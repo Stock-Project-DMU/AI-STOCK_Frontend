@@ -1,18 +1,12 @@
 import Link from "next/link";
-
-const footerLinks = [
-  { href: "/home", label: "개인정보 처리 방침" },
-  { href: "/home", label: "서비스 이용 약관" },
-  { href: "/home", label: "투자 유의사항" },
-  { href: "/home", label: "이용자 권리 및 유의사항" },
-];
+import { FOOTER_LINKS } from "../../constants/navigation";
 
 export default function Footer() {
   return (
     <footer className="w-full border-t border-gray-200 bg-white px-6 py-8">
       <div className="mx-auto flex max-w-[1280px] flex-col items-center text-center">
         <nav className="mb-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-          {footerLinks.map((link) => (
+          {FOOTER_LINKS.map((link) => (
             <Link
               key={link.label}
               href={link.href}
