@@ -1,5 +1,4 @@
-import RightSidebar from "./RightSidebar";
-import StockTable from "./StockTable";
+import { RightSidebar, StockTable } from "@/features/home";
 
 export default function Home() {
     return (

@@ -1,4 +1,5 @@
 import { FavoriteButton } from "@/components/common/Button";
+import Link from "next/link";
 
 export default function StockTable() {
     const stockData = [
@@ -65,7 +66,15 @@ export default function StockTable() {
                                 <td className="w-16 px-3 text-center align-middle">
                                     <FavoriteButton />
                                 </td>
-                                <td className="p-3">{stockData[index]?.name}</td>
+                                <td className="p-3">
+                                    {stockData[index]?.name === "삼성전자" ? (
+                                        <Link href="/stock-detail" className="font-semibold hover:text-red-500">
+                                            {stockData[index]?.name}
+                                        </Link>
+                                    ) : (
+                                        stockData[index]?.name
+                                    )}
+                                </td>
                                 <td className="p-3 text-right text-red-500">{stockData[index]?.changeRate}</td>
                                 <td className="p-3 text-right">{stockData[index]?.currentPrice}</td>
                                 <td className="p-3 text-right">{stockData[index]?.tradingValue}</td>
