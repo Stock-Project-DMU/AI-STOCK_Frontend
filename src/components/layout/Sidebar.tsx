@@ -10,6 +10,7 @@ export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
     const [activeLabel, setActiveLabel] = useState<SidebarTabLabel>(
         SIDEBAR_TABS[0].label,
+
     );
 
     const activeTab =
