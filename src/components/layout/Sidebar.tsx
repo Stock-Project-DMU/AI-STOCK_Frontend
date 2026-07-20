@@ -9,7 +9,7 @@ import { SIDEBAR_TABS } from "./sidebar/sidebarData";
 export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
     const [activeLabel, setActiveLabel] =
-        useState<SidebarTabLabel>("내 투자");
+        useState<SidebarTabLabel>("보유자산");
 
     const activeTab =
         SIDEBAR_TABS.find((tab) => tab.label === activeLabel) ??
@@ -45,7 +45,7 @@ export default function Sidebar() {
                     aria-controls="portfolio-sidebar-panel"
                     aria-label={isOpen ? "사이드바 닫기" : "사이드바 열기"}
                     onClick={() => setIsOpen((prev) => !prev)}
-                    className="cursor-pointer flex h-10 w-full items-center justify-center text-sm font-semibold text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-gray-400"
+                    className="flex h-10 w-full cursor-pointer items-center justify-center text-sm font-semibold text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-gray-400"
                 >
                     {isOpen ? ">>" : "<<"}
                 </button>
@@ -57,7 +57,6 @@ export default function Sidebar() {
                             label={tab.label}
                             active={tab.label === activeLabel}
                             onClick={() => handleRailItemClick(tab.label)}
-                            
                         >
                             <div className="cursor-pointer">{tab.icon}</div>
                         </RailItem>
