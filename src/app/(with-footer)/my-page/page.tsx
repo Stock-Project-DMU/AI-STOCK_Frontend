@@ -1,12 +1,5 @@
-import MyBody from "@/features/my-page/components/MyBody";
-import MySideBar from "@/features/my-page/components/MySideBar";
+import MyPageDashboard from "@/features/my-page/components/MyPageDashboard";
 
-
-export default function MyPage(){
-    return(
-        <div>
-            <MyBody />
-            <MySideBar />
-        </div>
-    );
+export default function MyPage() {
+  return <MyPageDashboard />;
 }
