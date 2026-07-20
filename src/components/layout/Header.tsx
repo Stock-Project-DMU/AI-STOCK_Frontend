@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { HEADER_LINKS } from "@/constants/navigation";
 
 export default function Header() {
+    const pathname = usePathname();
+
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+        return null;
+    }
+
     return (
         <header className="grid h-16 grid-cols-[auto_minmax(0,1fr)_auto] items-center bg-black px-2 sm:px-3 lg:px-8">
             <Link href="/home" className="flex items-center">
