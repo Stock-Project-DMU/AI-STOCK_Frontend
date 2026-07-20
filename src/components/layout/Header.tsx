@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HEADER_LINKS } from "../../constants/navigation";
+import { HEADER_LINKS } from "@/constants/navigation";
 
 export default function Header() {
     return (
@@ -31,9 +31,13 @@ export default function Header() {
                     className="w-20 rounded-md bg-white px-2 py-1.5 text-xs text-black outline-none placeholder:text-gray-500 sm:w-24 lg:w-44 lg:px-3 lg:text-sm xl:w-52"
                     placeholder="검색"
                 />
-                <button className="rounded-md bg-gray-500 px-2 py-1.5 text-xs font-bold text-white hover:bg-gray-600 lg:px-4 lg:text-base">
+
+                <Link
+                    href="/login"
+                    className="rounded-md bg-gray-500 px-2 py-1.5 text-xs font-bold text-white hover:bg-gray-600 lg:px-4 lg:text-base"
+                >
                     로그인
-                </button>
+                </Link>
             </div>
         </header>
     );
