@@ -1,8 +1,8 @@
 export const HEADER_LINKS = [
     { href: "/home", label: "홈" },
     { href: "/ai-financial-planner", label: "AI 재무설계사" },
-    { href: "/home", label: "AI 맞춤 시황 브리핑" },
-    { href: "/home", label: "목표 도달 시뮬레이션" },
+    { href: "/ai-market-briefing", label: "AI 맞춤 시황 브리핑" },
+    { href: "/goal-simulation", label: "목표 도달 시뮬레이션" },
     { href: "/my-page", label: "마이페이지" },
 ] as const;
 
