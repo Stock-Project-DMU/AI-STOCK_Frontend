@@ -27,14 +27,15 @@ export default function GoalSimulator() {
     };
 
     return (
-        <div className="flex min-h-[calc(100vh-4rem)] min-w-0 bg-[#f2f4f6]">
+        <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0">
             <MarketDashboard side="left" />
 
             <div className="min-w-0 flex-1 px-4 py-8 sm:px-7 lg:px-10">
-                <section className="mx-auto max-w-[1220px] rounded-2xl border border-gray-200 bg-white p-5 sm:p-7">
+                <section className="mx-auto max-w-[1220px] rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_24px_70px_rgba(0,0,0,.24)] sm:p-7">
                     <div className="flex items-start justify-between gap-4">
                         <div className="border-l-4 border-red-500 pl-3">
-                            <h1 className="text-xl font-black">시뮬레이션 설정</h1>
+                            <p className="theme-accent-text text-[10px] font-black tracking-[0.15em]">GOAL ENGINE · DEMO</p>
+                            <h1 className="mt-1 text-xl font-black">목표 도달 시뮬레이션</h1>
                             <p className="mt-1 text-xs text-gray-400">
                                 {resultSettings?.aggressive
                                     ? "기본 시나리오와 공격적 투자 시나리오를 비교합니다."

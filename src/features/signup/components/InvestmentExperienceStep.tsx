@@ -24,7 +24,7 @@ const INVESTMENT_OPTIONS: InvestmentOption[] = [
         id: "intermediate",
         title: "일반 투자자",
         description: "투자 경험 1년 ~ 3년\n기본 종목 거래 경험\nETF·펀드 약간 있음",
-        className: "bg-blue-900",
+        className: "bg-teal-800",
     },
     {
         id: "advanced",

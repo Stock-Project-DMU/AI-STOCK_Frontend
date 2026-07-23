@@ -13,7 +13,7 @@ export default function AiFinancialPlanner() {
     const [connectionOpen, setConnectionOpen] = useState(false);
 
     return (
-        <div className="flex min-h-[calc(100vh-4rem)] min-w-0 bg-[#f2f4f6]">
+        <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0">
             {view === "chat" && <PlannerHistory onNewDiagnosis={() => setView("survey")} />}
 
             <div className="flex min-w-0 flex-1 flex-col">
@@ -26,7 +26,7 @@ export default function AiFinancialPlanner() {
                     <InvestmentSurvey onComplete={() => setView("chat")} />
                 )}
 
-                <button onClick={() => setConnectionOpen(true)} className="flex h-12 items-center gap-2 border-t border-gray-200 bg-white px-5 text-xs text-gray-500 hover:text-black">⚙ 연동 기능</button>
+                <button onClick={() => setConnectionOpen(true)} className="flex h-12 items-center gap-2 border-t border-gray-200 bg-white px-5 text-xs font-bold text-gray-500 hover:text-black">⚙ 데이터 연동 설정</button>
             </div>
 
             {connectionOpen && <ConnectionModal onClose={() => setConnectionOpen(false)} />}

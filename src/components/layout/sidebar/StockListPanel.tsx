@@ -42,8 +42,8 @@ function StockListRow({
     variant: "watchlist" | "recent";
 }) {
     return (
-        <div className="cursor-pointer grid grid-cols-[48px_minmax(0,1fr)_122px] border-b border-gray-300 px-3 py-3 text-sm text-gray-900">
-            <div className="flex items-center justify-center text-gray-500">
+        <div className="grid cursor-pointer grid-cols-[48px_minmax(0,1fr)_122px] border-b border-white/[0.07] px-3 py-3 text-sm text-slate-200 hover:bg-white/[0.025]">
+            <div className="flex items-center justify-center text-slate-500">
                 {variant === "watchlist" ? (
                     <FavoriteButton defaultFavorite size="xl" />
                 ) : (
@@ -55,7 +55,7 @@ function StockListRow({
                 <div className="truncate text-[13px] font-medium leading-tight">
                     {item.name}
                 </div>
-                <div className="mt-1 truncate text-[11px] leading-tight text-gray-500">
+                <div className="mt-1 truncate text-[11px] leading-tight text-slate-600">
                     {item.meta}
                 </div>
             </div>

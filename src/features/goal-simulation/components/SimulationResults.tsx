@@ -79,7 +79,7 @@ function TextCard({ title, children }: { title: string; children: React.ReactNod
     return (
         <article className="rounded-2xl border border-gray-800 bg-white p-5">
             <p className="text-xs text-gray-400">{title}</p>
-            <p className="mt-3 text-sm leading-7 text-gray-700 [&_em]:font-bold [&_em]:not-italic [&_em]:text-blue-500">{children}</p>
+            <p className="mt-3 text-sm leading-7 text-gray-700 [&_em]:font-bold [&_em]:not-italic [&_em]:text-[var(--market-accent-text)]">{children}</p>
         </article>
     );
 }
