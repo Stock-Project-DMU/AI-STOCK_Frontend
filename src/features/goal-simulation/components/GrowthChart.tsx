@@ -10,7 +10,13 @@ type GrowthChartProps = {
 
 const chartWidth = 720;
 const chartHeight = 340;
-const padding = 38;
+const padding = 62;
+
+function formatChartValue(value: number) {
+    if (value >= 100_000_000) return `${(value / 100_000_000).toFixed(1)}억`;
+    if (value >= 10_000) return `${Math.round(value / 10_000).toLocaleString("ko-KR")}만`;
+    return Math.round(value).toLocaleString("ko-KR");
+}
 
 function toPath(values: number[], maxValue: number) {
     return values
@@ -65,7 +71,7 @@ export default function GrowthChart({
                     자산 성장 추이 {aggressive ? "비교" : "시뮬레이션"}
                 </h2>
                 <div className="flex gap-4 text-[11px] text-gray-500">
-                    <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-black" />기본 ({annualReturn.toFixed(1)}%)</span>
+                    <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--chart-primary)]" />기본 ({annualReturn.toFixed(1)}%)</span>
                     {aggressive && <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-red-500" />공격적 ({(annualReturn + 2.5).toFixed(1)}%)</span>}
                 </div>
             </div>
@@ -79,16 +85,27 @@ export default function GrowthChart({
                 >
                     {[0, 1, 2, 3, 4].map((line) => {
                         const y = padding + (line / 4) * (chartHeight - padding * 2);
-                        return <line key={line} x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="#eeeeee" />;
+                        const value = maxValue * (1 - line / 4);
+                        return (
+                            <g key={line}>
+                                <line x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="var(--chart-grid)" strokeDasharray="4 5" />
+                                <text x={padding - 10} y={y + 4} textAnchor="end" fill="var(--chart-label)" fontSize="10">{formatChartValue(value)}</text>
+                            </g>
+                        );
                     })}
-                    <path d={`${basePath} L ${chartWidth - padding} ${chartHeight - padding} L ${padding} ${chartHeight - padding} Z`} fill="#1111110b" />
-                    <path d={basePath} fill="none" stroke="#111111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d={`${basePath} L ${chartWidth - padding} ${chartHeight - padding} L ${padding} ${chartHeight - padding} Z`} fill="var(--chart-primary-soft)" />
+                    <path d={basePath} fill="none" stroke="var(--chart-primary)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
                     {aggressive && <path d={aggressivePath} fill="none" stroke="#ff4444" strokeWidth="3" strokeDasharray="7 5" strokeLinecap="round" strokeLinejoin="round" />}
                     {[0, 2, 4, 6, 8, 10].map((index) => {
                         const x = padding + (index / 10) * (chartWidth - padding * 2);
-                        return <text key={index} x={x} y={chartHeight - 10} textAnchor="middle" fill="#aaaaaa" fontSize="11">{Math.round((years * index) / 10)}년</text>;
+                        return <text key={index} x={x} y={chartHeight - 18} textAnchor="middle" fill="var(--chart-label)" fontSize="11">{Math.round((years * index) / 10)}년</text>;
                     })}
-                    <circle cx={chartWidth - padding} cy={chartHeight - padding - (baseValues.at(-1)! / maxValue) * (chartHeight - padding * 2)} r="5" fill="#111111" />
+                    {baseValues.map((value, index) => {
+                        const x = padding + (index / (baseValues.length - 1)) * (chartWidth - padding * 2);
+                        const y = chartHeight - padding - (value / maxValue) * (chartHeight - padding * 2);
+                        return <circle key={`base-${index}`} cx={x} cy={y} r="3" fill="var(--market-panel)" stroke="var(--chart-primary)" strokeWidth="2" />;
+                    })}
+                    <circle cx={chartWidth - padding} cy={chartHeight - padding - (baseValues.at(-1)! / maxValue) * (chartHeight - padding * 2)} r="5" fill="var(--chart-primary)" />
                     {aggressive && <circle cx={chartWidth - padding} cy={chartHeight - padding - (aggressiveValues.at(-1)! / maxValue) * (chartHeight - padding * 2)} r="5" fill="#ff4444" />}
                 </svg>
             </div>

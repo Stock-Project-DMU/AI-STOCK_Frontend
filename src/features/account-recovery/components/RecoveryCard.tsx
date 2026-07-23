@@ -15,18 +15,18 @@ export default function RecoveryCard({
     backLabel = "로그인으로 이동",
 }: RecoveryCardProps) {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-8">
-            <div className="w-full max-w-[420px] rounded-lg border border-gray-300 bg-white p-8 shadow-md">
+        <div className="market-theme auth-shell flex min-h-screen items-center justify-center px-4 py-12">
+            <div className="auth-card w-full max-w-[480px] rounded-3xl p-8 sm:p-10">
                 <div className="relative flex w-full items-center justify-center">
                     <Link
                         href={backHref}
                         aria-label={backLabel}
-                        className="absolute left-0 text-3xl leading-none hover:text-gray-300"
+                        className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-xl leading-none text-slate-400 hover:bg-white/5 hover:text-white"
                     >
                         ←
                     </Link>
 
-                    <h1 className="text-center text-3xl font-semibold">
+                    <h1 className="text-center text-2xl font-black text-white">
                         {title}
                     </h1>
                 </div>

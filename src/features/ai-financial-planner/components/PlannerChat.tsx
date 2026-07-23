@@ -27,11 +27,11 @@ export default function PlannerChat() {
 
     return (
         <section className="flex min-w-0 flex-1 flex-col bg-[#f2f4f6]">
-            <div className="flex h-16 items-center border-b border-gray-200 bg-white px-6 font-bold"><span className="mr-3 flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">▱</span>AI 재무설계사 밀착 진단</div>
+            <div className="flex h-16 items-center border-b border-gray-200 bg-white px-6 font-bold"><span className="theme-accent-bg mr-3 flex h-8 w-8 items-center justify-center rounded-lg">▱</span>AI 재무설계사 밀착 진단</div>
             <div className="flex-1 space-y-8 overflow-y-auto p-6 lg:p-8">
                 {messages.map(message => <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[630px] ${message.role === "user" ? "rounded-2xl rounded-tr-sm bg-[#171717] px-6 py-4 text-sm text-white" : "flex gap-3"}`}>
-                        {message.role === "assistant" && <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#171717] text-white">◇</span>}
+                    <div className={`max-w-[630px] ${message.role === "user" ? "chat-user-bubble rounded-2xl rounded-tr-sm px-6 py-4 text-sm font-medium leading-6" : "flex gap-3"}`}>
+                        {message.role === "assistant" && <span className="theme-accent-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">◇</span>}
                         <div className={message.role === "assistant" ? "rounded-2xl border border-gray-200 bg-white px-6 py-5 text-sm leading-7 text-gray-700" : ""}>
                             <p className="whitespace-pre-line">{message.text}</p>
                             {message.portfolio && <PortfolioAllocation />}
@@ -40,7 +40,7 @@ export default function PlannerChat() {
                 </div>)}
             </div>
             <form onSubmit={submit} className="border-t border-gray-200 bg-white px-6 pb-3 pt-4">
-                <div className="mx-auto flex max-w-[900px] rounded-xl bg-[#f2f4f6] p-2"><input value={input} onChange={event => setInput(event.target.value)} placeholder="AI에게 재무 질문을 입력하세요..." className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"/><button aria-label="메시지 보내기" className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-lg text-white">➤</button></div>
+                <div className="mx-auto flex max-w-[900px] rounded-xl bg-[#f2f4f6] p-2"><input value={input} onChange={event => setInput(event.target.value)} placeholder="AI에게 재무 질문을 입력하세요..." className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"/><button aria-label="메시지 보내기" className="theme-accent-bg flex h-10 w-10 items-center justify-center rounded-xl text-lg">➤</button></div>
                 <p className="mt-2 text-center text-[10px] text-gray-400">AI의 조언은 투자 참고용이며 최종 결정은 본인의 책임입니다.</p>
             </form>
         </section>

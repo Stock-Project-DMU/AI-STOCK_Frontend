@@ -13,15 +13,15 @@ export default function MarketDashboard({ side = "right" }: MarketDashboardProps
                     : "border-l border-gray-300"
             }`}
         >
-            <h2 className="text-sm font-bold">⌁ 실시간 시장 현황</h2>
+            <div className="flex items-center justify-between"><h2 className="text-sm font-bold">⌁ 시장 현황</h2><span className="theme-accent-soft theme-accent-text rounded-full px-2 py-1 text-[9px] font-black">DEMO</span></div>
             <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 border-t-2 border-t-black">
                 {MARKET_INDEXES.map(([name, value, change, color]) => <div key={name} className="grid grid-cols-[72px_1fr_auto] items-center border-b border-gray-100 px-4 py-3 text-[11px] last:border-0"><strong>{name}</strong><span className="text-right font-semibold">{value}</span><span className={`ml-2 ${color}`}>{change}</span></div>)}
             </div>
 
             <div className="mt-4 rounded-xl border border-gray-200 p-4">
-                <h3 className="text-sm font-bold">🔥 실시간 트렌드</h3>
+                <h3 className="text-sm font-bold">🔥 샘플 트렌드</h3>
                 <ol className="mt-3 space-y-1">
-                    {LIVE_TRENDS.map(([trend, badge], index) => <li key={trend} className="grid grid-cols-[18px_1fr_auto] items-center border-b border-gray-100 py-2 text-xs last:border-0"><strong className={index < 3 ? "text-red-500" : "text-gray-500"}>{index + 1}</strong><span>{trend}</span>{badge && <span className={`rounded px-1.5 py-0.5 text-[9px] ${badge === "HOT" ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"}`}>{badge}</span>}</li>)}
+                    {LIVE_TRENDS.map(([trend, badge], index) => <li key={trend} className="grid grid-cols-[18px_1fr_auto] items-center border-b border-gray-100 py-2 text-xs last:border-0"><strong className={index < 3 ? "text-red-500" : "text-gray-500"}>{index + 1}</strong><span>{trend}</span>{badge && <span className={`rounded px-1.5 py-0.5 text-[9px] ${badge === "HOT" ? "bg-red-50 text-red-500" : "theme-accent-soft theme-accent-text"}`}>{badge}</span>}</li>)}
                 </ol>
             </div>
 

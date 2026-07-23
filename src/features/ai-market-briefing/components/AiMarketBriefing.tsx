@@ -28,5 +28,5 @@ export default function AiMarketBriefing() {
         setAvailable(["summary"]);
     };
 
-    return <div className="flex min-h-[calc(100vh-4rem)] min-w-0 bg-[#f2f4f6]"><BriefingHistory onNewBriefing={reset}/><div className="flex min-w-0 flex-1"><BriefingChat messages={messages} onAddMessage={message => setMessages(current => [...current, message])} onSave={() => setSaveOpen(true)} onShowSemiconductor={showSemiconductor}/><MarketDashboard/></div>{saveOpen && <SaveBriefingModal available={available} onClose={() => setSaveOpen(false)}/>}</div>;
+    return <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0"><BriefingHistory onNewBriefing={reset}/><div className="flex min-w-0 flex-1"><BriefingChat messages={messages} onAddMessage={message => setMessages(current => [...current, message])} onSave={() => setSaveOpen(true)} onShowSemiconductor={showSemiconductor}/><MarketDashboard/></div>{saveOpen && <SaveBriefingModal available={available} onClose={() => setSaveOpen(false)}/>}</div>;
 }

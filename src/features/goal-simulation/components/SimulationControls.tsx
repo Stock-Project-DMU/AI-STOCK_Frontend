@@ -43,8 +43,8 @@ export default function SimulationControls({
                             onClick={() => updateGoal(goal)}
                             className={`rounded-lg border px-3 py-3 text-sm font-semibold transition-colors ${
                                 settings.goal === goal
-                                    ? "border-black bg-gray-50 text-black"
-                                    : "border-gray-200 text-gray-500 hover:border-gray-400"
+                                    ? "theme-accent-border theme-accent-soft theme-accent-text shadow-[0_0_0_1px_var(--market-accent-soft)]"
+                                    : "border-gray-200 text-gray-500 hover:border-[var(--market-accent)] hover:text-[var(--market-accent-text)]"
                             }`}
                         >
                             {GOAL_PRESETS[goal].label}
@@ -134,6 +134,8 @@ function RangeField({
     step,
     onChange,
 }: RangeFieldProps) {
+    const progress = ((value - min) / (max - min)) * 100;
+
     return (
         <label className="mt-5 block">
             <span className="flex items-center justify-between text-xs font-semibold">
@@ -148,7 +150,10 @@ function RangeField({
                 value={value}
                 disabled={displayValue === "-"}
                 onChange={(event) => onChange(Number(event.target.value))}
-                className="mt-3 h-1.5 w-full cursor-pointer accent-black disabled:cursor-not-allowed disabled:opacity-40"
+                className="simulation-range mt-3 w-full cursor-pointer disabled:cursor-not-allowed"
+                style={{
+                    background: `linear-gradient(to right, var(--control-accent) 0%, var(--control-accent) ${progress}%, var(--control-track) ${progress}%, var(--control-track) 100%)`,
+                }}
             />
         </label>
     );
