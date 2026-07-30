@@ -5,6 +5,7 @@ import { useState } from "react";
 import RecoveryCard from "@/features/account-recovery/components/RecoveryCard";
 import RecoveryField from "@/features/account-recovery/components/RecoveryField";
 import RecoveryModal from "@/features/account-recovery/components/RecoveryModal";
+import { Button } from "@/components/common/Button";
 import type { FindPasswordFormData } from "../types";
 
 const INITIAL_FORM_DATA: FindPasswordFormData = {
@@ -81,7 +82,7 @@ export default function FindPasswordCard() {
     return (
         <RecoveryCard title="비밀번호 재설정">
             <form className="mt-8" onSubmit={handleSubmit} noValidate>
-                <div className="flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4 py-6">
+                <div className="flex flex-col gap-2 rounded-lg border border-hairline-soft bg-surface-soft p-4 py-6">
                     <RecoveryField
                         id="find-password-user-id"
                         name="userId"
@@ -129,12 +130,9 @@ export default function FindPasswordCard() {
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    className="mt-10 w-full bg-black px-4 py-3 font-semibold text-white transition-colors hover:bg-gray-700"
-                >
+                <Button type="submit" fullWidth size="md" className="mt-10">
                     확인
-                </button>
+                </Button>
             </form>
 
             {isComplete ? (

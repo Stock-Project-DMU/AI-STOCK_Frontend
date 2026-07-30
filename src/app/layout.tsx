@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Header from "../components/layout/Header";
 
@@ -27,18 +26,9 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      data-theme="dark"
-      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col">
-        <Script
-          id="ai-stock-theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ai-stock-theme');var v=t==='light'?'light':'dark';document.documentElement.dataset.theme=v;document.documentElement.style.colorScheme=v;}catch(e){}})();`,
-          }}
-        />
         <Header />
 
         <div className="flex-1 flex flex-col">

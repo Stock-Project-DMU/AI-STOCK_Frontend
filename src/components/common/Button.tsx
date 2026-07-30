@@ -1,6 +1,57 @@
 "use client";
 
 import { useState } from "react";
+import type { ButtonHTMLAttributes } from "react";
+
+type ButtonVariant = "primary" | "secondary" | "outline" | "text";
+type ButtonSize = "sm" | "md" | "lg";
+
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: ButtonVariant;
+    size?: ButtonSize;
+    fullWidth?: boolean;
+};
+
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
+    primary:
+        "bg-primary text-white hover:bg-primary-active disabled:bg-primary-disabled",
+    secondary:
+        "bg-surface-strong text-ink hover:bg-hairline-soft disabled:opacity-50",
+    outline:
+        "border border-hairline bg-transparent text-ink hover:border-primary hover:text-primary disabled:opacity-50",
+    text: "bg-transparent text-primary hover:text-primary-active disabled:opacity-50 !px-0 !h-auto",
+};
+
+const SIZE_CLASS: Record<ButtonSize, string> = {
+    sm: "h-9 px-4 text-sm rounded-pill",
+    md: "h-11 px-5 text-sm rounded-pill",
+    lg: "h-14 px-8 text-base rounded-pill",
+};
+
+/**
+ * Shared pill-button primitive per DESIGN-coinbase.md's button tokens
+ * (button-primary / button-secondary-light / button-outline / button-tertiary-text).
+ */
+export function Button({
+    variant = "primary",
+    size = "md",
+    fullWidth = false,
+    disabled,
+    className = "",
+    children,
+    ...rest
+}: ButtonProps) {
+    return (
+        <button
+            type="button"
+            disabled={disabled}
+            className={`inline-flex items-center justify-center gap-2 font-semibold transition-colors disabled:cursor-not-allowed ${SIZE_CLASS[size]} ${VARIANT_CLASS[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
+            {...rest}
+        >
+            {children}
+        </button>
+    );
+}
 
 type FavoriteButtonProps = {
     defaultFavorite?: boolean;

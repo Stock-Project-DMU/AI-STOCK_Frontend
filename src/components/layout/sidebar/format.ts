@@ -10,12 +10,12 @@ export function formatSignedWon(value: number) {
 
 export function getRateColorClass(rate: string) {
     if (rate.trim().startsWith("-")) {
-        return "text-blue-500";
+        return "text-down";
     }
 
     if (rate.trim() === "0%" || rate.trim() === "0.00%") {
-        return "text-gray-500";
+        return "text-muted";
     }
 
-    return "text-red-500";
+    return "text-up";
 }

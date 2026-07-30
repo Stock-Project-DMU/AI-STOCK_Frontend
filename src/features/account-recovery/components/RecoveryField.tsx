@@ -41,7 +41,7 @@ export default function RecoveryField({
 
     return (
         <div className="mt-2 first:mt-0">
-            <label htmlFor={id} className="mb-1 block text-xs font-semibold">
+            <label htmlFor={id} className="mb-1 block text-xs font-semibold text-ink">
                 {label}
             </label>
             <input
@@ -57,17 +57,17 @@ export default function RecoveryField({
                 required={required}
                 aria-invalid={hasError}
                 aria-describedby={visibleHelperText ? helperId : undefined}
-                className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none ${
+                className={`w-full rounded-md border px-3 py-2 text-sm outline-none ${
                     hasError
                         ? "border-red-400 focus:border-red-500"
-                        : "border-gray-300 focus:border-black"
+                        : "border-hairline"
                 }`}
             />
             {visibleHelperText ? (
                 <p
                     id={helperId}
                     className={`mt-1 px-1 text-xs ${
-                        hasError ? "text-red-500" : "text-gray-500"
+                        hasError ? "text-red-500" : "text-muted"
                     }`}
                 >
                     {visibleHelperText}

@@ -1,3 +1,4 @@
+import { Button } from "@/components/common/Button";
 import type { TermDetail } from "@/features/signup/constants/terms";
 
 type TermDetailModalProps = {
@@ -11,7 +12,7 @@ export default function TermDetailModal({
 }: TermDetailModalProps) {
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
             role="presentation"
             onClick={onClose}
         >
@@ -19,17 +20,23 @@ export default function TermDetailModal({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="term-modal-title"
-                className="max-h-[80vh] w-full max-w-[520px] overflow-hidden rounded-lg bg-white shadow-xl"
+                className="max-h-[80vh] w-full max-w-[520px] overflow-hidden rounded-xl border border-hairline bg-canvas shadow-xl"
                 onClick={(event) => event.stopPropagation()}
             >
-                <div className="flex items-start justify-between border-b border-gray-200 px-5 py-4">
+                <div className="flex items-start justify-between gap-3 border-b border-hairline-soft px-6 py-5">
                     <div>
-                        <p className="text-xs font-semibold text-red-500">
+                        <p
+                            className={`text-xs font-semibold ${
+                                term.isRequired
+                                    ? "text-red-500"
+                                    : "text-muted"
+                            }`}
+                        >
                             {term.isRequired ? "필수 동의" : "선택 동의"}
                         </p>
                         <h2
                             id="term-modal-title"
-                            className="mt-1 text-lg font-semibold text-gray-900"
+                            className="mt-1 text-lg font-semibold text-ink"
                         >
                             {term.title}
                         </h2>
@@ -37,27 +44,28 @@ export default function TermDetailModal({
                     <button
                         type="button"
                         aria-label="약관 닫기"
-                        className="rounded px-2 text-2xl leading-none text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                        className="shrink-0 rounded-md px-2 text-2xl leading-none text-muted hover:bg-surface-strong hover:text-ink"
                         onClick={onClose}
                     >
                         ×
                     </button>
                 </div>
 
-                <div className="max-h-[52vh] overflow-y-auto px-5 py-4">
-                    <p className="whitespace-pre-line text-sm leading-6 text-gray-700">
+                <div className="max-h-[52vh] overflow-y-auto px-6 py-5">
+                    <p className="text-sm leading-6 whitespace-pre-line text-body">
                         {term.content}
                     </p>
                 </div>
 
-                <div className="border-t border-gray-200 px-5 py-4">
-                    <button
-                        type="button"
-                        className="w-full rounded bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-gray-700"
+                <div className="border-t border-hairline-soft px-6 py-5">
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        fullWidth
                         onClick={onClose}
                     >
                         닫기
-                    </button>
+                    </Button>
                 </div>
             </section>
         </div>

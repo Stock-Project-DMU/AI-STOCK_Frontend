@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { SparkleIcon, SendIcon } from "@/components/icons/Icon";
 import type { ChatMessage } from "../types";
 
 const initialMessages: ChatMessage[] = [
@@ -26,28 +27,62 @@ export default function PlannerChat() {
     };
 
     return (
-        <section className="flex min-w-0 flex-1 flex-col bg-[#f2f4f6]">
-            <div className="flex h-16 items-center border-b border-gray-200 bg-white px-6 font-bold"><span className="theme-accent-bg mr-3 flex h-8 w-8 items-center justify-center rounded-lg">▱</span>AI 재무설계사 밀착 진단</div>
-            <div className="flex-1 space-y-8 overflow-y-auto p-6 lg:p-8">
-                {messages.map(message => <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[630px] ${message.role === "user" ? "chat-user-bubble rounded-2xl rounded-tr-sm px-6 py-4 text-sm font-medium leading-6" : "flex gap-3"}`}>
-                        {message.role === "assistant" && <span className="theme-accent-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">◇</span>}
-                        <div className={message.role === "assistant" ? "rounded-2xl border border-gray-200 bg-white px-6 py-5 text-sm leading-7 text-gray-700" : ""}>
-                            <p className="whitespace-pre-line">{message.text}</p>
-                            {message.portfolio && <PortfolioAllocation />}
+        <section className="flex min-w-0 flex-1 flex-col bg-surface-soft">
+            <div className="flex h-14 items-center border-b border-hairline bg-canvas px-6 font-bold text-ink">
+                <span className="theme-accent-bg mr-3 flex h-8 w-8 items-center justify-center rounded-md"><SparkleIcon className="h-4 w-4" /></span>
+                AI 재무설계사 밀착 진단
+            </div>
+            <div className="flex-1 space-y-6 overflow-y-auto p-6 lg:p-8">
+                {messages.map(message => (
+                    <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[630px] ${message.role === "user" ? "chat-user-bubble rounded-lg rounded-tr-sm px-5 py-3.5 text-sm font-medium leading-6" : "flex gap-3"}`}>
+                            {message.role === "assistant" && (
+                                <span className="theme-accent-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-md"><SparkleIcon className="h-4 w-4" /></span>
+                            )}
+                            <div className={message.role === "assistant" ? "rounded-lg border border-hairline bg-canvas px-5 py-4 text-sm leading-6 text-body" : ""}>
+                                <p className="whitespace-pre-line">{message.text}</p>
+                                {message.portfolio && <PortfolioAllocation />}
+                            </div>
                         </div>
                     </div>
-                </div>)}
+                ))}
             </div>
-            <form onSubmit={submit} className="border-t border-gray-200 bg-white px-6 pb-3 pt-4">
-                <div className="mx-auto flex max-w-[900px] rounded-xl bg-[#f2f4f6] p-2"><input value={input} onChange={event => setInput(event.target.value)} placeholder="AI에게 재무 질문을 입력하세요..." className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"/><button aria-label="메시지 보내기" className="theme-accent-bg flex h-10 w-10 items-center justify-center rounded-xl text-lg">➤</button></div>
-                <p className="mt-2 text-center text-[10px] text-gray-400">AI의 조언은 투자 참고용이며 최종 결정은 본인의 책임입니다.</p>
+            <form onSubmit={submit} className="border-t border-hairline bg-canvas px-6 pt-3 pb-3">
+                <div className="mx-auto flex max-w-[900px] rounded-md bg-surface-soft p-2">
+                    <input value={input} onChange={event => setInput(event.target.value)} placeholder="AI에게 재무 질문을 입력하세요..." className="min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none placeholder:text-muted-soft" />
+                    <button aria-label="메시지 보내기" className="theme-accent-bg flex h-9 w-9 items-center justify-center rounded-md"><SendIcon className="h-4 w-4" /></button>
+                </div>
+                <p className="mt-2 text-center text-[10px] text-muted-soft">AI의 조언은 투자 참고용이며 최종 결정은 본인의 책임입니다.</p>
             </form>
         </section>
     );
 }
 
 function PortfolioAllocation() {
-    const rows = [["주식 (Equity)", "45% →", "60%", "bg-red-500", "w-3/5"], ["채권/안전 (Bonds)", "20% →", "25%", "bg-blue-400", "w-1/4"], ["현금 (Cash)", "35% →", "15%", "bg-gray-500", "w-[15%]"]];
-    return <div className="mt-5 rounded-xl bg-gray-50 p-4"><div className="flex justify-between text-xs font-bold"><span>포트폴리오 비중 (현재 vs 추천)</span><span className="rounded bg-emerald-100 px-2 py-1 text-emerald-600">+1.4% 기대수익 상승</span></div><div className="mt-5 space-y-4">{rows.map(([name,from,to,color,width]) => <div key={name}><div className="flex justify-between text-xs"><span>{name}</span><span className="text-gray-500">{from} <b className="text-red-500">{to}</b></span></div><div className="mt-2 h-1.5 bg-gray-200"><div className={`h-full ${width} ${color}`} /></div></div>)}</div></div>;
+    const rows: [string, string, string, string, string][] = [
+        ["주식 (Equity)", "45% →", "60%", "bg-primary", "w-3/5"],
+        ["채권/안전 (Bonds)", "20% →", "25%", "bg-primary/45", "w-1/4"],
+        ["현금 (Cash)", "35% →", "15%", "bg-muted-soft", "w-[15%]"],
+    ];
+    return (
+        <div className="mt-4 rounded-md bg-surface-strong p-4">
+            <div className="flex items-center justify-between text-xs font-bold text-ink">
+                <span>포트폴리오 비중 (현재 vs 추천)</span>
+                <span className="rounded-sm bg-surface-soft px-2 py-1 text-up">+1.4% 기대수익 상승</span>
+            </div>
+            <div className="mt-4 space-y-3">
+                {rows.map(([name, from, to, color, width]) => (
+                    <div key={name}>
+                        <div className="flex justify-between text-xs text-ink">
+                            <span>{name}</span>
+                            <span className="text-muted">{from} <b className="text-primary">{to}</b></span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 bg-hairline-soft">
+                            <div className={`h-full ${width} ${color}`} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }

@@ -1,34 +1,34 @@
 export default function StockHeader() {
     return (
-        <section className="border-b border-slate-800 bg-[#081321] px-5 py-6 text-white sm:px-8">
+        <section className="border-b border-hairline bg-canvas px-4 py-4 text-ink sm:px-6">
             <div className="mx-auto max-w-[1500px]">
-                <div className="mb-5 flex items-center justify-between text-xs text-slate-400">
+                <div className="mb-3 flex items-center justify-between text-[11px] text-muted">
                     <span>국내주식　/　KOSPI　/　전기·전자</span>
                     <span className="flex items-center gap-2">
-                        <i className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                        <i className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
                         장 마감 · 데이터 기준 20:43
                     </span>
                 </div>
 
-                <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
+                <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
                     <div>
                         <div className="flex flex-wrap items-center gap-3">
-                            <span className="always-dark flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-teal-700 text-lg font-black text-white shadow-lg shadow-teal-950/40">S</span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base font-black text-white">S</span>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h1 className="text-xl font-black">삼성전자</h1>
-                                    <span className="rounded bg-slate-800 px-2 py-1 text-[10px] font-bold text-slate-400">005930</span>
-                                    <span className="theme-accent-soft theme-accent-text rounded px-2 py-1 text-[10px] font-bold">KOSPI</span>
+                                    <h1 className="text-lg font-black text-ink">삼성전자</h1>
+                                    <span className="rounded-xs bg-surface-strong px-2 py-1 text-[10px] font-bold text-muted num">005930</span>
+                                    <span className="theme-accent-soft theme-accent-text rounded-xs px-2 py-1 text-[10px] font-bold">KOSPI</span>
                                 </div>
-                                <p className="mt-1 text-xs text-slate-500">Samsung Electronics Co., Ltd.</p>
+                                <p className="mt-1 text-xs text-muted">Samsung Electronics Co., Ltd.</p>
                             </div>
                         </div>
 
-                        <div className="mt-6 flex flex-wrap items-end gap-4">
-                            <strong className="text-4xl font-black tracking-tight tabular-nums">191,000<span className="ml-1 text-lg font-semibold text-slate-400">원</span></strong>
+                        <div className="mt-4 flex flex-wrap items-end gap-4">
+                            <strong className="num text-3xl font-black tracking-tight text-ink">191,000<span className="ml-1 text-base font-semibold text-muted">원</span></strong>
                             <div className="mb-1">
-                                <span className="rounded-lg bg-red-500/15 px-3 py-1.5 text-sm font-bold text-red-400">▲ 3,303 (1.76%)</span>
-                                <p className="mt-2 text-[11px] text-slate-500">전일 종가 187,697</p>
+                                <span className="num rounded-md bg-[rgba(207,32,47,0.1)] px-3 py-1.5 text-sm font-bold text-up">▲ 3,303 (1.76%)</span>
+                                <p className="mt-2 text-[11px] text-muted num">전일 종가 187,697</p>
                             </div>
                         </div>
                     </div>
@@ -47,9 +47,9 @@ export default function StockHeader() {
 
 function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
     return (
-        <dl className="rounded-xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 shadow-inner shadow-black/20">
-            <dt className="text-[10px] font-medium text-slate-500">{label}</dt>
-            <dd className={`mt-1.5 text-sm font-bold tabular-nums ${accent ? "text-red-400" : "text-slate-100"}`}>{value}</dd>
+        <dl className="rounded-lg border border-hairline bg-surface-soft px-3 py-2">
+            <dt className="text-[10px] font-medium text-muted">{label}</dt>
+            <dd className={`num mt-1 text-sm font-bold ${accent ? "text-up" : "text-ink"}`}>{value}</dd>
         </dl>
     );
 }

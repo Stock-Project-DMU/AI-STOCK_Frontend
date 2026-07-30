@@ -17,8 +17,8 @@ export default function RailItem({
         <button
             type="button"
             onClick={onClick}
-            className={`flex w-full flex-col items-center gap-1.5 px-1 text-center text-[10px] font-bold focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--market-accent)] ${
-                active ? "theme-accent-text" : "text-slate-600 hover:text-slate-200"
+            className={`flex w-full flex-col items-center gap-2 px-1 text-center text-[11px] font-bold focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--market-accent)] ${
+                active ? "theme-accent-text" : "text-muted hover:text-ink"
             }`}
         >
             {children}

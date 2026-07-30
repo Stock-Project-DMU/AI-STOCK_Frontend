@@ -1,3 +1,4 @@
+import { Button } from "@/components/common/Button";
 import { GOAL_PRESETS } from "../constants/simulationData";
 import type { GoalType, SimulationSettings } from "../types";
 
@@ -30,21 +31,21 @@ export default function SimulationControls({
     };
 
     return (
-        <section className="rounded-2xl border border-gray-800 bg-white p-5">
-            <h2 className="font-bold">시뮬레이션 설정</h2>
+        <section className="rounded-lg border border-hairline bg-canvas p-5">
+            <h2 className="text-sm font-bold text-ink">시뮬레이션 설정</h2>
 
-            <div className="mt-5">
-                <p className="text-xs text-gray-500">목표 선택</p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-4">
+                <p className="text-xs text-muted">목표 선택</p>
+                <div className="mt-2.5 grid grid-cols-2 gap-2">
                     {(Object.keys(GOAL_PRESETS) as GoalType[]).map((goal) => (
                         <button
                             key={goal}
                             type="button"
                             onClick={() => updateGoal(goal)}
-                            className={`rounded-lg border px-3 py-3 text-sm font-semibold transition-colors ${
+                            className={`rounded-md border px-3 py-2.5 text-sm font-semibold transition-colors ${
                                 settings.goal === goal
                                     ? "theme-accent-border theme-accent-soft theme-accent-text shadow-[0_0_0_1px_var(--market-accent-soft)]"
-                                    : "border-gray-200 text-gray-500 hover:border-[var(--market-accent)] hover:text-[var(--market-accent-text)]"
+                                    : "border-hairline text-muted hover:border-[var(--market-accent)] hover:text-[var(--market-accent-text)]"
                             }`}
                         >
                             {GOAL_PRESETS[goal].label}
@@ -85,10 +86,10 @@ export default function SimulationControls({
                 }
             />
 
-            <label className="mt-5 flex cursor-pointer items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+            <label className="mt-5 flex cursor-pointer items-center justify-between rounded-md bg-surface-soft px-4 py-3">
                 <span>
-                    <strong className="block text-xs">공격적 투자 시나리오</strong>
-                    <small className="text-[10px] text-gray-400">
+                    <strong className="block text-xs text-ink">공격적 투자 시나리오</strong>
+                    <small className="text-[10px] text-muted-soft">
                         수익률 +2.5% 추가 반영 시 비교
                     </small>
                 </span>
@@ -100,17 +101,19 @@ export default function SimulationControls({
                     }
                     className="peer sr-only"
                 />
-                <span className="relative h-6 w-11 rounded-full bg-gray-300 transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-red-500 peer-checked:after:translate-x-5" />
+                <span className="relative h-6 w-11 rounded-full bg-hairline transition-colors after:absolute after:top-1 after:left-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-primary peer-checked:after:translate-x-5" />
             </label>
 
-            <button
-                type="button"
+            <Button
+                variant="primary"
+                size="lg"
+                fullWidth
                 disabled={!settings.goal}
                 onClick={onRun}
-                className="mt-5 w-full rounded-lg bg-black py-3 text-sm font-bold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                className="mt-5"
             >
                 시뮬레이션 실행
-            </button>
+            </Button>
         </section>
     );
 }
@@ -138,9 +141,9 @@ function RangeField({
 
     return (
         <label className="mt-5 block">
-            <span className="flex items-center justify-between text-xs font-semibold">
+            <span className="flex items-center justify-between text-xs font-semibold text-ink">
                 {label}
-                <strong className="text-sm text-red-500">{displayValue}</strong>
+                <strong className="text-sm text-primary">{displayValue}</strong>
             </span>
             <input
                 type="range"

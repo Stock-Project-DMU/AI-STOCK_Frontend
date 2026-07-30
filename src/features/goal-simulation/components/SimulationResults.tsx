@@ -21,13 +21,13 @@ export default function SimulationResults({ settings }: SimulationResultsProps) 
 
     if (settings.aggressive) {
         return (
-            <div className="mt-5 space-y-5">
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-orange-100 bg-orange-50 px-5 py-4">
+            <div className="mt-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-primary/15 bg-primary/5 px-5 py-4">
                     <span>
-                        <strong className="block text-sm text-amber-700">▤　공격적 시나리오 추가 수익</strong>
-                        <small className="text-gray-500">기본 대비 수익률 2.5%p 상승 시, {settings.years}년 후 추가로 확보 가능한 금액</small>
+                        <strong className="block text-sm text-primary">▤　공격적 시나리오 추가 수익</strong>
+                        <small className="text-muted">기본 대비 수익률 2.5%p 상승 시, {settings.years}년 후 추가로 확보 가능한 금액</small>
                     </span>
-                    <strong className="text-2xl text-red-500">+{formatWon(additionalReturn)}</strong>
+                    <strong className="text-2xl text-up">+{formatWon(additionalReturn)}</strong>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">
@@ -63,13 +63,13 @@ type ResultCardProps = {
 
 function ResultCard({ title, years, value, principal, rate, accent }: ResultCardProps) {
     return (
-        <article className={`rounded-2xl border bg-white p-5 ${accent ? "border-t-2 border-red-500" : "border-gray-800"}`}>
-            <p className={`text-xs ${accent ? "text-red-500" : "text-gray-500"}`}>{title}</p>
-            <p className={`mt-2 text-2xl font-black ${accent ? "text-red-500" : "text-black"}`}>{Math.round(value).toLocaleString("ko-KR")}</p>
-            <div className="mt-4 border-t pt-3 text-xs text-gray-500">
-                <div className="flex justify-between"><span>원금 합계</span><strong className="text-gray-700">{Math.round(principal).toLocaleString("ko-KR")}</strong></div>
-                <div className="mt-1 flex justify-between"><span>예상 수익</span><strong className="text-emerald-500">+{Math.round(value - principal).toLocaleString("ko-KR")}</strong></div>
-                <div className="mt-1 flex justify-between"><span>{years}년 평균 수익률</span><strong className={accent ? "text-red-500" : "text-gray-700"}>{rate.toFixed(1)}%</strong></div>
+        <article className={`rounded-lg border bg-canvas p-5 ${accent ? "border-t-2 border-primary" : "border-hairline"}`}>
+            <p className={`text-xs ${accent ? "text-primary" : "text-muted"}`}>{title}</p>
+            <p className={`mt-2 text-2xl font-black ${accent ? "text-primary" : "text-ink"}`}>{Math.round(value).toLocaleString("ko-KR")}</p>
+            <div className="mt-4 border-t border-hairline-soft pt-3 text-xs text-muted">
+                <div className="flex justify-between"><span>원금 합계</span><strong className="text-body">{Math.round(principal).toLocaleString("ko-KR")}</strong></div>
+                <div className="mt-1 flex justify-between"><span>예상 수익</span><strong className="text-up">+{Math.round(value - principal).toLocaleString("ko-KR")}</strong></div>
+                <div className="mt-1 flex justify-between"><span>{years}년 평균 수익률</span><strong className={accent ? "text-primary" : "text-body"}>{rate.toFixed(1)}%</strong></div>
             </div>
         </article>
     );
@@ -77,9 +77,9 @@ function ResultCard({ title, years, value, principal, rate, accent }: ResultCard
 
 function TextCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <article className="rounded-2xl border border-gray-800 bg-white p-5">
-            <p className="text-xs text-gray-400">{title}</p>
-            <p className="mt-3 text-sm leading-7 text-gray-700 [&_em]:font-bold [&_em]:not-italic [&_em]:text-[var(--market-accent-text)]">{children}</p>
+        <article className="rounded-lg border border-hairline bg-canvas p-5">
+            <p className="text-xs text-muted">{title}</p>
+            <p className="mt-3 text-sm leading-7 text-body [&_em]:font-bold [&_em]:not-italic [&_em]:text-[var(--market-accent-text)]">{children}</p>
         </article>
     );
 }

@@ -14,13 +14,13 @@ export default function SignupCard({ title, onBack, children }: SignupCardProps)
                     <button
                         type="button"
                         aria-label="이전 단계로 이동"
-                        className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-xl leading-none text-slate-400 hover:bg-white/5 hover:text-white"
+                        className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-xl border border-hairline text-xl leading-none text-muted hover:bg-surface-soft hover:text-ink"
                         onClick={onBack}
                     >
                         ←
                     </button>
 
-                    <h1 className="text-center text-2xl font-black text-white">
+                    <h1 className="text-center text-2xl font-black text-ink">
                         {title}
                     </h1>
                 </div>

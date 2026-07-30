@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HEADER_LINKS } from "@/constants/navigation";
-import ThemeToggle from "@/components/common/ThemeToggle";
+import { SearchIcon } from "@/components/icons/Icon";
 
 export default function Header() {
     const pathname = usePathname();
@@ -13,26 +13,21 @@ export default function Header() {
     }
 
     return (
-        <header className="sticky top-0 z-50 h-16 border-b border-white/10 bg-[#06101d]/95 px-3 text-slate-100 shadow-[0_8px_30px_rgba(0,0,0,.24)] backdrop-blur-xl lg:px-7">
-            <div className="mx-auto grid h-full max-w-[1760px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+        <header className="sticky top-0 z-50 h-[72px] border-b border-hairline bg-canvas/95 px-4 text-ink shadow-[0_1px_0_rgba(10,11,13,0.04)] backdrop-blur-xl lg:px-7">
+            <div className="mx-auto grid h-full max-w-[1760px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
                 <Link href="/home" className="flex items-center gap-2.5" aria-label="AI STOCK 홈">
-                    <span className="theme-accent-border theme-accent-soft flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border">
-                        <img src="/Logo.png" alt="" className="h-8 w-8 object-contain" width={32} height={32} />
-                    </span>
-                    <span className="hidden sm:block">
-                        <strong className="block text-sm font-black tracking-[0.12em]">AI STOCK</strong>
-                        <small className="theme-accent-text block text-[9px] font-semibold tracking-[0.16em]">INVESTMENT LAB</small>
-                    </span>
+                    <img src="/Logo.png" alt="" className="h-9 w-9 object-contain" width={36} height={36} />
+                    <strong className="hidden text-base font-black tracking-[0.12em] text-ink sm:block">AI STOCK</strong>
                 </Link>
 
-                <nav className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="주요 메뉴">
+                <nav className="flex min-w-0 items-center justify-center gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="주요 메뉴">
                     {HEADER_LINKS.map((link) => {
                         const active = pathname === link.href;
                         return (
                             <Link
                                 key={link.label}
                                 href={link.href}
-                                className={`whitespace-nowrap rounded-lg px-2 py-2 text-[10px] font-bold sm:px-3 sm:text-xs xl:px-4 xl:text-sm ${active ? "theme-accent-soft theme-accent-text" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+                                className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold sm:px-3.5 sm:text-sm ${active ? "theme-accent-soft theme-accent-text" : "text-body hover:bg-surface-soft hover:text-ink"}`}
                             >
                                 {link.label}
                             </Link>
@@ -40,16 +35,18 @@ export default function Header() {
                     })}
                 </nav>
 
-                <div className="flex items-center justify-end gap-2">
-                    <span className="hidden items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/8 px-3 py-1.5 text-[10px] font-bold text-emerald-300 xl:flex">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> DEMO MARKET
+                <div className="flex items-center justify-end gap-2.5">
+                    <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 xl:flex">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 모의투자
                     </span>
-                    <label className="hidden items-center rounded-lg border border-white/10 bg-white/5 px-3 2xl:flex">
-                        <span className="text-xs text-slate-500">⌕</span>
-                        <input className="w-36 bg-transparent px-2 py-2 text-xs text-white outline-none placeholder:text-slate-600" placeholder="종목명·코드 검색" />
+                    <label className="hidden items-center rounded-full border border-hairline bg-surface-soft px-3.5 2xl:flex">
+                        <SearchIcon className="h-4 w-4 text-muted" />
+                        <input className="w-36 bg-transparent px-2 py-2 text-sm text-ink outline-none placeholder:text-muted-soft" placeholder="종목명·코드 검색" />
                     </label>
-                    <ThemeToggle />
-                    <Link href="/login" className="theme-accent-bg theme-accent-border theme-accent-shadow rounded-lg border px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs">
+                    <Link
+                        href="/login"
+                        className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full bg-primary px-4 text-xs font-bold text-white transition-colors hover:bg-primary-active sm:px-5 sm:text-sm"
+                    >
                         로그인
                     </Link>
                 </div>

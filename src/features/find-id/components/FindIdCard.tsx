@@ -5,6 +5,7 @@ import { useState } from "react";
 import RecoveryCard from "@/features/account-recovery/components/RecoveryCard";
 import RecoveryField from "@/features/account-recovery/components/RecoveryField";
 import RecoveryModal from "@/features/account-recovery/components/RecoveryModal";
+import { Button } from "@/components/common/Button";
 import type { FindIdFormData } from "../types";
 
 const INITIAL_FORM_DATA: FindIdFormData = {
@@ -126,7 +127,7 @@ export default function FindIdCard() {
     return (
         <RecoveryCard title="아이디 찾기">
             <form className="mt-8" onSubmit={handleSubmit} noValidate>
-                <div className="flex flex-col gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4 py-6">
+                <div className="flex flex-col gap-2 rounded-lg border border-hairline-soft bg-surface-soft p-4 py-6">
                     <RecoveryField
                         id="find-id-name"
                         name="name"
@@ -174,10 +175,10 @@ export default function FindIdCard() {
                                             ? "find-id-email-local-helper"
                                             : undefined
                                     }
-                                    className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none ${
+                                    className={`w-full rounded-md border bg-canvas px-3 py-2 text-sm outline-none ${
                                         errors.emailLocal
                                             ? "border-red-400 focus:border-red-500"
-                                            : "border-gray-300 focus:border-black"
+                                            : "border-hairline focus:border-primary"
                                     }`}
                                 />
                                 {errors.emailLocal ? (
@@ -189,7 +190,7 @@ export default function FindIdCard() {
                                     </p>
                                 ) : null}
                             </div>
-                            <span className="pt-2 text-xs text-gray-500">@</span>
+                            <span className="pt-2 text-xs text-muted">@</span>
                             <div className="min-w-0 flex-1">
                                 <input
                                     name="emailDomain"
@@ -224,12 +225,9 @@ export default function FindIdCard() {
                     </div>
                 </div>
 
-                <button
-                    type="submit"
-                    className="mt-10 w-full bg-black px-4 py-3 font-semibold text-white transition-colors hover:bg-gray-700"
-                >
+                <Button type="submit" fullWidth size="md" className="mt-10">
                     확인
-                </button>
+                </Button>
             </form>
 
             {foundUserId ? (
@@ -237,9 +235,9 @@ export default function FindIdCard() {
                     title="아이디 찾기 결과"
                     onClose={() => setFoundUserId(null)}
                 >
-                    <p className="text-center text-sm text-gray-700">
+                    <p className="text-center text-sm text-body">
                         찾으신 아이디는{" "}
-                        <span className="font-bold text-black">
+                        <span className="font-bold text-ink">
                             {foundUserId}
                         </span>
                         입니다.
