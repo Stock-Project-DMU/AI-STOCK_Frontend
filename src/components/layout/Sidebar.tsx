@@ -6,6 +6,7 @@ import type { SidebarTabLabel } from "./sidebar/types";
 import RailItem from "./sidebar/RailItem";
 import SidebarPanelContent from "./sidebar/SidebarPanelContent";
 import { SIDEBAR_TABS } from "./sidebar/sidebarData";
+import { ChevronLeftIcon, ChevronRightSmallIcon } from "@/components/icons/Icon";
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -29,34 +30,33 @@ export default function Sidebar() {
     }
 
     return (
-        <aside className="flex min-h-full shrink-0 justify-end border-l border-white/10 bg-[#07111e] text-xs text-slate-300">
+        <aside className="flex min-h-full shrink-0 justify-end border-l border-hairline bg-canvas text-xs text-body">
             <section
                 id="portfolio-sidebar-panel"
                 aria-hidden={!isOpen}
-                className={`min-h-full overflow-hidden bg-[#0b1726] transition-[width] duration-300 ease-in-out ${
-                    isOpen ? "w-[300px] border-l border-white/10" : "w-0"
+                className={`min-h-full overflow-hidden bg-canvas transition-[width] duration-300 ease-in-out ${
+                    isOpen ? "w-[320px] border-l border-hairline" : "w-0"
                 }`}
             >
-                <div className="flex min-h-full w-[300px] min-w-[300px] flex-col">
-                    <div className="flex h-14 items-center justify-between border-b border-white/10 bg-[#081321] px-4 text-sm font-black text-white">
+                <div className="flex min-h-full w-[320px] min-w-[320px] flex-col">
+                    <div className="flex h-14 items-center border-b border-hairline bg-surface-soft px-4 text-sm font-black text-ink">
                         <span>{activeTab.label}</span>
-                        <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[9px] tracking-wider text-emerald-300">PORTFOLIO</span>
                     </div>
 
                     <SidebarPanelContent activeTab={activeTab} />
                 </div>
             </section>
 
-            <nav className="flex w-[60px] min-w-[60px] flex-col items-center bg-[#07111e]">
+            <nav className="flex w-[68px] min-w-[68px] flex-col items-center bg-canvas">
                 <button
                     type="button"
                     aria-expanded={isOpen}
                     aria-controls="portfolio-sidebar-panel"
                     aria-label={isOpen ? "사이드바 닫기" : "사이드바 열기"}
                     onClick={() => setIsOpen((prev) => !prev)}
-                    className="flex h-14 w-full items-center justify-center border-b border-white/10 text-xs font-bold text-slate-500 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--market-accent)]"
+                    className="flex h-14 w-full items-center justify-center border-b border-hairline text-sm font-bold text-muted hover:bg-surface-soft hover:text-ink focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--market-accent)]"
                 >
-                    {isOpen ? "→" : "←"}
+                    {isOpen ? <ChevronRightSmallIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
                 </button>
 
                 <div className="mt-5 flex w-full flex-col items-center gap-7">

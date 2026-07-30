@@ -6,7 +6,7 @@ type EmptyTabProps = {
 
 export default function EmptyTab({ message }: EmptyTabProps) {
     return (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center text-sm text-slate-500">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center text-sm text-muted">
             <EmptyPortfolioIcon />
             <p>{message}</p>
         </div>

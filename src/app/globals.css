@@ -1,63 +1,78 @@
 @import "tailwindcss";
 
-:root {
-  color-scheme: dark;
-  --market-bg: #050c16;
-  --market-surface: #081321;
-  --market-panel: #0b1726;
-  --market-panel-strong: #0f1e31;
-  --market-header: #06101d;
-  --market-elevated: #132238;
-  --market-line: rgba(148, 163, 184, 0.16);
-  --market-text: #e7eef8;
-  --market-secondary: #b6c3d4;
-  --market-muted: #8fa2bb;
-  --market-accent: #0f9f91;
-  --market-accent-hover: #14b8a6;
-  --market-accent-soft: rgba(20, 184, 166, 0.13);
-  --market-accent-text: #5eead4;
-  --market-up: #fb5b66;
-  --market-down: #4f8cff;
-  --market-positive: #36d399;
-  --market-grid-line: rgba(148, 163, 184, 0.035);
-  --market-glow: rgba(20, 184, 166, 0.13);
-  --chart-grid: #26374c;
-  --chart-primary: #2dd4bf;
-  --chart-primary-soft: rgba(20, 184, 166, 0.16);
-  --chart-label: #91a4bd;
-  --control-track: #293a51;
-  --control-thumb: #f8fafc;
-  --control-accent: #14b8a6;
+/*
+  Design tokens sourced from /DESIGN-coinbase.md (Coinbase marketing-site
+  analysis) plus the "AI-STOCK Dashboard Density Addendum" at the bottom of
+  that doc, which covers the trading/dashboard surfaces the source analysis
+  explicitly leaves out of scope.
+
+  Single light-canvas theme only — no dark/light toggle. Korean securities
+  convention is used for price direction: up = red, down = blue (opposite of
+  Coinbase's own crypto green/red, but correct for this app's users).
+*/
+@theme {
+  --color-primary: #0052ff;
+  --color-primary-active: #003ecc;
+  --color-primary-disabled: #a8b8cc;
+  --color-ink: #0a0b0d;
+  --color-body: #5b616e;
+  --color-muted: #7c828a;
+  --color-muted-soft: #a8acb3;
+  --color-hairline: #dee1e6;
+  --color-hairline-soft: #eef0f3;
+  --color-canvas: #ffffff;
+  --color-surface-soft: #f7f7f7;
+  --color-surface-strong: #eef0f3;
+  --color-surface-dark: #0a0b0d;
+  --color-surface-dark-elevated: #16181c;
+  --color-up: #cf202f;
+  --color-down: #1d4ed8;
+  --color-accent-yellow: #f4b000;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 100px;
+
+  --font-sans: var(--font-geist-sans), -apple-system, system-ui, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace,
+    monospace;
 }
 
-:root[data-theme="light"] {
+:root {
   color-scheme: light;
-  --market-bg: #f3f6fb;
-  --market-surface: #eef3f9;
+
+  /* Legacy --market-* names are kept because many components still consume
+     them via var(--market-*) / inline styles; only their values change. */
+  --market-bg: #f7f7f7;
+  --market-surface: #ffffff;
   --market-panel: #ffffff;
-  --market-panel-strong: #f8fafc;
+  --market-panel-strong: #eef0f3;
   --market-header: #ffffff;
-  --market-elevated: #e8eef7;
-  --market-line: rgba(15, 23, 42, 0.13);
-  --market-text: #0f172a;
-  --market-secondary: #475569;
-  --market-muted: #64748b;
-  --market-accent: #0f8f83;
-  --market-accent-hover: #0d9488;
-  --market-accent-soft: rgba(13, 148, 136, 0.11);
-  --market-accent-text: #0f766e;
-  --market-up: #e54855;
-  --market-down: #2563eb;
-  --market-positive: #079669;
-  --market-grid-line: rgba(71, 85, 105, 0.055);
-  --market-glow: rgba(13, 148, 136, 0.09);
-  --chart-grid: #cbd5e1;
-  --chart-primary: #0f8f83;
-  --chart-primary-soft: rgba(13, 148, 136, 0.14);
-  --chart-label: #64748b;
-  --control-track: #cbd5e1;
+  --market-elevated: #eef0f3;
+  --market-line: #dee1e6;
+  --market-text: #0a0b0d;
+  --market-secondary: #5b616e;
+  --market-muted: #7c828a;
+  --market-accent: #0052ff;
+  --market-accent-hover: #003ecc;
+  --market-accent-soft: rgba(0, 82, 255, 0.1);
+  --market-accent-text: #0052ff;
+  --market-up: #cf202f;
+  --market-down: #1d4ed8;
+  --market-positive: #05b169;
+  --market-grid-line: rgba(10, 11, 13, 0.04);
+  --market-glow: rgba(0, 82, 255, 0.08);
+  --chart-grid: #eef0f3;
+  --chart-primary: #0052ff;
+  --chart-primary-soft: rgba(0, 82, 255, 0.14);
+  --chart-label: #7c828a;
+  --control-track: #dee1e6;
   --control-thumb: #ffffff;
-  --control-accent: #0f8f83;
+  --control-accent: #0052ff;
 }
 
 * {
@@ -98,6 +113,13 @@ a {
   color: white;
 }
 
+/* Tabular, mono-leaning number rendering per DESIGN-coinbase.md's
+   "CoinbaseMono on every number" rule — apply to price/qty/balance cells. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
 .market-grid {
   background-color: var(--market-bg);
   background-image:
@@ -112,99 +134,58 @@ a {
   color: var(--market-text);
 }
 
-.market-theme [class~="bg-white"] {
-  background-color: var(--market-panel);
-}
-
-.market-theme [class~="bg-gray-50"],
-.market-theme [class~="bg-gray-100"],
-.market-theme [class~="bg-[#f2f4f6]"] {
-  background-color: var(--market-surface);
-}
-
-.market-theme [class~="bg-black"],
-.market-theme [class~="bg-[#171717]"] {
-  background-color: var(--market-accent);
-}
-
-.market-theme [class~="border-gray-100"],
-.market-theme [class~="border-gray-200"],
-.market-theme [class~="border-gray-300"],
-.market-theme [class~="border-gray-500"] {
-  border-color: var(--market-line);
-}
-
-.market-theme [class~="text-black"],
-.market-theme [class~="text-gray-900"],
-.market-theme [class~="text-[#111]"] {
-  color: var(--market-text);
-}
-
-.market-theme [class~="text-gray-700"],
-.market-theme [class~="text-gray-600"],
-.market-theme [class~="text-[#6e6f6f]"] {
-  color: var(--market-secondary);
-}
-
-:root[data-theme="light"] .market-theme [class~="text-gray-300"] {
-  color: #475569;
-}
-
-.market-theme [class~="text-gray-500"],
-.market-theme [class~="text-gray-400"] {
-  color: var(--market-muted);
-}
-
 .market-theme input,
 .market-theme select,
 .market-theme textarea {
   color: var(--market-text);
-  color-scheme: inherit;
 }
 
 .market-theme input::placeholder,
 .market-theme textarea::placeholder {
-  color: #657993;
+  color: var(--market-muted);
 }
 
-.market-theme [class~="shadow-sm"],
-.market-theme [class~="shadow-md"],
-.market-theme [class~="shadow-xl"],
-.market-theme [class~="shadow-2xl"] {
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.24);
+/* Deliberate dark surface for AI-advisor hero cards — kept dark regardless
+   of the rest of the page, per the validated "always-dark hero" decision. */
+.always-dark {
+  background-color: var(--color-surface-dark);
+  color: #ffffff;
+}
+
+.always-dark .elevated {
+  background-color: var(--color-surface-dark-elevated);
 }
 
 .auth-shell {
   background-color: var(--market-bg);
   background-image:
-    radial-gradient(circle at 15% 16%, var(--market-glow), transparent 23rem),
-    radial-gradient(circle at 90% 85%, rgba(251, 91, 102, 0.09), transparent 22rem);
+    radial-gradient(circle at 15% 12%, var(--market-glow), transparent 26rem),
+    radial-gradient(
+      circle at 88% 88%,
+      rgba(207, 32, 47, 0.05),
+      transparent 22rem
+    );
 }
 
-.theme-toggle {
+.auth-card {
+  border: 1px solid var(--market-line);
+  background: #ffffff;
+  box-shadow: 0 20px 60px rgba(10, 11, 13, 0.08);
+}
+
+.auth-card input,
+.auth-card select,
+.auth-card textarea {
   border-color: var(--market-line);
-  background-color: color-mix(in srgb, var(--market-elevated) 72%, transparent);
-  color: var(--market-muted);
+  background: #ffffff;
+  color: var(--market-text);
 }
 
-.theme-toggle-sun {
-  display: none;
-}
-
-.theme-toggle-moon {
-  display: block;
-}
-
-:root[data-theme="light"] .theme-toggle-thumb {
-  transform: translateX(25px);
-}
-
-:root[data-theme="light"] .theme-toggle-sun {
-  display: block;
-}
-
-:root[data-theme="light"] .theme-toggle-moon {
-  display: none;
+.auth-card input:focus,
+.auth-card select:focus,
+.auth-card textarea:focus {
+  border-color: var(--market-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--market-accent) 14%, transparent);
 }
 
 .theme-accent-bg {
@@ -247,20 +228,20 @@ a {
 .admin-button-primary,
 .chat-user-bubble {
   border: 1px solid transparent;
-  background-color: #0f766e;
+  background-color: var(--market-accent);
   color: #ffffff;
 }
 
 .admin-button-primary {
-  box-shadow: 0 10px 26px rgba(15, 118, 110, 0.22);
+  box-shadow: 0 10px 26px rgba(0, 82, 255, 0.22);
 }
 
 .admin-button-primary:hover {
-  background-color: #115e59;
+  background-color: var(--market-accent-hover);
 }
 
 .chat-user-bubble {
-  box-shadow: 0 12px 30px rgba(15, 118, 110, 0.2);
+  box-shadow: 0 12px 30px rgba(0, 82, 255, 0.2);
 }
 
 .admin-filter-button {
@@ -275,10 +256,10 @@ a {
 }
 
 .admin-filter-button-active {
-  border: 1px solid #0f766e;
-  background-color: #0f766e;
+  border: 1px solid var(--market-accent);
+  background-color: var(--market-accent);
   color: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 118, 110, 0.2);
+  box-shadow: 0 8px 22px rgba(0, 82, 255, 0.2);
 }
 
 .admin-link-button {
@@ -289,12 +270,17 @@ a {
   color: var(--market-accent-hover);
 }
 
+.trade-action-button {
+  color: #ffffff;
+}
+
 .simulation-range {
   appearance: none;
   height: 8px;
   border: 1px solid color-mix(in srgb, var(--control-track) 82%, transparent);
   border-radius: 999px;
   outline: none;
+  background: var(--market-panel-strong);
 }
 
 .simulation-range::-webkit-slider-thumb {
@@ -338,173 +324,6 @@ a {
     var(--market-grid-line) 75%,
     transparent 76%
   );
-}
-
-:root[data-theme="light"] [class~="bg-[#050c16]"],
-:root[data-theme="light"] [class~="bg-[#06101d]"],
-:root[data-theme="light"] [class~="bg-[#06101d]/95"] {
-  background-color: var(--market-header);
-}
-
-:root[data-theme="light"] [class~="bg-[#07111e]"],
-:root[data-theme="light"] [class~="bg-[#07111e]/95"],
-:root[data-theme="light"] [class~="bg-[#081321]"],
-:root[data-theme="light"] [class~="bg-[#081321]/90"] {
-  background-color: var(--market-surface);
-}
-
-:root[data-theme="light"] [class~="bg-[#0b1726]"],
-:root[data-theme="light"] [class~="bg-[#0b1726]/85"],
-:root[data-theme="light"] [class~="bg-[#0b1726]/90"],
-:root[data-theme="light"] [class~="bg-[#0b1726]/95"],
-:root[data-theme="light"] [class~="bg-[#0d1929]"],
-:root[data-theme="light"] [class~="bg-[#101010]"],
-:root[data-theme="light"] [class~="bg-[#1a1a1a]"],
-:root[data-theme="light"] [class~="bg-[#1c1c1c]"] {
-  background-color: var(--market-panel);
-}
-
-:root[data-theme="light"] [class~="bg-[#0d0d0d]"],
-:root[data-theme="light"] [class~="bg-slate-900"],
-:root[data-theme="light"] [class~="bg-slate-900/40"],
-:root[data-theme="light"] [class~="bg-slate-900/50"],
-:root[data-theme="light"] [class~="bg-slate-900/60"],
-:root[data-theme="light"] [class~="bg-slate-900/70"],
-:root[data-theme="light"] [class~="bg-slate-900/80"],
-:root[data-theme="light"] [class~="bg-slate-700"],
-:root[data-theme="light"] [class~="bg-slate-800"],
-:root[data-theme="light"] [class~="bg-slate-800/40"],
-:root[data-theme="light"] [class~="bg-slate-800/50"],
-:root[data-theme="light"] [class~="bg-black/15"],
-:root[data-theme="light"] [class~="bg-black/30"] {
-  background-color: var(--market-elevated);
-}
-
-:root[data-theme="light"] [class~="bg-white/5"],
-:root[data-theme="light"] [class~="bg-white/10"],
-:root[data-theme="light"] [class~="bg-white/[.025]"],
-:root[data-theme="light"] [class~="bg-white/[0.025]"],
-:root[data-theme="light"] [class~="bg-white/[0.035]"] {
-  background-color: rgba(15, 23, 42, 0.045);
-}
-
-:root[data-theme="light"] [class~="border-white/5"],
-:root[data-theme="light"] [class~="border-white/8"],
-:root[data-theme="light"] [class~="border-white/10"],
-:root[data-theme="light"] [class~="border-white/15"],
-:root[data-theme="light"] [class~="border-white/[0.06]"],
-:root[data-theme="light"] [class~="border-white/[0.07]"],
-:root[data-theme="light"] [class~="border-slate-700"],
-:root[data-theme="light"] [class~="border-slate-800"],
-:root[data-theme="light"] [class~="border-slate-800/70"],
-:root[data-theme="light"] [class~="border-gray-800"],
-:root[data-theme="light"] [class~="border-[#1e1e1e]"] {
-  border-color: var(--market-line);
-}
-
-:root[data-theme="light"] [class~="text-white"],
-:root[data-theme="light"] [class~="text-slate-100"],
-:root[data-theme="light"] [class~="text-slate-200"],
-:root[data-theme="light"] [class~="text-slate-300"],
-:root[data-theme="light"] [class~="text-zinc-100"],
-:root[data-theme="light"] [class~="text-zinc-200"],
-:root[data-theme="light"] [class~="text-black"],
-:root[data-theme="light"] [class~="text-[#ddd]"] {
-  color: var(--market-text);
-}
-
-:root[data-theme="light"] [class~="text-slate-400"],
-:root[data-theme="light"] [class~="text-slate-500"],
-:root[data-theme="light"] [class~="text-zinc-400"],
-:root[data-theme="light"] [class~="text-zinc-500"],
-:root[data-theme="light"] [class~="text-[#888]"] {
-  color: var(--market-muted);
-}
-
-:root[data-theme="light"] [class~="text-slate-600"],
-:root[data-theme="light"] [class~="text-zinc-600"] {
-  color: #8291a5;
-}
-
-:root[data-theme="light"] [class~="text-blue-300"],
-:root[data-theme="light"] [class~="text-blue-400"] {
-  color: #1d4ed8;
-}
-
-:root[data-theme="light"] [class~="text-red-300"],
-:root[data-theme="light"] [class~="text-red-400"] {
-  color: #dc2638;
-}
-
-:root[data-theme="light"] [class~="text-emerald-300"],
-:root[data-theme="light"] [class~="text-emerald-400"] {
-  color: #047857;
-}
-
-:root[data-theme="light"] [class~="text-amber-300"],
-:root[data-theme="light"] [class~="text-amber-400"] {
-  color: #a15c05;
-}
-
-:root[data-theme="light"] [class*="bg-blue-"][class~="text-white"],
-:root[data-theme="light"] [class*="bg-red-"][class~="text-white"],
-:root[data-theme="light"] [class*="bg-emerald-"][class~="text-white"],
-:root[data-theme="light"] [class*="bg-teal-"][class~="text-white"],
-:root[data-theme="light"] [class*="bg-amber-"][class~="text-white"],
-:root[data-theme="light"] [class~="bg-black"][class~="text-white"],
-:root[data-theme="light"] [class~="bg-[#03c75a]"][class~="text-white"],
-:root[data-theme="light"] .theme-accent-bg,
-:root[data-theme="light"] .always-dark [class~="text-white"],
-:root[data-theme="light"] .always-dark[class~="text-white"] {
-  color: #ffffff;
-}
-
-:root[data-theme="light"] .always-dark [class~="text-slate-200"],
-:root[data-theme="light"] .always-dark [class~="text-slate-300"] {
-  color: #d9e3f0;
-}
-
-:root[data-theme="light"] .always-dark [class~="text-slate-400"] {
-  color: #a8b6c9;
-}
-
-:root[data-theme="light"] .always-dark [class~="bg-black/15"] {
-  background-color: rgba(0, 0, 0, 0.18);
-}
-
-:root[data-theme="light"] .always-dark [class~="bg-white/5"],
-:root[data-theme="light"] .always-dark [class~="bg-white/[0.035]"] {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-:root[data-theme="light"] .theme-toggle {
-  border-color: rgba(15, 23, 42, 0.14);
-  background-color: #e7edf6;
-}
-
-:root .market-theme .trade-action-button {
-  color: #ffffff;
-}
-
-.auth-card {
-  border: 1px solid var(--market-line);
-  background: color-mix(in srgb, var(--market-panel) 96%, transparent);
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
-}
-
-.auth-card input,
-.auth-card select,
-.auth-card textarea {
-  border-color: var(--market-line);
-  background: var(--market-surface);
-  color: var(--market-text);
-}
-
-.auth-card input:focus,
-.auth-card select:focus,
-.auth-card textarea:focus {
-  border-color: var(--market-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--market-accent) 14%, transparent);
 }
 
 ::-webkit-scrollbar {

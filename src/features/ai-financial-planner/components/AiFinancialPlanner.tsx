@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { GearIcon } from "@/components/icons/Icon";
 import type { PlannerView } from "../types";
 import ConnectionModal from "./ConnectionModal";
 import FinancialSummary from "./FinancialSummary";
@@ -26,7 +27,7 @@ export default function AiFinancialPlanner() {
                     <InvestmentSurvey onComplete={() => setView("chat")} />
                 )}
 
-                <button onClick={() => setConnectionOpen(true)} className="flex h-12 items-center gap-2 border-t border-gray-200 bg-white px-5 text-xs font-bold text-gray-500 hover:text-black">⚙ 데이터 연동 설정</button>
+                <button onClick={() => setConnectionOpen(true)} className="flex h-12 items-center gap-2 border-t border-hairline bg-canvas px-5 text-xs font-bold text-muted hover:text-ink"><GearIcon className="h-3.5 w-3.5" /> 데이터 연동 설정</button>
             </div>
 
             {connectionOpen && <ConnectionModal onClose={() => setConnectionOpen(false)} />}

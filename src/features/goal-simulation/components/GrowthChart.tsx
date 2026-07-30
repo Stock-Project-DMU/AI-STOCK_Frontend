@@ -37,10 +37,10 @@ export default function GrowthChart({
 }: GrowthChartProps) {
     if (!hasResult) {
         return (
-            <section className="flex min-h-[390px] items-center justify-center rounded-2xl border border-gray-800 bg-white p-5 text-center">
-                <div className="text-gray-400">
-                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-gray-300 text-2xl">▤</div>
-                    <p className="text-sm font-semibold">시뮬레이션 결과가 없습니다</p>
+            <section className="flex min-h-[390px] items-center justify-center rounded-lg border border-hairline bg-canvas p-5 text-center">
+                <div className="text-muted">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-dashed border-hairline text-2xl">▤</div>
+                    <p className="text-sm font-semibold text-ink">시뮬레이션 결과가 없습니다</p>
                     <p className="mt-2 text-xs leading-5">
                         왼쪽에서 목표와 조건을 설정한 후
                         <br />
@@ -65,14 +65,14 @@ export default function GrowthChart({
     const aggressivePath = toPath(aggressiveValues, maxValue);
 
     return (
-        <section className="min-h-[390px] rounded-2xl border border-gray-800 bg-white p-5">
+        <section className="min-h-[390px] rounded-lg border border-hairline bg-canvas p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-bold">
+                <h2 className="text-sm font-bold text-ink">
                     자산 성장 추이 {aggressive ? "비교" : "시뮬레이션"}
                 </h2>
-                <div className="flex gap-4 text-[11px] text-gray-500">
+                <div className="flex gap-4 text-[11px] text-muted">
                     <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--chart-primary)]" />기본 ({annualReturn.toFixed(1)}%)</span>
-                    {aggressive && <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-red-500" />공격적 ({(annualReturn + 2.5).toFixed(1)}%)</span>}
+                    {aggressive && <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--market-up)]" />공격적 ({(annualReturn + 2.5).toFixed(1)}%)</span>}
                 </div>
             </div>
 
@@ -95,7 +95,7 @@ export default function GrowthChart({
                     })}
                     <path d={`${basePath} L ${chartWidth - padding} ${chartHeight - padding} L ${padding} ${chartHeight - padding} Z`} fill="var(--chart-primary-soft)" />
                     <path d={basePath} fill="none" stroke="var(--chart-primary)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                    {aggressive && <path d={aggressivePath} fill="none" stroke="#ff4444" strokeWidth="3" strokeDasharray="7 5" strokeLinecap="round" strokeLinejoin="round" />}
+                    {aggressive && <path d={aggressivePath} fill="none" stroke="var(--market-up)" strokeWidth="3" strokeDasharray="7 5" strokeLinecap="round" strokeLinejoin="round" />}
                     {[0, 2, 4, 6, 8, 10].map((index) => {
                         const x = padding + (index / 10) * (chartWidth - padding * 2);
                         return <text key={index} x={x} y={chartHeight - 18} textAnchor="middle" fill="var(--chart-label)" fontSize="11">{Math.round((years * index) / 10)}년</text>;
@@ -106,7 +106,7 @@ export default function GrowthChart({
                         return <circle key={`base-${index}`} cx={x} cy={y} r="3" fill="var(--market-panel)" stroke="var(--chart-primary)" strokeWidth="2" />;
                     })}
                     <circle cx={chartWidth - padding} cy={chartHeight - padding - (baseValues.at(-1)! / maxValue) * (chartHeight - padding * 2)} r="5" fill="var(--chart-primary)" />
-                    {aggressive && <circle cx={chartWidth - padding} cy={chartHeight - padding - (aggressiveValues.at(-1)! / maxValue) * (chartHeight - padding * 2)} r="5" fill="#ff4444" />}
+                    {aggressive && <circle cx={chartWidth - padding} cy={chartHeight - padding - (aggressiveValues.at(-1)! / maxValue) * (chartHeight - padding * 2)} r="5" fill="var(--market-up)" />}
                 </svg>
             </div>
             <p className="sr-only">기본 예상 자산 {formatWon(baseValues.at(-1) ?? 0)}</p>

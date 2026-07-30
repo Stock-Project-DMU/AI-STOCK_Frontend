@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { EmptyPortfolioIcon } from "@/components/icons/Icon";
+import { EmptyPortfolioIcon, CheckIcon, CloseIcon } from "@/components/icons/Icon";
 
 type MyPageTab = "profile" | "account" | "orders" | "returns";
 type AccountView = "summary" | "recharge" | "reason" | "history" | "detail";
@@ -160,29 +160,28 @@ export default function MyPageDashboard() {
   };
 
   return (
-    <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] text-[#111]">
-      <aside className="hidden w-[250px] shrink-0 border-r border-gray-200 bg-white lg:flex lg:flex-col">
-        <div className="theme-accent-bg m-4 rounded-xl px-5 py-4">
-          <p className="text-[10px] font-black tracking-[0.16em] opacity-70">MY WORKSPACE</p>
-          <strong className="mt-1 block text-base">마이페이지</strong>
-          <span className="mt-1 block text-[11px] opacity-75">투자 계정 관리 센터</span>
+    <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] text-ink">
+      <aside className="hidden w-[250px] shrink-0 border-r border-hairline bg-white lg:flex lg:flex-col">
+        <div className="theme-accent-bg m-3 rounded-lg px-4 py-3">
+          <strong className="block text-sm">마이페이지</strong>
+          <span className="mt-1 block text-xs opacity-75">투자 계정 관리 센터</span>
         </div>
 
-        <p className="px-6 pb-3 text-xs text-gray-400">계정 메뉴</p>
+        <p className="px-5 pb-2 text-xs text-muted-soft">계정 메뉴</p>
         <nav aria-label="마이페이지 메뉴" className="flex flex-col">
           {navItems.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => changeTab(item.id)}
-              className={`cursor-pointer border-l-2 px-6 py-3.5 text-left transition-colors ${
+              className={`cursor-pointer border-l-2 px-5 py-2.5 text-left transition-colors ${
                 activeTab === item.id
                   ? "theme-accent-soft theme-accent-text border-[var(--market-accent)]"
-                  : "border-transparent text-gray-700 hover:bg-gray-50 hover:text-black"
+                  : "border-transparent text-body hover:bg-surface-soft hover:text-ink"
               }`}
             >
               <strong className="block text-sm font-semibold">{item.label}</strong>
-              <span className={`mt-1 block text-[10px] ${activeTab === item.id ? "opacity-75" : "text-gray-400"}`}>
+              <span className={`mt-1 block text-[11px] ${activeTab === item.id ? "opacity-75" : "text-muted-soft"}`}>
                 {item.description}
               </span>
             </button>
@@ -190,15 +189,15 @@ export default function MyPageDashboard() {
         </nav>
       </aside>
 
-      <section className="min-w-0 flex-1 px-4 py-5 sm:px-7 lg:px-12">
-        <div className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-1.5 lg:hidden">
+      <section className="min-w-0 flex-1 px-3 py-4 sm:px-5 lg:px-8">
+        <div className="mb-3 flex gap-1 overflow-x-auto rounded-lg border border-hairline bg-white p-1 lg:hidden">
           {navItems.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => changeTab(item.id)}
-              className={`shrink-0 cursor-pointer rounded-lg px-3.5 py-2.5 text-sm font-bold transition-colors ${
-                activeTab === item.id ? "theme-accent-bg" : "text-gray-500 hover:bg-gray-50 hover:text-black"
+              className={`shrink-0 cursor-pointer rounded-md px-3 py-2 text-sm font-bold transition-colors ${
+                activeTab === item.id ? "theme-accent-bg" : "text-muted hover:bg-surface-soft hover:text-ink"
               }`}
             >
               {item.label}
@@ -206,7 +205,7 @@ export default function MyPageDashboard() {
           ))}
         </div>
 
-        <div className="mx-auto min-h-[640px] max-w-[1540px] rounded-2xl border border-gray-200 bg-white px-5 py-7 shadow-[0_24px_70px_rgba(0,0,0,.16)] sm:px-8 lg:px-12 lg:py-10">
+        <div className="mx-auto w-full max-w-[1540px] rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
           {activeTab === "profile" && (
             <ProfilePanel
               profile={profile}
@@ -267,9 +266,9 @@ export default function MyPageDashboard() {
 
       {showSaved && (
         <Modal ariaLabel="정보 수정 완료" onClose={() => setShowSaved(false)}>
-          <p className="text-lg font-bold">변경되었습니다</p>
-          <p className="mt-2 text-sm text-gray-500">회원 정보가 화면에 반영되었습니다.</p>
-          <button type="button" onClick={() => setShowSaved(false)} className="theme-accent-bg mt-6 rounded-lg px-5 py-2.5 text-sm font-bold">
+          <p className="text-base font-bold">변경되었습니다</p>
+          <p className="mt-2 text-sm text-muted">회원 정보가 화면에 반영되었습니다.</p>
+          <button type="button" onClick={() => setShowSaved(false)} className="theme-accent-bg mt-5 rounded-lg px-4 py-2 text-sm font-bold">
             확인
           </button>
         </Modal>
@@ -277,15 +276,15 @@ export default function MyPageDashboard() {
 
       {requestComplete && (
         <Modal ariaLabel="충전 요청 완료" onClose={() => setRequestComplete(false)}>
-          <p className="text-lg font-bold">충전 요청이 완료되었습니다</p>
-          <p className="mt-2 text-sm text-gray-500">관리자 검토 후 계좌에 반영됩니다.</p>
+          <p className="text-base font-bold">충전 요청이 완료되었습니다</p>
+          <p className="mt-2 text-sm text-muted">관리자 검토 후 계좌에 반영됩니다.</p>
           <button
             type="button"
             onClick={() => {
               setRequestComplete(false);
               setAccountView("history");
             }}
-            className="mt-6 cursor-pointer rounded-md bg-black px-5 py-2 text-sm font-bold text-white"
+            className="mt-5 cursor-pointer rounded-md bg-black px-4 py-2 text-sm font-bold text-white"
           >
             이력 확인
           </button>
@@ -294,19 +293,19 @@ export default function MyPageDashboard() {
 
       {showWithdrawal && (
         <Modal ariaLabel="회원 탈퇴 확인" onClose={() => setShowWithdrawal(false)}>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-xl font-black text-red-500">!</div>
-          <h2 className="mt-4 text-xl font-extrabold">정말 탈퇴하시겠어요?</h2>
-          <p className="mt-3 text-sm leading-6 text-gray-500">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10 text-lg font-black text-red-500">!</div>
+          <h2 className="mt-3 text-lg font-extrabold">정말 탈퇴하시겠어요?</h2>
+          <p className="mt-2 text-sm leading-6 text-muted">
             탈퇴하면 저장된 투자 성향, 주문 내역과 수익률 정보를 다시 확인할 수 없습니다.
           </p>
-          <div className="mt-5 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-left text-xs leading-5 text-red-500">
+          <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2.5 text-left text-xs leading-5 text-red-500">
             이 작업은 되돌릴 수 없습니다. 계속하기 전에 필요한 정보를 확인해 주세요.
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => setShowWithdrawal(false)} className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-bold hover:bg-gray-50">
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => setShowWithdrawal(false)} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">
               취소
             </button>
-            <button type="button" onClick={() => setShowWithdrawal(false)} className="rounded-lg bg-red-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-600">
+            <button type="button" onClick={() => setShowWithdrawal(false)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600">
               탈퇴하기
             </button>
           </div>
@@ -355,8 +354,8 @@ function ProfilePanel({
         const selectedChoice = getProfileChoice(row.key, profile[row.key]);
 
         return (
-          <div key={row.key} className="grid min-h-16 grid-cols-[100px_minmax(0,1fr)] items-center gap-4 py-3 sm:grid-cols-[110px_minmax(0,1fr)]">
-            <dt className="text-xs font-semibold text-gray-500 sm:text-sm">{row.label}</dt>
+          <div key={row.key} className="grid min-h-12 grid-cols-[100px_minmax(0,1fr)] items-center gap-3 py-2 sm:grid-cols-[110px_minmax(0,1fr)]">
+            <dt className="text-xs font-semibold text-muted sm:text-sm">{row.label}</dt>
             <dd className="min-w-0">
               {isEditing ? (
                 <input
@@ -364,14 +363,14 @@ function ProfilePanel({
                   type={row.key === "password" ? "password" : "text"}
                   value={draftProfile[row.key]}
                   onChange={(event) => onDraftChange({ ...draftProfile, [row.key]: event.target.value })}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-semibold outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]"
+                  className="w-full rounded-md border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]"
                 />
               ) : selectedChoice ? (
-                <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-bold ${profileChoiceToneClasses[selectedChoice.tone]}`}>
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-sm font-bold ${profileChoiceToneClasses[selectedChoice.tone]}`}>
                   {profile[row.key]}
                 </span>
               ) : (
-                <span className="block break-words text-sm font-bold text-gray-900 sm:text-base">{profile[row.key]}</span>
+                <span className="block break-words text-sm font-bold text-ink sm:text-base">{profile[row.key]}</span>
               )}
             </dd>
           </div>
@@ -382,44 +381,40 @@ function ProfilePanel({
 
   return (
     <div className="mx-auto max-w-[1180px]">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="theme-accent-text text-xs font-black tracking-[0.14em]">PROFILE</p>
-          <h1 className="mt-1 text-2xl font-extrabold">내 정보</h1>
-          <p className="mt-2 text-sm text-gray-500">회원 정보와 투자 프로필을 한곳에서 관리합니다.</p>
+          <h1 className="text-xl font-extrabold">내 정보</h1>
         </div>
         <div className="flex gap-2">
           {isEditing && (
-            <button type="button" onClick={onCancel} className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-bold hover:bg-gray-50">
+            <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">
               취소
             </button>
           )}
           <button
             type="button"
             onClick={isEditing ? onSave : onEdit}
-            className="theme-accent-bg rounded-lg px-5 py-2.5 text-sm font-bold"
+            className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold"
           >
             {isEditing ? "완료" : "정보 수정"}
           </button>
         </div>
       </div>
 
-      <div className={isEditing ? "space-y-5" : "grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,.65fr)]"}>
-        <section className="rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-7">
+      <div className={isEditing ? "space-y-4" : "grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,.65fr)]"}>
+        <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
           <div className="mb-2">
             <h2 className="font-bold">기본 정보</h2>
-            <p className="mt-1 text-xs text-gray-500">로그인과 본인 확인에 사용되는 정보입니다.</p>
           </div>
           {renderRows(accountRows)}
         </section>
 
-        <section className="rounded-2xl border border-gray-200 p-5 sm:p-7">
+        <section className="rounded-lg border border-hairline p-4 sm:p-5">
           <div className="mb-2">
             <h2 className="font-bold">투자 프로필</h2>
-            <p className="mt-1 text-xs text-gray-500">AI 분석과 맞춤 정보에 반영되는 선택 항목입니다.</p>
           </div>
           {isEditing ? (
-            <div className="mt-6 space-y-8">
+            <div className="mt-5 space-y-6">
               <ProfileChoiceGroup
                 label="투자 성향"
                 helper="감당할 수 있는 위험 수준을 선택해 주세요."
@@ -450,7 +445,7 @@ function ProfilePanel({
           ) : (
             <>
               {renderRows(investmentRows)}
-              <div className="theme-accent-soft mt-5 rounded-xl px-4 py-3">
+              <div className="theme-accent-soft mt-4 rounded-lg px-3.5 py-2.5">
                 <p className="theme-accent-text text-xs font-semibold leading-5">현재 선택한 성향을 기반으로 맞춤 분석이 제공되고 있습니다.</p>
               </div>
             </>
@@ -458,12 +453,12 @@ function ProfilePanel({
         </section>
       </div>
 
-      <section className="mt-6 flex flex-col justify-between gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 sm:flex-row sm:items-center sm:px-6">
+      <section className="mt-4 flex flex-col justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 p-4 sm:flex-row sm:items-center sm:px-5">
         <div>
           <h2 className="text-sm font-bold text-red-500">회원 탈퇴</h2>
-          <p className="mt-1 text-xs leading-5 text-gray-500">계정과 저장된 투자 데이터를 삭제합니다.</p>
+          <p className="mt-1 text-xs leading-5 text-muted">계정과 저장된 투자 데이터를 삭제합니다.</p>
         </div>
-        <button type="button" onClick={onRequestWithdrawal} className="shrink-0 rounded-lg border border-red-500/30 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-500 hover:text-white">
+        <button type="button" onClick={onRequestWithdrawal} className="shrink-0 rounded-lg border border-red-500/30 px-3.5 py-2 text-sm font-bold text-red-500 hover:bg-red-500 hover:text-white">
           AI STOCK 탈퇴하기
         </button>
       </section>
@@ -532,8 +527,8 @@ function ProfileChoiceGroup({
   return (
     <fieldset>
       <legend className="text-sm font-bold sm:text-base">{label}</legend>
-      <p className="mt-1 text-xs text-gray-500">{helper}</p>
-      <div role="radiogroup" aria-label={label} className={`mt-4 grid gap-3 ${columnClass}`}>
+      <p className="mt-1 text-xs text-muted">{helper}</p>
+      <div role="radiogroup" aria-label={label} className={`mt-3 grid gap-2.5 ${columnClass}`}>
         {options.map((option) => {
           const isSelected = selected === option.value;
 
@@ -544,19 +539,19 @@ function ProfileChoiceGroup({
               role="radio"
               aria-checked={isSelected}
               onClick={() => onSelect(option.value)}
-              className={`relative min-h-28 rounded-xl border px-3 py-4 text-center transition-all hover:-translate-y-0.5 hover:brightness-110 ${profileChoiceToneClasses[option.tone]} ${
+              className={`relative min-h-24 rounded-lg border px-3 py-3 text-center transition-all hover:-translate-y-0.5 hover:brightness-110 ${profileChoiceToneClasses[option.tone]} ${
                 isSelected
                   ? `${profileChoiceSelectedClasses[option.tone]} ring-offset-2 ring-offset-[var(--market-panel)] shadow-[0_10px_28px_rgba(0,0,0,.16)]`
                   : "opacity-75 hover:opacity-100"
               }`}
             >
               {isSelected && (
-                <span aria-hidden="true" className={`absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-black text-white ${profileChoiceCheckClasses[option.tone]}`}>
+                <span aria-hidden="true" className={`absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-xs font-black text-white ${profileChoiceCheckClasses[option.tone]}`}>
                   ✓
                 </span>
               )}
               <strong className="block text-sm sm:text-base">{option.value}</strong>
-              <span className="mt-2 block whitespace-pre-line text-[11px] font-semibold leading-5 opacity-80 sm:text-xs">
+              <span className="mt-2 block whitespace-pre-line text-xs font-semibold leading-5 opacity-80 sm:text-xs">
                 {option.description}
               </span>
             </button>
@@ -564,7 +559,7 @@ function ProfileChoiceGroup({
         })}
       </div>
       {scaleLabels && (
-        <div aria-hidden="true" className="mt-4 flex items-center gap-3 text-[11px] font-semibold text-gray-500">
+        <div aria-hidden="true" className="mt-4 flex items-center gap-3 text-xs font-semibold text-muted">
           <span className="shrink-0">{scaleLabels[0]}</span>
           <span className="h-px flex-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-orange-500" />
           <span className="shrink-0">{scaleLabels[1]}</span>
@@ -604,31 +599,21 @@ function AccountPanel({
   onSelectHistory: (record: RechargeRecord) => void;
   onResetRequest: () => void;
 }) {
-  const viewDescription: Record<AccountView, string> = {
-    summary: "가상계좌의 잔액과 투자 현황을 확인합니다.",
-    recharge: "추가로 지급받을 가상캐시 금액을 선택합니다.",
-    reason: "가상캐시가 필요한 목적을 작성합니다.",
-    history: "가상캐시 지급 요청과 처리 결과를 확인합니다.",
-    detail: "선택한 가상캐시 처리 내역의 상세 정보입니다.",
-  };
-
   return (
     <div className="mx-auto max-w-[1180px]">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="theme-accent-text text-xs font-black tracking-[0.14em]">ACCOUNT</p>
-          <h1 className="mt-1 text-2xl font-extrabold">계좌관리</h1>
-          <p className="mt-2 text-sm text-gray-500">{viewDescription[view]}</p>
+          <h1 className="text-xl font-extrabold">계좌관리</h1>
         </div>
         {view === "summary" && (
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => onViewChange("history")} className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-bold hover:bg-gray-50">충전 이력</button>
-            <button type="button" onClick={() => onViewChange("recharge")} className="theme-accent-bg rounded-lg px-4 py-2.5 text-sm font-bold">가상캐시 재충전</button>
+            <button type="button" onClick={() => onViewChange("history")} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">충전 이력</button>
+            <button type="button" onClick={() => onViewChange("recharge")} className="theme-accent-bg rounded-lg px-3.5 py-2 text-sm font-bold">가상캐시 재충전</button>
           </div>
         )}
       </div>
 
-      <div className="min-h-[430px] rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-7">
+      <div className="min-h-[360px] rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
         {view === "summary" && <AccountSummary />}
         {view === "recharge" && (
           <RechargeAmount
@@ -667,26 +652,26 @@ function AccountSummary() {
   ];
 
   return (
-    <div className="space-y-5">
-      <section className="theme-accent-soft rounded-2xl border border-[var(--market-accent)]/20 p-5 sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="space-y-4">
+      <section className="theme-accent-soft rounded-lg border border-[var(--market-accent)]/20 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold text-gray-500">AI STOCK 가상계좌</p>
-            <p className="mt-2 text-lg font-extrabold tracking-[0.06em] sm:text-xl">829-342-001935</p>
+            <p className="text-xs font-semibold text-muted">AI STOCK 가상계좌</p>
+            <p className="num mt-1.5 text-base font-extrabold tracking-[0.06em] sm:text-lg">829-342-001935</p>
           </div>
-          <span className="rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-500">정상</span>
+          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-500">정상</span>
         </div>
-        <div className="mt-7 border-t border-[var(--market-accent)]/15 pt-5">
-          <p className="text-xs font-semibold text-gray-500">총 주문 가능 금액</p>
-          <strong className="mt-1 block text-2xl font-black sm:text-3xl">100,000,000원</strong>
+        <div className="mt-5 border-t border-[var(--market-accent)]/15 pt-4">
+          <p className="text-xs font-semibold text-muted">총 주문 가능 금액</p>
+          <strong className="num mt-1 block text-xl font-black sm:text-2xl">100,000,000원</strong>
         </div>
       </section>
 
-      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <dl className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-gray-200 bg-white p-4">
-            <dt className="text-xs font-semibold text-gray-500">{metric.label}</dt>
-            <dd className="mt-2 text-base font-extrabold">{metric.value}</dd>
+          <div key={metric.label} className="rounded-lg border border-hairline bg-white p-3">
+            <dt className="text-xs font-semibold text-muted">{metric.label}</dt>
+            <dd className="num mt-1.5 text-right text-sm font-extrabold">{metric.value}</dd>
           </div>
         ))}
       </dl>
@@ -704,29 +689,29 @@ function RechargeAmount({ selectedAmount, customAmount, onSelectAmount, onCustom
 }) {
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-6">
-        <h2 className="text-lg font-bold">충전 금액 선택</h2>
-        <p className="mt-1 text-sm text-gray-500">금액을 선택하거나 직접 입력해 주세요.</p>
+      <div className="mb-4">
+        <h2 className="text-base font-bold">충전 금액 선택</h2>
+        <p className="mt-1 text-sm text-muted">금액을 선택하거나 직접 입력해 주세요.</p>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {rechargeAmounts.map((amount) => (
           <button
             key={amount}
             type="button"
             onClick={() => onSelectAmount(amount)}
-            className={`min-h-20 rounded-xl border px-2 text-sm font-bold transition-colors sm:min-h-24 ${selectedAmount === amount ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_8px_24px_var(--market-accent-soft)]" : "border-gray-200 bg-white text-gray-700 hover:border-[var(--market-accent)] hover:text-black"}`}
+            className={`num min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 ${selectedAmount === amount ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_8px_24px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}
           >
             {won(amount)}
           </button>
         ))}
       </div>
-      <label className="mt-4 flex items-center rounded-xl border border-gray-200 bg-white px-4 focus-within:border-[var(--market-accent)] focus-within:ring-2 focus-within:ring-[var(--market-accent-soft)]">
-        <input aria-label="직접 충전 금액" value={customAmount} onChange={(event) => onCustomAmount(event.target.value)} inputMode="numeric" placeholder="직접 입력" className="min-w-0 flex-1 bg-transparent py-4 text-sm font-bold outline-none" />
+      <label className="mt-3 flex items-center rounded-lg border border-hairline bg-white px-3.5 focus-within:border-[var(--market-accent)] focus-within:ring-2 focus-within:ring-[var(--market-accent-soft)]">
+        <input aria-label="직접 충전 금액" value={customAmount} onChange={(event) => onCustomAmount(event.target.value)} inputMode="numeric" placeholder="직접 입력" className="num min-w-0 flex-1 bg-transparent py-3 text-sm font-bold outline-none" />
         <span className="text-sm font-bold text-[#6e6f6f]">원</span>
       </label>
-      <div className="mt-7 flex justify-end gap-3">
-        <button type="button" onClick={onCancel} className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-bold hover:bg-gray-50">취소</button>
-        <button type="button" onClick={onNext} className="theme-accent-bg rounded-lg px-5 py-2.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40" disabled={!selectedAmount && !customAmount}>다음</button>
+      <div className="mt-5 flex justify-end gap-3">
+        <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>
+        <button type="button" onClick={onNext} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40" disabled={!selectedAmount && !customAmount}>다음</button>
       </div>
     </div>
   );
@@ -735,16 +720,16 @@ function RechargeAmount({ selectedAmount, customAmount, onSelectAmount, onCustom
 function RechargeReason({ amount, reason, onReasonChange, onBack, onRequest }: { amount: number; reason: string; onReasonChange: (value: string) => void; onBack: () => void; onRequest: () => void }) {
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-5 py-4">
-        <div><p className="text-xs font-semibold text-gray-500">요청 금액</p><strong className="mt-1 block text-xl">{won(amount)}</strong></div>
-        <span className="theme-accent-soft theme-accent-text rounded-full px-3 py-1.5 text-xs font-bold">2단계 중 2단계</span>
+      <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-hairline bg-white px-4 py-3">
+        <div><p className="text-xs font-semibold text-muted">요청 금액</p><strong className="num mt-1 block text-lg">{won(amount)}</strong></div>
+        <span className="theme-accent-soft theme-accent-text rounded-full px-2.5 py-1 text-xs font-bold">2단계 중 2단계</span>
       </div>
       <label className="mb-2 block text-sm font-bold" htmlFor="recharge-reason">충전 목적</label>
-      <textarea id="recharge-reason" value={reason} onChange={(event) => onReasonChange(event.target.value)} className="h-44 w-full resize-none rounded-xl border border-gray-200 bg-white p-4 text-sm leading-6 outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]" placeholder="가상캐시가 필요한 목적을 입력해 주세요." />
-      <p className="mt-2 text-right text-xs text-gray-500">{reason.length}자</p>
-      <div className="mt-6 flex justify-end gap-3">
-        <button type="button" onClick={onBack} className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-bold hover:bg-gray-50">이전</button>
-        <button type="button" onClick={onRequest} disabled={!reason.trim()} className="theme-accent-bg rounded-lg px-5 py-2.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40">요청</button>
+      <textarea id="recharge-reason" value={reason} onChange={(event) => onReasonChange(event.target.value)} className="h-40 w-full resize-none rounded-lg border border-hairline bg-white p-3.5 text-sm leading-6 outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]" placeholder="가상캐시가 필요한 목적을 입력해 주세요." />
+      <p className="mt-2 text-right text-xs text-muted">{reason.length}자</p>
+      <div className="mt-4 flex justify-end gap-3">
+        <button type="button" onClick={onBack} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">이전</button>
+        <button type="button" onClick={onRequest} disabled={!reason.trim()} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40">요청</button>
       </div>
     </div>
   );
@@ -753,18 +738,18 @@ function RechargeReason({ amount, reason, onReasonChange, onBack, onRequest }: {
 function RechargeHistory({ onBack, onSelect }: { onBack: () => void; onSelect: (record: RechargeRecord) => void }) {
   return (
     <div>
-      <button type="button" onClick={onBack} className="mb-5 text-sm font-bold text-gray-500 hover:text-black">← 계좌 요약으로</button>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <button type="button" onClick={onBack} className="mb-4 text-sm font-bold text-muted hover:text-ink">← 계좌 요약으로</button>
+      <div className="overflow-x-auto rounded-lg border border-hairline bg-white">
         <table className="w-full min-w-[680px] border-collapse text-left text-xs sm:text-sm">
-          <thead className="bg-gray-50"><tr>{["요청 일시", "유형", "요청 금액", "충전 전 잔액", "처리 상태"].map((head) => <th key={head} className="border-b border-gray-200 px-4 py-3.5 text-xs font-semibold text-gray-500">{head}</th>)}</tr></thead>
+          <thead className="bg-surface-soft"><tr>{["요청 일시", "유형", "요청 금액", "충전 전 잔액", "처리 상태"].map((head) => <th key={head} className="border-b border-hairline px-3 py-2 text-xs font-semibold text-muted">{head}</th>)}</tr></thead>
           <tbody>
             {rechargeHistory.map((record) => (
-              <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-gray-200 last:border-0 hover:bg-gray-50">
-                <td className="whitespace-nowrap px-4 py-4 text-gray-500">{record.date}</td>
-                <td className="px-4 py-4 font-bold">{record.type}</td>
-                <td className="px-4 py-4 font-extrabold">+{won(record.amount)}</td>
-                <td className="px-4 py-4 font-semibold">{won(record.balance)}</td>
-                <td className="px-4 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td>
+              <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-hairline last:border-0 hover:bg-surface-soft">
+                <td className="whitespace-nowrap px-3 py-2.5 text-muted">{record.date}</td>
+                <td className="px-3 py-2.5 font-bold">{record.type}</td>
+                <td className="num px-3 py-2.5 text-right font-extrabold">+{won(record.amount)}</td>
+                <td className="num px-3 py-2.5 text-right font-semibold">{won(record.balance)}</td>
+                <td className="px-3 py-2.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td>
               </tr>
             ))}
           </tbody>
@@ -778,16 +763,16 @@ function RechargeDetail({ record, onBack }: { record: RechargeRecord; onBack: ()
   const approved = record.status === "승인";
   return (
     <div>
-      <button type="button" onClick={onBack} className="mb-5 text-sm font-bold text-gray-500 hover:text-black">← 충전 이력으로</button>
-      <article className="mx-auto max-w-[680px] rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-6">
-          <div className="flex items-center gap-4">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-full text-xl font-black ${approved ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{approved ? "✓" : "×"}</div>
-            <div><p className="text-xs font-semibold text-gray-500">가상캐시 처리 결과</p><h2 className="mt-1 text-xl font-extrabold">캐시 충전 {approved ? "승인 완료" : "거절"}</h2></div>
+      <button type="button" onClick={onBack} className="mb-4 text-sm font-bold text-muted hover:text-ink">← 충전 이력으로</button>
+      <article className="mx-auto max-w-[680px] rounded-lg border border-hairline bg-white p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline pb-4">
+          <div className="flex items-center gap-3">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${approved ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{approved ? <CheckIcon className="h-5 w-5" /> : <CloseIcon className="h-5 w-5" />}</div>
+            <div><p className="text-xs font-semibold text-muted">가상캐시 처리 결과</p><h2 className="mt-1 text-lg font-extrabold">캐시 충전 {approved ? "승인 완료" : "거절"}</h2></div>
           </div>
-          <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${approved ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span>
+          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${approved ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
           <DetailCell label="요청자" value={record.requester} />
           <DetailCell label={approved ? "지급 금액" : "요청 금액"} value={`₩${record.amount.toLocaleString("ko-KR")}`} tone={approved ? "text-[#44cc88]" : "text-[#ff4444]"} />
           <DetailCell label={approved ? "지급 전 잔액" : "현재 잔액"} value="₩0" tone="text-[#ff4444]" />
@@ -795,8 +780,8 @@ function RechargeDetail({ record, onBack }: { record: RechargeRecord; onBack: ()
           {approved && <DetailCell label="누적 지급 총액" value="₩200,000,000" tone="text-[#ffaa44]" />}
           {approved && <DetailCell label="처리 일시" value={record.date} />}
         </div>
-        <div className={`mt-5 rounded-xl border-l-4 bg-gray-50 p-4 ${approved ? "border-emerald-500" : "border-red-500"}`}>
-          <p className="text-[11px] font-semibold text-gray-500">{approved ? "관리자 메모" : "거절 사유"}</p>
+        <div className={`mt-4 rounded-lg border-l-4 bg-surface-soft p-3.5 ${approved ? "border-emerald-500" : "border-red-500"}`}>
+          <p className="text-xs font-semibold text-muted">{approved ? "관리자 메모" : "거절 사유"}</p>
           <p className="mt-2 text-sm leading-6">{record.note}</p>
         </div>
       </article>
@@ -805,7 +790,7 @@ function RechargeDetail({ record, onBack }: { record: RechargeRecord; onBack: ()
 }
 
 function DetailCell({ label, value, tone = "text-white" }: { label: string; value: string; tone?: string }) {
-  return <div className="rounded-xl border border-gray-200 bg-gray-50 p-4"><p className="text-[11px] font-semibold text-gray-500">{label}</p><p className={`mt-1 text-sm font-bold ${tone === "text-white" ? "text-gray-900" : tone}`}>{value}</p></div>;
+  return <div className="rounded-lg border border-hairline bg-surface-soft p-3"><p className="text-xs font-semibold text-muted">{label}</p><p className={`num mt-1 text-sm font-bold ${tone === "text-white" ? "text-ink" : tone}`}>{value}</p></div>;
 }
 
 function OrdersPanel({ selectedOrderId, onSelect }: { selectedOrderId: number; onSelect: (id: number) => void }) {
@@ -822,43 +807,41 @@ function OrdersPanel({ selectedOrderId, onSelect }: { selectedOrderId: number; o
 
   return (
     <div className="mx-auto max-w-[1180px]">
-      <div className="mb-7">
-        <p className="theme-accent-text text-xs font-black tracking-[0.14em]">ORDER HISTORY</p>
-        <h1 className="mt-1 text-2xl font-extrabold">주문내역</h1>
-        <p className="mt-2 text-sm text-gray-500">체결이 완료된 매수·매도 주문과 상세 정보를 확인합니다.</p>
+      <div className="mb-4">
+        <h1 className="text-xl font-extrabold">주문내역</h1>
       </div>
 
-      <div className="grid min-h-[500px] gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <section className="overflow-hidden rounded-2xl border border-gray-200">
-          <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-4">
-            <div><h2 className="font-bold">완료된 주문</h2><p className="mt-1 text-xs text-gray-500">총 {orders.length}건</p></div>
-            <span className="theme-accent-soft theme-accent-text rounded-full px-3 py-1 text-xs font-bold">전체</span>
+      <div className="grid min-h-[420px] gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="overflow-hidden rounded-lg border border-hairline">
+          <div className="flex items-center justify-between border-b border-hairline bg-surface-soft px-4 py-3">
+            <div><h2 className="font-bold">완료된 주문</h2><p className="mt-1 text-xs text-muted">총 {orders.length}건</p></div>
+            <span className="theme-accent-soft theme-accent-text rounded-full px-2.5 py-1 text-xs font-bold">전체</span>
           </div>
-          <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px] border-b border-gray-200 px-5 py-3 text-xs font-semibold text-gray-500 sm:grid">
+          <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px] border-b border-hairline px-4 py-2 text-xs font-semibold text-muted sm:grid">
             <span>종목 / 주문 구분</span><span>수량</span><span className="text-right">체결 금액</span>
           </div>
           <div className="divide-y divide-gray-200">
           {orders.map((order) => (
-            <button key={order.id} type="button" onClick={() => onSelect(order.id)} className={`relative grid w-full grid-cols-[minmax(0,1fr)_70px_110px] items-center gap-2 px-5 py-4 text-left text-sm transition-colors sm:grid-cols-[minmax(0,1fr)_90px_130px] ${selectedOrderId === order.id ? "theme-accent-soft" : "bg-white hover:bg-gray-50"}`}>
+            <button key={order.id} type="button" onClick={() => onSelect(order.id)} className={`relative grid w-full grid-cols-[minmax(0,1fr)_70px_110px] items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors sm:grid-cols-[minmax(0,1fr)_90px_130px] ${selectedOrderId === order.id ? "theme-accent-soft" : "bg-white hover:bg-surface-soft"}`}>
               {selectedOrderId === order.id && <span className="absolute inset-y-0 left-0 w-0.5 bg-[var(--market-accent)]" />}
-              <span><strong className="block font-bold">{order.name}</strong><small className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${order.side === "판매완료" ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"}`}>{order.side}</small></span>
-              <span className="font-semibold">{order.quantity}</span><span className="text-right font-extrabold">{order.price}</span>
+              <span><strong className="block font-bold">{order.name}</strong><small className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${order.side === "판매완료" ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"}`}>{order.side}</small></span>
+              <span className="num font-semibold">{order.quantity}</span><span className="num text-right font-extrabold">{order.price}</span>
             </button>
           ))}
           </div>
       </section>
-      <aside className="rounded-2xl border border-gray-200 bg-gray-50 p-6 sm:p-7">
-        <div className="flex items-start justify-between gap-4 border-b border-gray-200 pb-5">
-          <div><p className="text-xs font-semibold text-gray-500">선택 주문</p><h2 className="mt-1 text-xl font-extrabold">{selected.name}</h2></div>
-          <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${isSell ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"}`}>{selected.side}</span>
+      <aside className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3 border-b border-hairline pb-4">
+          <div><p className="text-xs font-semibold text-muted">선택 주문</p><h2 className="mt-1 text-lg font-extrabold">{selected.name}</h2></div>
+          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${isSell ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"}`}>{selected.side}</span>
         </div>
-        <dl className="mt-3 divide-y divide-gray-200">
+        <dl className="mt-2 divide-y divide-gray-200">
           {detailRows.map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[1fr_auto] gap-5 py-3.5 text-sm"><dt className="text-gray-500">{label}</dt><dd className="text-right font-bold">{value}</dd></div>
+            <div key={label} className="grid grid-cols-[1fr_auto] gap-4 py-2 text-sm"><dt className="text-muted">{label}</dt><dd className="num text-right font-bold">{value}</dd></div>
           ))}
         </dl>
-        <div className="theme-accent-soft mt-5 rounded-xl p-4">
-          <p className="text-xs font-semibold text-gray-500">주문 결과</p>
+        <div className="theme-accent-soft mt-4 rounded-lg p-3.5">
+          <p className="text-xs font-semibold text-muted">주문 결과</p>
           <p className="theme-accent-text mt-1 text-sm font-bold">{isSell ? "매도" : "매수"} 주문이 모두 체결되었습니다.</p>
         </div>
       </aside>
@@ -885,31 +868,29 @@ function ReturnsPanel() {
 
   return (
     <div className="mx-auto max-w-[1180px]">
-      <div className="mb-7">
-        <p className="theme-accent-text text-xs font-black tracking-[0.14em]">PERFORMANCE</p>
-        <h1 className="mt-1 text-2xl font-extrabold">수익률</h1>
-        <p className="mt-2 text-sm text-gray-500">실현 수익의 구성과 종목별 거래 성과를 확인합니다.</p>
+      <div className="mb-4">
+        <h1 className="text-xl font-extrabold">수익률</h1>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <section className="rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-6">
-          <p className="text-xs font-semibold text-gray-500">총 실현 수익</p>
-          <strong className="mt-2 block text-3xl font-black text-red-500 sm:text-4xl">+123,000원</strong>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
+          <p className="text-xs font-semibold text-muted">총 실현 수익</p>
+          <strong className="num mt-1.5 block text-2xl font-black text-red-500 sm:text-3xl">+123,000원</strong>
+          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
             {summaryMetrics.map((metric) => (
-              <div key={metric.label} className="rounded-xl border border-gray-200 bg-white p-4">
-                <p className="text-xs font-semibold text-gray-500">{metric.label}</p>
-                <p className="mt-2 text-sm font-extrabold text-red-500">{metric.value}</p>
+              <div key={metric.label} className="rounded-lg border border-hairline bg-white p-3">
+                <p className="text-xs font-semibold text-muted">{metric.label}</p>
+                <p className="num mt-1.5 text-right text-sm font-extrabold text-red-500">{metric.value}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="flex flex-col items-center justify-center rounded-2xl border border-gray-200 p-5">
-          <div aria-label="종목별 수익 구성 원형 차트" className="h-40 w-40 rounded-full bg-[conic-gradient(#14b8a6_0_25%,#fb7185_25%_48%,#8b5cf6_48%_92%,#94a3b8_92%)] p-7 shadow-[0_10px_30px_rgba(0,0,0,.12)]">
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-white"><strong className="text-lg">3종목</strong><span className="mt-1 text-[10px] text-gray-500">수익 구성</span></div>
+        <section className="flex flex-col items-center justify-center rounded-lg border border-hairline p-4">
+          <div aria-label="종목별 수익 구성 원형 차트" className="h-32 w-32 rounded-full bg-[conic-gradient(#14b8a6_0_25%,#fb7185_25%_48%,#8b5cf6_48%_92%,#94a3b8_92%)] p-6 shadow-[0_10px_30px_rgba(0,0,0,.12)]">
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-white"><strong className="text-base">3종목</strong><span className="mt-1 text-[11px] text-muted">수익 구성</span></div>
           </div>
-          <div className="mt-5 grid w-full grid-cols-3 gap-2 text-center text-[11px]">
+          <div className="mt-4 grid w-full grid-cols-3 gap-2 text-center text-xs">
             <span><i className="mx-auto mb-1 block h-2 w-2 rounded-full bg-teal-500" />삼성전자</span>
             <span><i className="mx-auto mb-1 block h-2 w-2 rounded-full bg-rose-400" />SK하이닉스</span>
             <span><i className="mx-auto mb-1 block h-2 w-2 rounded-full bg-violet-500" />메리츠</span>
@@ -917,24 +898,24 @@ function ReturnsPanel() {
         </section>
       </div>
 
-      <dl className="mt-5 grid gap-3 sm:grid-cols-3">
+      <dl className="mt-3 grid gap-2.5 sm:grid-cols-3">
         {balanceMetrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-            <dt className="text-xs font-semibold text-gray-500">{metric.label}</dt>
-            <dd className="mt-2 text-base font-extrabold">{metric.value}</dd>
+          <div key={metric.label} className="rounded-lg border border-hairline bg-white p-3 sm:p-4">
+            <dt className="text-xs font-semibold text-muted">{metric.label}</dt>
+            <dd className="num mt-1.5 text-right text-sm font-extrabold">{metric.value}</dd>
           </div>
         ))}
       </dl>
 
-      <section className="mt-5 overflow-hidden rounded-2xl border border-gray-200">
-        <div className="border-b border-gray-200 bg-gray-50 px-5 py-4">
+      <section className="mt-3 overflow-hidden rounded-lg border border-hairline">
+        <div className="border-b border-hairline bg-surface-soft px-4 py-3">
           <h2 className="font-bold">종목별 실현 수익</h2>
-          <p className="mt-1 text-xs text-gray-500">최근 체결된 매도 주문 기준</p>
+          <p className="mt-1 text-xs text-muted">최근 체결된 매도 주문 기준</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-left text-xs">
-            <thead className="bg-gray-50"><tr>{["판매일", "종목명", "총 판매수익", "수익률", "총 판매금액", "총 구매금액", "판매수량", "수수료", "1주당 수익", "1주당 판매가격"].map((head) => <th key={head} className="border-b border-gray-200 px-4 py-3.5 font-semibold text-gray-500">{head}</th>)}</tr></thead>
-            <tbody>{returnRows.map((row, index) => <tr key={row[1]} className="border-b border-gray-200 last:border-0 hover:bg-gray-50">{row.map((cell, cellIndex) => <td key={`${row[1]}-${cellIndex}`} className={`whitespace-nowrap px-4 py-4 ${cellIndex === 1 ? "font-bold" : ""} ${cellIndex === 2 || cellIndex === 3 ? (index ? "text-blue-500" : "text-red-500") + " font-bold" : ""}`}>{cell}</td>)}</tr>)}</tbody>
+            <thead className="bg-surface-soft"><tr>{["판매일", "종목명", "총 판매수익", "수익률", "총 판매금액", "총 구매금액", "판매수량", "수수료", "1주당 수익", "1주당 판매가격"].map((head) => <th key={head} className="border-b border-hairline px-3 py-2 font-semibold text-muted">{head}</th>)}</tr></thead>
+            <tbody>{returnRows.map((row, index) => <tr key={row[1]} className="border-b border-hairline last:border-0 hover:bg-surface-soft">{row.map((cell, cellIndex) => <td key={`${row[1]}-${cellIndex}`} className={`whitespace-nowrap px-3 py-2 ${cellIndex !== 1 ? "num text-right" : ""} ${cellIndex === 1 ? "font-bold" : ""} ${cellIndex === 2 || cellIndex === 3 ? (index ? "text-blue-500" : "text-red-500") + " font-bold" : ""}`}>{cell}</td>)}</tr>)}</tbody>
           </table>
         </div>
       </section>
@@ -959,8 +940,8 @@ function Modal({ children, onClose, ariaLabel }: { children: React.ReactNode; on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-5 backdrop-blur-sm" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={ariaLabel} className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-2xl sm:p-8" onMouseDown={(event) => event.stopPropagation()}>
-        <button type="button" aria-label="모달 닫기" onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-lg text-gray-500 hover:bg-gray-50 hover:text-black">×</button>
+      <div role="dialog" aria-modal="true" aria-label={ariaLabel} className="relative w-full max-w-md rounded-xl border border-hairline bg-white p-6 text-center shadow-2xl sm:p-7" onMouseDown={(event) => event.stopPropagation()}>
+        <button type="button" aria-label="모달 닫기" onClick={onClose} className="absolute right-3.5 top-3.5 flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-surface-soft hover:text-ink"><CloseIcon className="h-4 w-4" /></button>
         {children}
       </div>
     </div>

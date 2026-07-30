@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { FavoriteButton } from "@/components/common/Button";
+import { Button, FavoriteButton } from "@/components/common/Button";
 
 const STOCK_DATA = [
     { code: "005930", name: "삼성전자", changeRate: "+1.05%", currentPrice: "191,700", tradingValue: "6.7억원" },
@@ -28,47 +28,50 @@ export default function StockTable() {
     }, [sortKey]);
 
     return (
-        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1726]/95 shadow-[0_18px_55px_rgba(0,0,0,.24)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
-                <div>
-                    <p className="theme-accent-text text-[10px] font-bold tracking-[0.16em]">MARKET WATCH</p>
-                    <h2 className="mt-1 text-lg font-black text-white">주요 종목</h2>
-                </div>
-                <div className="flex flex-wrap gap-1 rounded-xl border border-white/10 bg-[#07111e] p-1">
+        <section className="overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3">
+                <h2 className="text-base font-black text-ink">주요 종목</h2>
+                <div className="flex flex-wrap gap-1.5">
                     {(["현재가", "급상승", "급하락", "거래량", "거래대금"] as SortKey[]).map((label) => (
-                        <button key={label} type="button" onClick={() => setSortKey(label)} className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${sortKey === label ? "theme-accent-bg" : "text-slate-500 hover:bg-white/5 hover:text-slate-200"}`}>
+                        <Button
+                            key={label}
+                            variant={sortKey === label ? "primary" : "secondary"}
+                            size="sm"
+                            className="!h-7 !px-3 !text-[11px]"
+                            onClick={() => setSortKey(label)}
+                        >
                             {label}
-                        </button>
+                        </Button>
                     ))}
                 </div>
             </div>
 
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[680px] border-collapse text-sm">
+                <table className="w-full min-w-[680px] border-collapse text-[13px]">
                     <thead>
-                        <tr className="border-b border-white/10 bg-[#081321] text-[10px] font-bold tracking-wider text-slate-500">
-                            <th className="w-16 px-4 py-3 text-center">관심</th>
-                            <th className="px-4 py-3 text-left">종목</th>
-                            <th className="px-4 py-3 text-right">등락률</th>
-                            <th className="px-4 py-3 text-right">현재가</th>
-                            <th className="px-4 py-3 text-right">거래대금</th>
+                        <tr className="border-b border-hairline bg-surface-soft text-[10px] font-bold tracking-wider text-muted">
+                            <th className="w-12 px-3 py-2 text-center">관심</th>
+                            <th className="px-3 py-2 text-left">종목</th>
+                            <th className="px-3 py-2 text-right">등락률</th>
+                            <th className="px-3 py-2 text-right">현재가</th>
+                            <th className="px-3 py-2 text-right">거래대금</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rows.map((stock) => {
                             const rising = stock.changeRate.startsWith("+");
                             return (
-                                <tr key={stock.code} className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.025]">
-                                    <td className="px-3 py-3 text-center"><FavoriteButton /></td>
-                                    <td className="px-4 py-3">
+                                <tr key={stock.code} className="border-b border-hairline-soft last:border-0 hover:bg-surface-soft">
+                                    <td className="px-3 py-2 text-center"><FavoriteButton size="sm" /></td>
+                                    <td className="px-3 py-2">
                                         <Link href={stock.name === "삼성전자" ? "/stock-detail" : "/home"} className="group inline-flex flex-col">
-                                            <strong className="font-bold text-slate-100 group-hover:text-[var(--market-accent-text)]">{stock.name}</strong>
-                                            <span className="mt-0.5 text-[10px] text-slate-600">{stock.code} · KRX</span>
+                                            <strong className="font-bold text-ink group-hover:text-primary">{stock.name}</strong>
+                                            <span className="mt-0.5 text-[10px] text-muted">{stock.code} · KRX</span>
                                         </Link>
                                     </td>
-                                    <td className={`px-4 py-3 text-right font-bold ${rising ? "text-red-400" : "text-blue-400"}`}>{stock.changeRate}</td>
-                                    <td className="px-4 py-3 text-right font-semibold text-slate-200">{stock.currentPrice}<span className="ml-1 text-[10px] text-slate-600">KRW</span></td>
-                                    <td className="px-4 py-3 text-right text-slate-400">{stock.tradingValue}</td>
+                                    <td className={`num px-3 py-2 text-right font-bold ${rising ? "text-up" : "text-down"}`}>{stock.changeRate}</td>
+                                    <td className="num px-3 py-2 text-right font-semibold text-ink">{stock.currentPrice}<span className="ml-1 text-[10px] font-normal text-muted">KRW</span></td>
+                                    <td className="num px-3 py-2 text-right text-body">{stock.tradingValue}</td>
                                 </tr>
                             );
                         })}

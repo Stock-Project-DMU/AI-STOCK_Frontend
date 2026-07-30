@@ -43,10 +43,10 @@ export default function RecoveryModal({
                 aria-labelledby={titleId}
                 className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl"
             >
-                <div className="rounded-lg border border-gray-300 bg-gray-100 p-4 py-6">
+                <div className="rounded-lg border border-hairline bg-surface-soft p-4 py-6">
                     <h2
                         id={titleId}
-                        className="text-center text-xl font-bold"
+                        className="text-center text-xl font-bold text-ink"
                     >
                         {title}
                     </h2>
@@ -56,7 +56,7 @@ export default function RecoveryModal({
                 <button
                     type="button"
                     onClick={onClose}
-                    className="mt-6 w-full rounded-lg bg-black py-3 font-bold text-white hover:bg-gray-800"
+                    className="theme-accent-bg theme-accent-shadow mt-6 w-full rounded-lg py-3 font-bold"
                 >
                     {closeLabel}
                 </button>

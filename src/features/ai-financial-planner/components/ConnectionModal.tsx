@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/common/Button";
+import { GearIcon, CloseIcon, CheckIcon, TrendUpIcon, NewsIcon } from "@/components/icons/Icon";
 
 type ConnectionModalProps = { onClose: () => void };
 
@@ -29,28 +31,45 @@ export default function ConnectionModal({ onClose }: ConnectionModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4" role="dialog" aria-modal="true" aria-label="설정 및 연동">
-            <div className="w-full max-w-[820px] overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b px-6 py-4">
-                    <h2 className="text-lg font-semibold text-gray-500">⚙ 설정 및 연동</h2>
-                    <button onClick={onClose} aria-label="닫기" className="text-2xl text-gray-400">×</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4" role="dialog" aria-modal="true" aria-label="설정 및 연동">
+            <div className="w-full max-w-[820px] overflow-hidden rounded-lg border border-hairline bg-canvas shadow-2xl">
+                <div className="flex items-center justify-between border-b border-hairline-soft px-6 py-4">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold text-ink"><GearIcon className="h-4 w-4 text-muted" /> 설정 및 연동</h2>
+                    <button onClick={onClose} aria-label="닫기" className="rounded-md p-1.5 text-muted hover:bg-surface-strong hover:text-ink"><CloseIcon className="h-5 w-5" /></button>
                 </div>
-                <div className="flex border-b text-sm">
-                    <button onClick={() => changeTab("goals")} className={`px-7 py-4 ${tab === "goals" ? "font-bold text-black" : "text-gray-500"}`}>〽 목표 도달 시뮬레이션 연동</button>
-                    <button onClick={() => changeTab("news")} className={`px-7 py-4 ${tab === "news" ? "font-bold text-black" : "text-gray-500"}`}>▣ 뉴스 시황 연동</button>
+                <div className="flex border-b border-hairline-soft text-sm">
+                    <button onClick={() => changeTab("goals")} className={`flex items-center gap-1.5 px-7 py-3.5 transition-colors ${tab === "goals" ? "border-b-2 border-primary font-bold text-ink" : "text-muted hover:text-ink"}`}><TrendUpIcon className="h-4 w-4" /> 목표 도달 시뮬레이션 연동</button>
+                    <button onClick={() => changeTab("news")} className={`flex items-center gap-1.5 px-7 py-3.5 transition-colors ${tab === "news" ? "border-b-2 border-primary font-bold text-ink" : "text-muted hover:text-ink"}`}><NewsIcon className="h-4 w-4" /> 뉴스 시황 연동</button>
                 </div>
-                <div className="px-14 py-7">
-                    <div className="mb-5 flex justify-between"><h3 className="font-bold">{tab === "news" ? "뉴스 요약 리스트" : "목표 시뮬레이션 리스트"}</h3><span className="text-xs text-gray-400">{selected.length}개 선택　 <button onClick={() => setSelected(items.map((_, index) => index))} className="text-red-500">전체 선택</button></span></div>
+                <div className="px-6 py-6 sm:px-10">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-ink">{tab === "news" ? "뉴스 요약 리스트" : "목표 시뮬레이션 리스트"}</h3>
+                        <span className="text-xs text-muted">
+                            {selected.length}개 선택
+                            <button onClick={() => setSelected(items.map((_, index) => index))} className="font-semibold text-primary hover:text-primary-active">전체 선택</button>
+                        </span>
+                    </div>
                     <div className="space-y-2">
                         {items.map((item, index) => {
                             const checked = selected.includes(index);
-                            return <button key={item} onClick={() => setSelected(current => checked ? current.filter(value => value !== index) : [...current, index])} className={`flex w-full items-center gap-4 rounded-lg border px-4 py-3 text-left ${checked ? "border-2 border-red-500" : "border-transparent"}`}>
-                                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${checked ? "bg-red-500 text-white" : "border border-gray-300"}`}>{checked ? "✓" : ""}</span>
-                                <span><strong className="block text-sm">{item}</strong><small className="mt-1 block text-gray-400">{tab === "news" ? "한국경제 · 5시간 전" : "6시간 전"}</small></span>
-                            </button>;
+                            return (
+                                <button
+                                    key={item}
+                                    onClick={() => setSelected((current) => (checked ? current.filter((value) => value !== index) : [...current, index]))}
+                                    className={`flex w-full items-center gap-4 rounded-md border px-4 py-3 text-left transition-colors ${checked ? "border-primary bg-primary/5" : "border-hairline hover:bg-surface-soft"}`}
+                                >
+                                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${checked ? "bg-primary text-white" : "border border-hairline"}`}>{checked ? <CheckIcon className="h-3 w-3" /> : null}</span>
+                                    <span>
+                                        <strong className="block text-sm text-ink">{item}</strong>
+                                        <small className="mt-1 block text-muted">{tab === "news" ? "한국경제 · 5시간 전" : "6시간 전"}</small>
+                                    </span>
+                                </button>
+                            );
                         })}
                     </div>
-                    <button onClick={onClose} className="mx-auto mt-7 block rounded-lg bg-black px-8 py-3 text-sm font-bold text-white">확인</button>
+                    <div className="mt-7 flex justify-center">
+                        <Button variant="primary" size="lg" onClick={onClose} className="px-10">확인</Button>
+                    </div>
                 </div>
             </div>
         </div>

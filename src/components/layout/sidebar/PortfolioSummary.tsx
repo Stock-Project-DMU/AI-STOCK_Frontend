@@ -14,16 +14,16 @@ export default function PortfolioSummary({
     profitTotal,
 }: PortfolioSummaryProps) {
     return (
-        <div className="border-t border-white/10 bg-[#07111e] px-4 py-5 text-sm font-semibold text-slate-200">
+        <div className="border-t border-hairline bg-surface-soft px-4 py-3.5 text-sm font-semibold text-ink">
             <div className="flex items-center justify-between">
                 <span>원화</span>
-                <span className="whitespace-nowrap">{formatWon(cashTotal)}</span>
+                <span className="num whitespace-nowrap">{formatWon(cashTotal)}</span>
             </div>
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-3 flex items-center justify-between">
                 <span>평가액</span>
                 <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span>{formatWon(evaluationTotal)}</span>
-                    <span className="text-[11px] font-bold text-red-400">
+                    <span className="num">{formatWon(evaluationTotal)}</span>
+                    <span className={`num text-xs font-bold ${profitTotal >= 0 ? "text-up" : "text-down"}`}>
                         {formatSignedWon(profitTotal)} ({profitRate.toFixed(2)}%)
                     </span>
                 </div>

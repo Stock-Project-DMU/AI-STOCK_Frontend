@@ -1,3 +1,4 @@
+import { Button } from "@/components/common/Button";
 import type { InvestmentExperienceLevel } from "../types";
 
 type InvestmentOption = {
@@ -18,19 +19,19 @@ const INVESTMENT_OPTIONS: InvestmentOption[] = [
         id: "beginner",
         title: "입문자",
         description: "주식 계좌가 없거나\n투자 경험 1년 미만\n용어가 낯선 단계",
-        className: "bg-emerald-900",
+        className: "bg-[#7c94ff]",
     },
     {
         id: "intermediate",
         title: "일반 투자자",
         description: "투자 경험 1년 ~ 3년\n기본 종목 거래 경험\nETF·펀드 약간 있음",
-        className: "bg-teal-800",
+        className: "bg-primary",
     },
     {
         id: "advanced",
         title: "숙련 투자자",
         description: "투자 경험 3년 이상\n재무제표 차트 분석\n파생·레버리지 경험",
-        className: "bg-amber-900",
+        className: "bg-primary-active",
     },
 ];
 
@@ -41,8 +42,8 @@ export default function InvestmentExperienceStep({
 }: InvestmentExperienceStepProps) {
     return (
         <>
-            <div className="mt-12 rounded-lg border border-gray-300 bg-gray-100 px-8 py-6">
-                <div className="space-y-4">
+            <div className="mt-8 rounded-lg border border-hairline-soft bg-surface-soft p-5 sm:p-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     {INVESTMENT_OPTIONS.map((option) => {
                         const isSelected = selectedExperience === option.id;
 
@@ -50,18 +51,23 @@ export default function InvestmentExperienceStep({
                             <button
                                 type="button"
                                 key={option.id}
-                                className={`mx-auto block w-full max-w-[260px] rounded-lg px-6 py-5 text-center text-white transition ${option.className} ${
+                                className={`relative flex flex-col items-center rounded-lg px-5 py-6 text-center text-white transition ${option.className} ${
                                     isSelected
-                                        ? "ring-4 ring-black/25"
+                                        ? "ring-2 ring-primary ring-offset-2 ring-offset-surface-soft"
                                         : "hover:brightness-110"
                                 }`}
                                 aria-pressed={isSelected}
                                 onClick={() => onSelect(option.id)}
                             >
+                                {isSelected ? (
+                                    <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-primary">
+                                        ✓
+                                    </span>
+                                ) : null}
                                 <span className="block text-base font-bold">
                                     {option.title}
                                 </span>
-                                <span className="mt-3 block whitespace-pre-line text-xs leading-5">
+                                <span className="mt-3 block whitespace-pre-line text-xs leading-5 text-white/90">
                                     {option.description}
                                 </span>
                             </button>
@@ -70,14 +76,16 @@ export default function InvestmentExperienceStep({
                 </div>
             </div>
 
-            <button
-                type="button"
-                className="mt-12 w-full bg-black px-4 py-3 font-semibold text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="mt-8"
                 disabled={!selectedExperience}
                 onClick={onNext}
             >
                 다음
-            </button>
+            </Button>
         </>
     );
 }
