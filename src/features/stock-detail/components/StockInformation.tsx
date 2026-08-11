@@ -17,7 +17,7 @@ export default function StockInformation() {
     return (
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3 p-3 lg:flex-row lg:p-4">
             <nav className="flex shrink-0 overflow-x-auto rounded-lg border border-hairline bg-canvas p-2 lg:w-48 lg:flex-col lg:self-start">
-                <p className="hidden px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-soft lg:block">Research Menu</p>
+                <p className="hidden px-3 pb-2 pt-1 text-[12px] font-bold uppercase tracking-[0.18em] text-muted-soft lg:block">Research Menu</p>
                 {INFORMATION_TABS.map((item) => (
                     <button
                         key={item.id}
@@ -55,7 +55,7 @@ function SectionTitle({ title, subtitle, badge }: { title: string; subtitle: str
     return (
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-hairline pb-4">
             <div><h2 className="text-lg font-black tracking-tight text-ink">{title}</h2><p className="mt-1 text-xs text-muted">{subtitle}</p></div>
-            {badge && <span className="rounded-pill border border-hairline bg-surface-soft px-3 py-1 text-[10px] font-bold text-muted">{badge}</span>}
+            {badge && <span className="rounded-pill border border-hairline bg-surface-soft px-3 py-1 text-[12px] font-bold text-muted">{badge}</span>}
         </div>
     );
 }
@@ -65,7 +65,7 @@ function Overview() {
         <div>
             <SectionTitle title="기업 개요" subtitle="삼성전자 · 005930 · KOSPI" badge="전자·반도체" />
             <div className="theme-accent-border mt-5 rounded-lg border bg-[linear-gradient(90deg,var(--market-accent-soft),transparent)] p-4">
-                <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="theme-accent-text text-[10px] font-bold uppercase tracking-[0.16em]">Company Profile</p><h3 className="mt-2 text-base font-black text-ink">삼성전자</h3></div><button type="button" className="rounded-lg border border-hairline bg-surface-soft px-4 py-2 text-xs text-body hover:border-primary hover:text-ink">기업 홈페이지 ↗</button></div>
+                <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="theme-accent-text text-[12px] font-bold uppercase tracking-[0.16em]">Company Profile</p><h3 className="mt-2 text-base font-black text-ink">삼성전자</h3></div><button type="button" className="rounded-lg border border-hairline bg-surface-soft px-4 py-2 text-xs text-body hover:border-primary hover:text-ink">기업 홈페이지 ↗</button></div>
                 <p className="mt-3 max-w-4xl text-sm leading-6 text-body">반도체, 모바일, 디스플레이, 가전 등 다양한 사업을 영위하는 글로벌 전자·IT 기업입니다. 메모리 반도체와 스마트폰 시장에서 높은 글로벌 점유율을 확보하고 있습니다.</p>
             </div>
 
@@ -87,11 +87,11 @@ function Overview() {
 }
 
 function Info({ label, value, change, positive }: { label: string; value: string; change: string; positive?: boolean }) {
-    return <div className="rounded-lg border border-hairline bg-surface-soft p-3"><dt className="text-[10px] text-muted">{label}</dt><dd className="num mt-1.5 text-sm font-bold text-ink">{value}</dd><span className={`mt-1.5 block text-[10px] ${positive ? "text-up" : "text-muted-soft"}`}>{change}</span></div>;
+    return <div className="rounded-lg border border-hairline bg-surface-soft p-3"><dt className="text-[12px] text-muted">{label}</dt><dd className="num mt-1.5 text-sm font-bold text-ink">{value}</dd><span className={`mt-1.5 block text-[12px] ${positive ? "text-up" : "text-muted-soft"}`}>{change}</span></div>;
 }
 
 function MiniMetric({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
-    return <dl><dt className="text-[10px] text-muted">{label}</dt><dd className={`num mt-1 text-base font-black ${positive ? "text-up" : "text-ink"}`}>{value}</dd></dl>;
+    return <dl><dt className="text-[12px] text-muted">{label}</dt><dd className={`num mt-1 text-base font-black ${positive ? "text-up" : "text-ink"}`}>{value}</dd></dl>;
 }
 
 function Legend({ color, label, value }: { color: string; label: string; value: string }) {
@@ -111,7 +111,7 @@ function Dividend() {
         <div>
             <SectionTitle title="배당 정보" subtitle="삼성전자 · 005930 · 최근 2년 기준" badge="분기 배당" />
             <KpiStrip items={[["현재 배당금", "$1.44", "+9.1%"], ["배당 수익률", "2.32%", "현재가 기준"], ["배당 성향", "26.0%", "안정"], ["배당 주기", "분기", "연 4회"]]} positive />
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(207,32,47,0.2)] bg-[rgba(207,32,47,0.05)] p-4"><div><p className="text-xs font-bold text-up">다음 배당 일정</p><p className="mt-2 text-sm font-bold text-ink">2026년 4월 15일 지급 예정</p><span className="mt-1 block text-[10px] text-muted">배당락일 2026년 3월 30일</span></div><div className="text-right"><p className="text-[10px] text-muted">예상 배당금</p><strong className="num mt-1 block text-lg text-up">$0.36</strong></div></div>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(207,32,47,0.2)] bg-[rgba(207,32,47,0.05)] p-4"><div><p className="text-xs font-bold text-up">다음 배당 일정</p><p className="mt-2 text-sm font-bold text-ink">2026년 4월 15일 지급 예정</p><span className="mt-1 block text-[12px] text-muted">배당락일 2026년 3월 30일</span></div><div className="text-right"><p className="text-[12px] text-muted">예상 배당금</p><strong className="num mt-1 block text-lg text-up">$0.36</strong></div></div>
             <h3 className="mt-6 text-sm font-bold text-ink">배당 지급 내역</h3><DataTable headers={["지급일", "배당락일", "주당 배당금", "배당 수익률", "배당 유형"]} rows={DIVIDEND_ROWS} redMiddle />
             <div className="mt-6 rounded-lg border border-hairline bg-surface-soft p-4"><h3 className="text-sm font-bold text-ink">연간 배당금 추이</h3><div className="mt-4 flex h-40 items-end justify-around border-b border-hairline pb-3">{[["2023", 62, "$1.20"], ["2024", 88, "$1.32"], ["2025", 114, "$1.44"]].map(([year, height, value]) => <div key={year} className="text-center text-xs"><div className={`mx-auto w-10 rounded-t-sm ${year === "2025" ? "bg-[var(--market-up)]" : "bg-muted-soft"}`} style={{ height: `${height}px` }} /><strong className="num mt-2 block text-up">{value}</strong><span className="text-muted">{year}</span></div>)}</div></div>
             <Analysis tone="green">배당금과 배당 수익률이 안정적인 범위에서 유지되고 있습니다. 현금흐름과 배당 성향을 고려하면 배당 지속 가능성은 높은 수준입니다.</Analysis>
@@ -128,15 +128,15 @@ function Analysts() {
         <div>
             <SectionTitle title="애널리스트 컨센서스" subtitle="최근 3개 리포트 및 목표주가" badge="매수 우위" />
             <div className="mt-5 grid gap-3 xl:grid-cols-[1fr_280px]">
-                <div className="space-y-2.5">{ANALYSTS.map((analyst) => <article key={analyst.name} className="flex items-center gap-4 rounded-lg border border-hairline bg-surface-soft p-4 transition-colors hover:border-muted-soft"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-xs font-black text-white ${analyst.tone === "green" ? "bg-emerald-500" : "bg-amber-500"}`}>{analyst.opinion}</span><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><strong className="text-ink">{analyst.name}</strong><span className="text-[10px] text-muted">{analyst.firm} · {analyst.date}</span></div><p className="mt-1.5 text-xs text-body">목표가 <em className="num text-sm font-black not-italic text-up">{analyst.target}</em>　현재 대비 <span className="num text-up">{analyst.upside}</span></p></div><span className={`rounded-md px-3 py-1.5 text-[10px] font-bold ${analyst.tone === "green" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>{analyst.opinion === "BUY" ? "매수" : "중립"}</span></article>)}</div>
-                <aside className="rounded-lg border border-hairline bg-surface-soft p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Consensus</p><h3 className="mt-2 font-bold text-ink">투자의견</h3><div className="mt-4 flex items-end gap-2"><strong className="text-2xl font-black text-up">매수</strong><span className="mb-1 text-xs text-muted">21 / 28</span></div><div className="mt-4 flex h-2 overflow-hidden rounded-pill"><span className="w-3/4 bg-[var(--market-up)]" /><span className="w-[21%] bg-amber-500" /><span className="flex-1 bg-[var(--market-down)]" /></div><div className="mt-2 flex justify-between text-[10px] text-muted"><span>매수 21</span><span>중립 6</span><span>매도 1</span></div><div className="mt-5 border-t border-hairline pt-4"><p className="text-[10px] text-muted">평균 목표가</p><strong className="num mt-2 block text-xl text-up">$94.00</strong><span className="num mt-1 block text-xs text-up">현재 대비 +20.5%</span></div></aside>
+                <div className="space-y-2.5">{ANALYSTS.map((analyst) => <article key={analyst.name} className="flex items-center gap-4 rounded-lg border border-hairline bg-surface-soft p-4 transition-colors hover:border-muted-soft"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-xs font-black text-white ${analyst.tone === "green" ? "bg-emerald-500" : "bg-amber-500"}`}>{analyst.opinion}</span><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><strong className="text-ink">{analyst.name}</strong><span className="text-[12px] text-muted">{analyst.firm} · {analyst.date}</span></div><p className="mt-1.5 text-xs text-body">목표가 <em className="num text-sm font-black not-italic text-up">{analyst.target}</em>　현재 대비 <span className="num text-up">{analyst.upside}</span></p></div><span className={`rounded-md px-3 py-1.5 text-[12px] font-bold ${analyst.tone === "green" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>{analyst.opinion === "BUY" ? "매수" : "중립"}</span></article>)}</div>
+                <aside className="rounded-lg border border-hairline bg-surface-soft p-4"><p className="text-[12px] font-bold uppercase tracking-[0.16em] text-muted">Consensus</p><h3 className="mt-2 font-bold text-ink">투자의견</h3><div className="mt-4 flex items-end gap-2"><strong className="text-2xl font-black text-up">매수</strong><span className="mb-1 text-xs text-muted">21 / 28</span></div><div className="mt-4 flex h-2 overflow-hidden rounded-pill"><span className="w-3/4 bg-[var(--market-up)]" /><span className="w-[21%] bg-amber-500" /><span className="flex-1 bg-[var(--market-down)]" /></div><div className="mt-2 flex justify-between text-[12px] text-muted"><span>매수 21</span><span>중립 6</span><span>매도 1</span></div><div className="mt-5 border-t border-hairline pt-4"><p className="text-[12px] text-muted">평균 목표가</p><strong className="num mt-2 block text-xl text-up">$94.00</strong><span className="num mt-1 block text-xs text-up">현재 대비 +20.5%</span></div></aside>
             </div>
         </div>
     );
 }
 
 function KpiStrip({ items, positive }: { items: string[][]; positive?: boolean }) {
-    return <div className="mt-5 grid grid-cols-2 gap-2 xl:grid-cols-4">{items.map(([label, value, meta], index) => <div key={label} className="rounded-lg border border-hairline bg-surface-soft p-3"><p className="text-[10px] text-muted">{label}</p><strong className="num mt-1.5 block text-base text-ink">{value}</strong><span className={`mt-1 block text-[10px] ${positive || index === 3 ? "text-up" : "text-muted-soft"}`}>{meta}</span></div>)}</div>;
+    return <div className="mt-5 grid grid-cols-2 gap-2 xl:grid-cols-4">{items.map(([label, value, meta], index) => <div key={label} className="rounded-lg border border-hairline bg-surface-soft p-3"><p className="text-[12px] text-muted">{label}</p><strong className="num mt-1.5 block text-base text-ink">{value}</strong><span className={`mt-1 block text-[12px] ${positive || index === 3 ? "text-up" : "text-muted-soft"}`}>{meta}</span></div>)}</div>;
 }
 
 function DataTable({ headers, rows, blueColumns, redLast, redMiddle }: { headers: readonly string[]; rows: readonly (readonly string[])[]; blueColumns?: boolean; redLast?: boolean; redMiddle?: boolean }) {

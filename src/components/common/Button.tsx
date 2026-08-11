@@ -55,14 +55,21 @@ export function Button({
 
 type FavoriteButtonProps = {
     defaultFavorite?: boolean;
+    favorite?: boolean;
     size?: "md" | "sm" | "xl";
+    disabled?: boolean;
+    onToggle?: (nextFavorite: boolean) => void;
 };
 
 export function FavoriteButton({
     defaultFavorite = false,
+    favorite,
     size = "md",
+    disabled = false,
+    onToggle,
 }: FavoriteButtonProps) {
     const [isFavorite, setIsFavorite] = useState(defaultFavorite);
+    const selected = favorite ?? isFavorite;
 
     const sizeClass =
         size === "sm"
@@ -76,17 +83,22 @@ export function FavoriteButton({
     return (
         <button
             type="button"
-            onClick={() => setIsFavorite((prev) => !prev)}
-            className={`mx-auto flex cursor-pointer items-center justify-center rounded-full leading-none transition-colors ${sizeClass} ${
-                isFavorite
+            disabled={disabled}
+            onClick={() => {
+                const nextFavorite = !selected;
+                if (favorite === undefined) setIsFavorite(nextFavorite);
+                onToggle?.(nextFavorite);
+            }}
+            className={`mx-auto flex cursor-pointer items-center justify-center rounded-full leading-none transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${sizeClass} ${
+                selected
                     ? "text-red-400"
                     : "text-gray-500 hover:text-red-300"
             }`}
-            aria-label="관심 종목 등록"
-            aria-pressed={isFavorite}
+            aria-label={selected ? "관심 종목 해제" : "관심 종목 등록"}
+            aria-pressed={selected}
         >
             <span className={`block ${iconOffsetClass}`}>
-                {isFavorite ? "♥" : "♡"}
+                {selected ? "♥" : "♡"}
             </span>
         </button>
     );

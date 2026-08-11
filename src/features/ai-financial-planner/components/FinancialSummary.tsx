@@ -35,7 +35,7 @@ export default function FinancialSummary() {
                     <span className="text-xs font-bold text-ink">재무 건강도</span>
                     <strong className="text-2xl text-emerald-500">95<span className="ml-1 text-xs">%</span></strong>
                 </div>
-                <span className="rounded-sm bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-600">우수</span>
+                <span className="rounded-sm bg-emerald-100 px-2 py-1 text-[12px] font-semibold text-emerald-600">우수</span>
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-strong"><div className="h-full w-[95%] rounded-full bg-emerald-400" /></div>
             </div>
         </aside>

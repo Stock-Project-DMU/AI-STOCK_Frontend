@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button, FavoriteButton } from "@/components/common/Button";
+import { getApiErrorMessage, isAuthenticated } from "@/lib/api/client";
+import { addWatchlist, getWatchlist, removeWatchlist } from "@/lib/api/stock";
 
 const STOCK_DATA = [
     { code: "005930", name: "삼성전자", changeRate: "+1.05%", currentPrice: "191,700", tradingValue: "6.7억원" },
@@ -21,6 +23,51 @@ type SortKey = "현재가" | "급상승" | "급하락" | "거래량" | "거래�
 
 export default function StockTable() {
     const [sortKey, setSortKey] = useState<SortKey>("현재가");
+    const [favoriteCodes, setFavoriteCodes] = useState<Set<string>>(new Set());
+    const [pendingCode, setPendingCode] = useState("");
+    const [watchlistError, setWatchlistError] = useState("");
+
+    useEffect(() => {
+        if (!isAuthenticated()) return;
+
+        let active = true;
+        getWatchlist()
+            .then((watchlist) => {
+                if (active) setFavoriteCodes(new Set(watchlist.map((item) => item.stockCode)));
+            })
+            .catch((error) => {
+                if (active) setWatchlistError(getApiErrorMessage(error, "관심 종목을 불러오지 못했습니다."));
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    async function handleFavorite(stockCode: string, nextFavorite: boolean) {
+        if (!isAuthenticated()) {
+            setWatchlistError("로그인 후 관심 종목을 등록할 수 있습니다.");
+            return;
+        }
+
+        setPendingCode(stockCode);
+        setWatchlistError("");
+        try {
+            if (nextFavorite) await addWatchlist(stockCode);
+            else await removeWatchlist(stockCode);
+
+            setFavoriteCodes((current) => {
+                const next = new Set(current);
+                if (nextFavorite) next.add(stockCode);
+                else next.delete(stockCode);
+                return next;
+            });
+        } catch (error) {
+            setWatchlistError(getApiErrorMessage(error, "관심 종목 변경에 실패했습니다."));
+        } finally {
+            setPendingCode("");
+        }
+    }
     const rows = useMemo(() => {
         if (sortKey === "급상승") return [...STOCK_DATA].sort((a, b) => Number.parseFloat(b.changeRate) - Number.parseFloat(a.changeRate));
         if (sortKey === "급하락") return [...STOCK_DATA].sort((a, b) => Number.parseFloat(a.changeRate) - Number.parseFloat(b.changeRate));
@@ -37,7 +84,7 @@ export default function StockTable() {
                             key={label}
                             variant={sortKey === label ? "primary" : "secondary"}
                             size="sm"
-                            className="!h-7 !px-3 !text-[11px]"
+                            className="!h-7 !px-3 !text-[12px]"
                             onClick={() => setSortKey(label)}
                         >
                             {label}
@@ -46,10 +93,12 @@ export default function StockTable() {
                 </div>
             </div>
 
+            {watchlistError && <p className="border-b border-hairline bg-red-500/5 px-4 py-2 text-[12px] text-up">{watchlistError}</p>}
+
             <div className="overflow-x-auto">
                 <table className="w-full min-w-[680px] border-collapse text-[13px]">
                     <thead>
-                        <tr className="border-b border-hairline bg-surface-soft text-[10px] font-bold tracking-wider text-muted">
+                        <tr className="border-b border-hairline bg-surface-soft text-[12px] font-bold tracking-wider text-muted">
                             <th className="w-12 px-3 py-2 text-center">관심</th>
                             <th className="px-3 py-2 text-left">종목</th>
                             <th className="px-3 py-2 text-right">등락률</th>
@@ -62,15 +111,15 @@ export default function StockTable() {
                             const rising = stock.changeRate.startsWith("+");
                             return (
                                 <tr key={stock.code} className="border-b border-hairline-soft last:border-0 hover:bg-surface-soft">
-                                    <td className="px-3 py-2 text-center"><FavoriteButton size="sm" /></td>
+                                    <td className="px-3 py-2 text-center"><FavoriteButton size="sm" favorite={favoriteCodes.has(stock.code)} disabled={pendingCode === stock.code} onToggle={(nextFavorite) => void handleFavorite(stock.code, nextFavorite)} /></td>
                                     <td className="px-3 py-2">
                                         <Link href={stock.name === "삼성전자" ? "/stock-detail" : "/home"} className="group inline-flex flex-col">
                                             <strong className="font-bold text-ink group-hover:text-primary">{stock.name}</strong>
-                                            <span className="mt-0.5 text-[10px] text-muted">{stock.code} · KRX</span>
+                                            <span className="mt-0.5 text-[12px] text-muted">{stock.code} · KRX</span>
                                         </Link>
                                     </td>
                                     <td className={`num px-3 py-2 text-right font-bold ${rising ? "text-up" : "text-down"}`}>{stock.changeRate}</td>
-                                    <td className="num px-3 py-2 text-right font-semibold text-ink">{stock.currentPrice}<span className="ml-1 text-[10px] font-normal text-muted">KRW</span></td>
+                                    <td className="num px-3 py-2 text-right font-semibold text-ink">{stock.currentPrice}<span className="ml-1 text-[12px] font-normal text-muted">KRW</span></td>
                                     <td className="num px-3 py-2 text-right text-body">{stock.tradingValue}</td>
                                 </tr>
                             );

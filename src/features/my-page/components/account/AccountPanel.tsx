@@ -1,6 +1,7 @@
 import { CheckIcon, CloseIcon } from "@/components/icons/Icon";
 import { rechargeAmounts, rechargeHistory, won } from "../../data";
 import type { AccountView, RechargeRecord } from "../../model";
+import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";
 
 type AccountPanelProps = {
   view: AccountView;
@@ -16,6 +17,10 @@ type AccountPanelProps = {
   onRequest: () => void;
   onSelectHistory: (record: RechargeRecord) => void;
   onResetRequest: () => void;
+  accounts: AccountInfoResponse[] | null;
+  profit: ProfitResponse | null;
+  isLoading: boolean;
+  error: string;
 };
 
 export default function AccountPanel({
@@ -32,6 +37,10 @@ export default function AccountPanel({
   onRequest,
   onSelectHistory,
   onResetRequest,
+  accounts,
+  profit,
+  isLoading,
+  error,
 }: AccountPanelProps) {
   return (
     <div className="mx-auto max-w-[1180px]">
@@ -46,7 +55,7 @@ export default function AccountPanel({
       </div>
 
       <div className="min-h-[360px] rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
-        {view === "summary" && <AccountSummary />}
+        {view === "summary" && <AccountSummary accounts={accounts} profit={profit} isLoading={isLoading} error={error} />}
         {view === "recharge" && <RechargeAmount selectedAmount={selectedAmount} customAmount={customAmount} onSelectAmount={onSelectAmount} onCustomAmount={onCustomAmount} onCancel={onResetRequest} onNext={() => requestedAmount > 0 && onViewChange("reason")} />}
         {view === "reason" && <RechargeReason amount={requestedAmount} reason={reason} onReasonChange={onReasonChange} onBack={() => onViewChange("recharge")} onRequest={onRequest} />}
         {view === "history" && <RechargeHistory onBack={() => onViewChange("summary")} onSelect={onSelectHistory} />}
@@ -56,24 +65,37 @@ export default function AccountPanel({
   );
 }
 
-function AccountSummary() {
+function AccountSummary({ accounts, profit, isLoading, error }: { accounts: AccountInfoResponse[] | null; profit: ProfitResponse | null; isLoading: boolean; error: string }) {
+  if (isLoading) {
+    return <div className="flex min-h-72 items-center justify-center text-sm font-semibold text-muted">계좌 정보를 불러오는 중입니다.</div>;
+  }
+
+  if (error) {
+    return <div role="alert" className="flex min-h-72 items-center justify-center text-center text-sm font-semibold text-red-500">{error}</div>;
+  }
+
+  const account = accounts?.[0];
+  if (!account) {
+    return <div className="flex min-h-72 items-center justify-center text-sm font-semibold text-muted">표시할 계좌가 없습니다.</div>;
+  }
+
   const metrics = [
-    { label: "총 투자 금액", value: "0원" },
-    { label: "판매 수익", value: "0원" },
-    { label: "배당금", value: "0원" },
-    { label: "계좌 이자", value: "0원" },
-    { label: "연 이자율", value: "1%" },
-    { label: "거래 수수료", value: "0.1%" },
+    { label: "기준 자산", value: won(account.baseBalance) },
+    { label: "현재 잔액", value: won(account.balance) },
+    { label: "주문 동결 금액", value: won(account.frozenBalance) },
+    { label: "총 평가 자산", value: won(profit?.totalAsset ?? account.balance + account.frozenBalance) },
+    { label: "평가 손익", value: won(profit?.profitAmount ?? 0) },
+    { label: "자동 충전 사용", value: `${account.chargeCount}/3회` },
   ];
 
   return (
     <div className="space-y-4">
       <section className="theme-accent-soft rounded-lg border border-[var(--market-accent)]/20 p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div><p className="text-xs font-semibold text-muted">AI STOCK 가상계좌</p><p className="num mt-1.5 text-base font-extrabold tracking-[0.06em] sm:text-lg">829-342-001935</p></div>
-          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-500">정상</span>
+          <div><p className="text-xs font-semibold text-muted">{account.accountName}</p><p className="num mt-1.5 text-base font-extrabold tracking-[0.06em] sm:text-lg">{account.accountNumber}</p></div>
+          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${account.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{account.status === "ACTIVE" ? "정상" : "정지"}</span>
         </div>
-        <div className="mt-5 border-t border-[var(--market-accent)]/15 pt-4"><p className="text-xs font-semibold text-muted">총 주문 가능 금액</p><strong className="num mt-1 block text-xl font-black sm:text-2xl">100,000,000원</strong></div>
+        <div className="mt-5 border-t border-[var(--market-accent)]/15 pt-4"><p className="text-xs font-semibold text-muted">총 주문 가능 금액</p><strong className="num mt-1 block text-xl font-black sm:text-2xl">{won(account.balance)}</strong></div>
       </section>
       <dl className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric) => <div key={metric.label} className="rounded-lg border border-hairline bg-white p-3"><dt className="text-xs font-semibold text-muted">{metric.label}</dt><dd className="num mt-1.5 text-right text-sm font-extrabold">{metric.value}</dd></div>)}

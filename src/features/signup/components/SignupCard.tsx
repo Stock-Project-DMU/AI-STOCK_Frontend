@@ -4,12 +4,13 @@ type SignupCardProps = {
     title: string;
     onBack: () => void;
     children: ReactNode;
+    wide?: boolean;
 };
 
-export default function SignupCard({ title, onBack, children }: SignupCardProps) {
+export default function SignupCard({ title, onBack, children, wide = false }: SignupCardProps) {
     return (
         <div className="market-theme auth-shell flex min-h-screen items-center justify-center px-4 py-12">
-            <div className="auth-card w-full max-w-[480px] rounded-3xl p-8 sm:p-10">
+            <div className={`auth-card w-full rounded-3xl p-8 transition-[max-width] sm:p-10 ${wide ? "max-w-[860px]" : "max-w-[480px]"}`}>
                 <div className="relative flex w-full items-center justify-center">
                     <button
                         type="button"

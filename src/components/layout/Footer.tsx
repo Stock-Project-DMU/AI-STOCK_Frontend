@@ -19,7 +19,7 @@ export default function Footer() {
                     <address className="mt-2.5 not-italic text-xs leading-6 text-muted-soft">
                         서울특별시 구로구 경인로 445 동양미래대학교 · 대표 김진우, 박찬서, 전우혁, 전유찬
                     </address>
-                    <p className="mt-2.5 text-[11px] font-semibold text-muted-soft">Copyright © AI STOCK. All rights reserved.</p>
+                    <p className="mt-2.5 text-[12px] font-semibold text-muted-soft">Copyright © AI STOCK. All rights reserved.</p>
                 </div>
             </div>
         </footer>

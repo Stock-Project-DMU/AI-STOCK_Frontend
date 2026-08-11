@@ -89,7 +89,7 @@ export default function SimulationControls({
             <label className="mt-5 flex cursor-pointer items-center justify-between rounded-md bg-surface-soft px-4 py-3">
                 <span>
                     <strong className="block text-xs text-ink">공격적 투자 시나리오</strong>
-                    <small className="text-[10px] text-muted-soft">
+                    <small className="text-[12px] text-muted-soft">
                         수익률 +2.5% 추가 반영 시 비교
                     </small>
                 </span>

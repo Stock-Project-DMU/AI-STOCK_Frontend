@@ -26,16 +26,16 @@ export default function RightSidebar() {
             <section className="rounded-lg border border-hairline bg-white p-4">
                 <h2 className="text-sm font-black text-ink">전략 신호</h2>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                    {[['시장', '중립'], ['변동성', '보통'], ['AI 신뢰도', '82%']].map(([label, value]) => <div key={label} className="rounded-md bg-surface-soft px-2 py-2.5"><p className="text-[10px] text-muted">{label}</p><strong className="num mt-1 block text-xs text-ink">{value}</strong></div>)}
+                    {[['시장', '중립'], ['변동성', '보통'], ['AI 신뢰도', '82%']].map(([label, value]) => <div key={label} className="rounded-md bg-surface-soft px-2 py-2.5"><p className="text-[12px] text-muted">{label}</p><strong className="num mt-1 block text-xs text-ink">{value}</strong></div>)}
                 </div>
             </section>
 
             <section className="rounded-lg border border-hairline bg-white p-4">
-                <div className="flex items-center justify-between"><h2 className="text-sm font-black text-ink">뉴스 리포트</h2><Link href="/ai-market-briefing" className="theme-accent-text text-[10px] font-bold">전체 보기</Link></div>
+                <div className="flex items-center justify-between"><h2 className="text-sm font-black text-ink">뉴스 리포트</h2><Link href="/ai-market-briefing" className="theme-accent-text text-[12px] font-bold">전체 보기</Link></div>
                 <div className="mt-2 divide-y divide-hairline-soft">
                     {news.map(([title, age], index) => (
                         <article key={title} className="grid grid-cols-[minmax(0,1fr)_72px] gap-3 py-2.5">
-                            <div><span className="theme-accent-text text-[9px] font-black">0{index + 1}</span><h3 className="mt-1 text-xs font-bold leading-5 text-ink">{title}</h3><p className="mt-1 text-[10px] text-muted">{age}</p></div>
+                            <div><span className="theme-accent-text text-[12px] font-black">0{index + 1}</span><h3 className="mt-1 text-xs font-bold leading-5 text-ink">{title}</h3><p className="mt-1 text-[12px] text-muted">{age}</p></div>
                             <img src="/new1.png" alt="" className="h-14 w-[72px] rounded-md object-cover" width={72} height={56} />
                         </article>
                     ))}

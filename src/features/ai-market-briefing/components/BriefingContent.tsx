@@ -10,10 +10,10 @@ export function NewsSummary({ onSemiconductor }: { onSemiconductor: () => void }
             </div>
             {MARKET_NEWS.map(item => (
                 <button key={item.rank} onClick={item.rank === 2 ? onSemiconductor : undefined} className="flex w-full items-center gap-3 border-t border-hairline-soft px-4 py-3 text-left hover:bg-surface-soft">
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${item.rank <= 3 ? "bg-primary text-white" : "bg-surface-strong text-muted"}`}>{item.rank}</span>
+                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[12px] ${item.rank <= 3 ? "bg-primary text-white" : "bg-surface-strong text-muted"}`}>{item.rank}</span>
                     <span className="min-w-0">
                         <strong className="block truncate text-xs text-ink">{item.title}</strong>
-                        <small className="mt-1 block text-[10px] text-muted-soft">{item.source} · {item.age}</small>
+                        <small className="mt-1 block text-[12px] text-muted-soft">{item.source} · {item.age}</small>
                     </span>
                 </button>
             ))}
@@ -33,7 +33,7 @@ export function SemiconductorBriefing() {
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
                 {["#삼성전자", "#SK하이닉스", "#HBM3E", "#마이크론", "#반도체지수"].map(tag => (
-                    <span key={tag} className="rounded-pill bg-canvas px-3 py-1 text-[10px] text-muted">{tag}</span>
+                    <span key={tag} className="rounded-pill bg-canvas px-3 py-1 text-[12px] text-muted">{tag}</span>
                 ))}
             </div>
         </div>

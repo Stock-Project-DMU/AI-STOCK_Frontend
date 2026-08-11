@@ -40,6 +40,13 @@
     Roboto, Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace,
     monospace;
+
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.625rem;
 }
 
 :root {
@@ -87,6 +94,8 @@ body {
   margin: 0;
   background: var(--market-bg);
   color: var(--market-text);
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
   font-variant-numeric: tabular-nums;
 }
 

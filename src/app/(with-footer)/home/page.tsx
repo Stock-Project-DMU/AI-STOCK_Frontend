@@ -17,7 +17,7 @@ export default function Home() {
                     <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
                         {marketPulse.map(([name, value, change, tone]) => (
                             <div key={name} className="border-r border-hairline px-3 py-3 last:border-0">
-                                <p className="text-[10px] font-bold tracking-wider text-muted">{name}</p>
+                                <p className="text-[12px] font-bold tracking-wider text-muted">{name}</p>
                                 <strong className="num mt-1.5 block text-base text-ink">{value}</strong>
                                 <span className={`num mt-0.5 block text-xs font-bold ${tone}`}>{change}</span>
                             </div>
@@ -29,7 +29,7 @@ export default function Home() {
                     <StockTable />
                     <RightSidebar />
                 </div>
-                <p className="mt-3 text-right text-[10px] text-muted">화면에 표시된 수치는 UI 확인을 위한 샘플 데이터입니다.</p>
+                <p className="mt-3 text-right text-[12px] text-muted">화면에 표시된 수치는 UI 확인을 위한 샘플 데이터입니다.</p>
             </section>
         </div>
     );

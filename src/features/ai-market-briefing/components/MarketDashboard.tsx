@@ -14,11 +14,11 @@ export default function MarketDashboard({ side = "right" }: MarketDashboardProps
         >
             <div className="flex items-center justify-between">
                 <h2 className="flex items-center gap-1.5 text-sm font-bold text-ink"><TrendUpIcon className="h-3.5 w-3.5" /> 시장 현황</h2>
-                <span className="theme-accent-soft theme-accent-text rounded-pill px-2 py-1 text-[9px] font-black">데모</span>
+                <span className="theme-accent-soft theme-accent-text rounded-pill px-2 py-1 text-[12px] font-black">데모</span>
             </div>
             <div className="mt-4 overflow-hidden rounded-md border border-hairline border-t-2 border-t-primary">
                 {MARKET_INDEXES.map(([name, value, change, color]) => (
-                    <div key={name} className="grid grid-cols-[72px_1fr_auto] items-center border-b border-hairline-soft px-4 py-2.5 text-[11px] last:border-0">
+                    <div key={name} className="grid grid-cols-[72px_1fr_auto] items-center border-b border-hairline-soft px-4 py-2.5 text-[12px] last:border-0">
                         <strong className="text-ink">{name}</strong>
                         <span className="text-right font-semibold text-ink">{value}</span>
                         <span className={`ml-2 ${color}`}>{change}</span>
@@ -34,7 +34,7 @@ export default function MarketDashboard({ side = "right" }: MarketDashboardProps
                             <strong className={index < 3 ? "text-primary" : "text-muted"}>{index + 1}</strong>
                             <span className="text-ink">{trend}</span>
                             {badge && (
-                                <span className={`rounded-sm px-1.5 py-0.5 text-[9px] ${badge === "HOT" ? "bg-primary/10 text-primary" : "theme-accent-soft theme-accent-text"}`}>{badge}</span>
+                                <span className={`rounded-sm px-1.5 py-0.5 text-[12px] ${badge === "HOT" ? "bg-primary/10 text-primary" : "theme-accent-soft theme-accent-text"}`}>{badge}</span>
                             )}
                         </li>
                     ))}
@@ -51,7 +51,7 @@ export default function MarketDashboard({ side = "right" }: MarketDashboardProps
                     <span className="w-[72%] bg-emerald-500" />
                     <span className="flex-1 bg-red-500" />
                 </div>
-                <div className="mt-2 flex justify-between text-[10px]">
+                <div className="mt-2 flex justify-between text-[12px]">
                     <span className="text-emerald-600">극도의 탐욕</span>
                     <span className="text-red-500">극도의 공포</span>
                 </div>

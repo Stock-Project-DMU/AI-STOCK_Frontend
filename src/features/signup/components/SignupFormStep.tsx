@@ -10,6 +10,13 @@ type SignupFormStepProps = {
     errors: SignupFormErrors;
     onChange: (field: SignupTextField, value: string) => void;
     onBirthDateChange: (value: string) => void;
+    emailCode: string;
+    emailVerificationStatus: "idle" | "sent" | "verified";
+    isSendingEmailCode: boolean;
+    isVerifyingEmailCode: boolean;
+    onEmailCodeChange: (value: string) => void;
+    onSendEmailCode: () => void;
+    onVerifyEmailCode: () => void;
     onNext: () => void;
 };
 
@@ -19,6 +26,13 @@ export default function SignupFormStep({
     errors,
     onChange,
     onBirthDateChange,
+    emailCode,
+    emailVerificationStatus,
+    isSendingEmailCode,
+    isVerifyingEmailCode,
+    onEmailCodeChange,
+    onSendEmailCode,
+    onVerifyEmailCode,
     onNext,
 }: SignupFormStepProps) {
     const handleChange =
@@ -286,6 +300,46 @@ export default function SignupFormStep({
                                     )}
                                 </div>
                             </div>
+                            <div className="mt-3 flex gap-2">
+                                <Button
+                                    variant="secondary"
+                                    size="md"
+                                    className="shrink-0 !rounded-md !px-4 !text-xs"
+                                    disabled={isSendingEmailCode || emailVerificationStatus === "verified"}
+                                    onClick={onSendEmailCode}
+                                >
+                                    {isSendingEmailCode ? "발송 중..." : emailVerificationStatus === "sent" ? "재발송" : "인증번호 받기"}
+                                </Button>
+                                {emailVerificationStatus !== "idle" ? (
+                                    <>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength={6}
+                                            aria-label="이메일 인증번호"
+                                            className={getInputClassName(Boolean(errors.emailVerification), "min-w-0 flex-1")}
+                                            placeholder="인증번호 6자리"
+                                            value={emailCode}
+                                            disabled={emailVerificationStatus === "verified"}
+                                            onChange={(event) => onEmailCodeChange(event.target.value.replace(/[^0-9]/g, ""))}
+                                        />
+                                        <Button
+                                            variant="outline"
+                                            size="md"
+                                            className="shrink-0 !rounded-md !px-4 !text-xs"
+                                            disabled={isVerifyingEmailCode || emailVerificationStatus === "verified" || emailCode.length !== 6}
+                                            onClick={onVerifyEmailCode}
+                                        >
+                                            {isVerifyingEmailCode ? "확인 중..." : emailVerificationStatus === "verified" ? "인증 완료" : "인증 확인"}
+                                        </Button>
+                                    </>
+                                ) : null}
+                            </div>
+                            {renderHelperText(
+                                "signup-email-verification-helper",
+                                errors.emailVerification,
+                                emailVerificationStatus === "verified" ? "이메일 인증이 완료되었습니다." : emailVerificationStatus === "sent" ? "이메일로 전송된 인증번호를 입력해 주세요." : undefined,
+                            )}
                         </div>
                     </div>
                 </section>

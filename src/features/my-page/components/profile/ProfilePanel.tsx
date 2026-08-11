@@ -16,6 +16,8 @@ type ProfilePanelProps = {
   draftProfile: Profile;
   isEditing: boolean;
   errors: ProfileErrors;
+  saveError?: string;
+  isSaving?: boolean;
   onDraftChange: (profile: Profile) => void;
   onEdit: () => void;
   onClearError: (field: ProfileField) => void;
@@ -70,6 +72,8 @@ export default function ProfilePanel({
   draftProfile,
   isEditing,
   errors,
+  saveError,
+  isSaving = false,
   onDraftChange,
   onEdit,
   onClearError,
@@ -84,7 +88,10 @@ export default function ProfilePanel({
     <dl className="divide-y divide-gray-200">
       {items.map((row) => {
         const selectedChoice = choicesByKey[row.key]?.find((choice) => choice.value === profile[row.key]);
-        const isChanged = draftProfile[row.key] !== profile[row.key];
+        const isChanged =
+          row.key === "password"
+            ? Boolean(draftProfile.password) && draftProfile.password !== profile.password
+            : draftProfile[row.key] !== profile[row.key];
         const error = errors[row.key];
 
         return (
@@ -96,6 +103,7 @@ export default function ProfilePanel({
                   aria-label={row.label}
                   type={row.key === "birthday" ? "date" : row.key === "email" ? "email" : "text"}
                   autoComplete={row.key === "password" ? "new-password" : row.key === "email" ? "email" : row.key === "name" ? "name" : undefined}
+                  placeholder={row.key === "password" ? "변경할 비밀번호 입력" : undefined}
                   value={draftProfile[row.key]}
                   onChange={(event) => {
                     onDraftChange({ ...draftProfile, [row.key]: event.target.value });
@@ -108,7 +116,13 @@ export default function ProfilePanel({
               ) : selectedChoice ? (
                 <span className={`inline-flex rounded-full border px-2.5 py-1 text-sm font-bold ${profileChoiceToneClasses[selectedChoice.tone]}`}>{profile[row.key]}</span>
               ) : (
-                <span className="block break-words text-sm font-bold text-ink sm:text-base">{row.key === "birthday" ? profile[row.key].replaceAll("-", ".") : profile[row.key]}</span>
+                <span className="block break-words text-sm font-bold text-ink sm:text-base">
+                  {row.key === "password"
+                    ? "**********"
+                    : row.key === "birthday"
+                      ? profile[row.key].replaceAll("-", ".")
+                      : profile[row.key]}
+                </span>
               )}
               {isEditing && error && <p id={`profile-${row.key}-error`} role="alert" className="mt-1.5 text-xs font-semibold text-red-500">{error}</p>}
             </dd>
@@ -124,9 +138,10 @@ export default function ProfilePanel({
         <h1 className="text-xl font-extrabold">내 정보</h1>
         <div className="flex gap-2">
           {isEditing && <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>}
-          <button type="button" onClick={isEditing ? onSave : onEdit} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold">{isEditing ? "완료" : "정보 수정"}</button>
+          <button type="button" onClick={isEditing ? onSave : onEdit} disabled={isSaving} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60">{isSaving ? "저장 중..." : isEditing ? "완료" : "정보 수정"}</button>
         </div>
       </div>
+      {saveError ? <p role="alert" className="mb-3 rounded-lg bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-500">{saveError}</p> : null}
 
       <div className={isEditing ? "space-y-4" : "grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,.65fr)]"}>
         <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">

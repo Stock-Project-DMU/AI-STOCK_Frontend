@@ -1,5 +1,15 @@
 import type { Profile, ProfileErrors } from "./model";
 
+export function hasProfileChanges(profile: Profile, savedProfile: Profile) {
+  return (Object.keys(profile) as (keyof Profile)[]).some((field) => {
+    if (field === "password") {
+      return Boolean(profile.password) && profile.password !== savedProfile.password;
+    }
+
+    return profile[field] !== savedProfile[field];
+  });
+}
+
 export function validateProfile(profile: Profile, savedProfile: Profile) {
   const errors: ProfileErrors = {};
   const today = new Date();
@@ -15,7 +25,7 @@ export function validateProfile(profile: Profile, savedProfile: Profile) {
     errors.userId = "아이디는 영문, 숫자, 밑줄, 하이픈을 사용해 4~20자로 입력해 주세요.";
   }
 
-  if (profile.password !== savedProfile.password && !/^(?=.*[A-Za-z])(?=.*\d).{8,20}$/.test(profile.password)) {
+  if (profile.password && profile.password !== savedProfile.password && !/^(?=.*[A-Za-z])(?=.*\d).{8,20}$/.test(profile.password)) {
     errors.password = "비밀번호는 영문과 숫자를 포함해 8~20자로 입력해 주세요.";
   }
 

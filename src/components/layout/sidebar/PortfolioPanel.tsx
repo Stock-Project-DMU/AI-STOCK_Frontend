@@ -1,14 +1,14 @@
-import { HOLDINGS, KRW_BALANCES } from "./sidebarData";
 import HoldingRow from "./HoldingRow";
 import PortfolioSummary from "./PortfolioSummary";
+import type { Holding } from "./types";
 
-export default function PortfolioPanel() {
-    const cashTotal = KRW_BALANCES.reduce((sum, amount) => sum + amount, 0);
-    const evaluationTotal = HOLDINGS.reduce(
+export default function PortfolioPanel({ holdings, balances }: { holdings: Holding[]; balances: number[] }) {
+    const cashTotal = balances.reduce((sum, amount) => sum + amount, 0);
+    const evaluationTotal = holdings.reduce(
         (sum, holding) => sum + holding.amountValue,
         0,
     );
-    const profitTotal = HOLDINGS.reduce(
+    const profitTotal = holdings.reduce(
         (sum, holding) => sum + holding.profitValue,
         0,
     );
@@ -20,7 +20,7 @@ export default function PortfolioPanel() {
     return (
         <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto">
-                {HOLDINGS.map((holding) => (
+                {holdings.map((holding) => (
                     <HoldingRow key={holding.name} holding={holding} />
                 ))}
             </div>

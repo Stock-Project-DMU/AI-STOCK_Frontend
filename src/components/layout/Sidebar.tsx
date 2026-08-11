@@ -7,6 +7,7 @@ import RailItem from "./sidebar/RailItem";
 import SidebarPanelContent from "./sidebar/SidebarPanelContent";
 import { SIDEBAR_TABS } from "./sidebar/sidebarData";
 import { ChevronLeftIcon, ChevronRightSmallIcon } from "@/components/icons/Icon";
+import { useSidebarPortfolio } from "./sidebar/useSidebarPortfolio";
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -15,6 +16,7 @@ export default function Sidebar() {
         SIDEBAR_TABS[0].label,
 
     );
+    const portfolioData = useSidebarPortfolio();
 
     const activeTab =
         SIDEBAR_TABS.find((tab) => tab.label === activeLabel) ??
@@ -43,7 +45,7 @@ export default function Sidebar() {
                         <span>{activeTab.label}</span>
                     </div>
 
-                    <SidebarPanelContent activeTab={activeTab} />
+                    <SidebarPanelContent activeTab={activeTab} data={portfolioData} />
                 </div>
             </section>
 

@@ -18,7 +18,7 @@ export function DesktopMyPageNavigation({ activeTab, onChange }: MyPageNavigatio
           {navItems.map((item) => (
             <button key={item.id} type="button" onClick={() => onChange(item.id)} className={`cursor-pointer border-l-2 px-5 py-2.5 text-left transition-colors ${activeTab === item.id ? "theme-accent-soft theme-accent-text border-[var(--market-accent)]" : "border-transparent text-body hover:bg-surface-soft hover:text-ink"}`}>
               <strong className="block text-sm font-semibold">{item.label}</strong>
-              <span className={`mt-1 block text-[11px] ${activeTab === item.id ? "opacity-75" : "text-muted-soft"}`}>{item.description}</span>
+              <span className={`mt-1 block text-[12px] ${activeTab === item.id ? "opacity-75" : "text-muted-soft"}`}>{item.description}</span>
             </button>
           ))}
         </nav>
