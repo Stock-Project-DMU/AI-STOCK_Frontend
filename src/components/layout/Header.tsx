@@ -36,7 +36,7 @@ export default function Header() {
                 </nav>
 
                 <div className="flex items-center justify-end gap-2.5">
-                    <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 xl:flex">
+                    <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[12px] font-bold text-emerald-700 xl:flex">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 모의투자
                     </span>
                     <label className="hidden items-center rounded-full border border-hairline bg-surface-soft px-3.5 2xl:flex">

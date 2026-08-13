@@ -80,7 +80,7 @@ export default function TermsAgreementStep({
                             >
                                 {term.title}
                                 <span
-                                    className={`ml-1 text-[11px] ${
+                                    className={`ml-1 text-[12px] ${
                                         term.isRequired
                                             ? "text-red-500"
                                             : "text-muted"
@@ -102,7 +102,7 @@ export default function TermsAgreementStep({
                 </div>
 
                 <div className="mt-3 rounded-md bg-surface-strong px-4 py-3">
-                    <p className="text-center text-[11px] leading-5 text-muted">
+                    <p className="text-center text-[12px] leading-5 text-muted">
                         본 서비스는 모의 투자 교육 목적의 서비스이며 실제
                         금융투자상품 매매를 중개하지 않습니다. 서비스 내 모든
                         자산은 가상 포트폴리오 기준이며 실제 현금 가치를

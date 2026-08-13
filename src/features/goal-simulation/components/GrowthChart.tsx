@@ -70,7 +70,7 @@ export default function GrowthChart({
                 <h2 className="text-sm font-bold text-ink">
                     자산 성장 추이 {aggressive ? "비교" : "시뮬레이션"}
                 </h2>
-                <div className="flex gap-4 text-[11px] text-muted">
+                <div className="flex gap-4 text-[12px] text-muted">
                     <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--chart-primary)]" />기본 ({annualReturn.toFixed(1)}%)</span>
                     {aggressive && <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[var(--market-up)]" />공격적 ({(annualReturn + 2.5).toFixed(1)}%)</span>}
                 </div>

@@ -12,6 +12,8 @@ type InvestmentExperienceStepProps = {
     selectedExperience: InvestmentExperienceLevel | null;
     onSelect: (experience: InvestmentExperienceLevel) => void;
     onNext: () => void;
+    isSubmitting?: boolean;
+    error?: string;
 };
 
 const INVESTMENT_OPTIONS: InvestmentOption[] = [
@@ -39,11 +41,13 @@ export default function InvestmentExperienceStep({
     selectedExperience,
     onSelect,
     onNext,
+    isSubmitting = false,
+    error,
 }: InvestmentExperienceStepProps) {
     return (
         <>
             <div className="mt-8 rounded-lg border border-hairline-soft bg-surface-soft p-5 sm:p-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {INVESTMENT_OPTIONS.map((option) => {
                         const isSelected = selectedExperience === option.id;
 
@@ -51,7 +55,7 @@ export default function InvestmentExperienceStep({
                             <button
                                 type="button"
                                 key={option.id}
-                                className={`relative flex flex-col items-center rounded-lg px-5 py-6 text-center text-white transition ${option.className} ${
+                                className={`relative flex min-h-[190px] flex-col items-center justify-center rounded-lg px-6 py-7 text-center text-white transition ${option.className} ${
                                     isSelected
                                         ? "ring-2 ring-primary ring-offset-2 ring-offset-surface-soft"
                                         : "hover:brightness-110"
@@ -67,7 +71,7 @@ export default function InvestmentExperienceStep({
                                 <span className="block text-base font-bold">
                                     {option.title}
                                 </span>
-                                <span className="mt-3 block whitespace-pre-line text-xs leading-5 text-white/90">
+                                <span className="mt-3 block whitespace-pre-line break-keep text-sm leading-6 text-white/90">
                                     {option.description}
                                 </span>
                             </button>
@@ -76,15 +80,17 @@ export default function InvestmentExperienceStep({
                 </div>
             </div>
 
+            {error ? <p role="alert" className="mt-4 text-center text-sm font-semibold text-red-500">{error}</p> : null}
+
             <Button
                 variant="primary"
                 size="lg"
                 fullWidth
                 className="mt-8"
-                disabled={!selectedExperience}
+                disabled={!selectedExperience || isSubmitting}
                 onClick={onNext}
             >
-                다음
+                {isSubmitting ? "가입 처리 중..." : "다음"}
             </Button>
         </>
     );

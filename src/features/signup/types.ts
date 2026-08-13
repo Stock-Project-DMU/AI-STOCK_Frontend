@@ -10,6 +10,9 @@ export type SignupFormData = {
     emailDomain: string;
 };
 
-export type SignupFormErrors = Partial<Record<keyof SignupFormData, string>>;
+export type SignupFormErrors = Partial<Record<keyof SignupFormData, string>> & {
+    emailVerification?: string;
+    submit?: string;
+};
 
 export type InvestmentExperienceLevel = "beginner" | "intermediate" | "advanced";

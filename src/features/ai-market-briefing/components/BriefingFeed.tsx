@@ -41,7 +41,7 @@ export default function BriefingFeed({ showDetail, onShowDetail, onSave }: Brief
                         </button>
                     </div>
 
-                    <p className="mt-4 text-center text-[10px] text-muted-soft">
+                    <p className="mt-4 text-center text-[12px] text-muted-soft">
                         매일 오전, AI가 그날의 시황을 자동으로 정리해 드립니다.
                     </p>
                 </div>

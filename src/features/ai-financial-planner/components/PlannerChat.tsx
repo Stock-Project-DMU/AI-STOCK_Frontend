@@ -52,7 +52,7 @@ export default function PlannerChat() {
                     <input value={input} onChange={event => setInput(event.target.value)} placeholder="AI에게 재무 질문을 입력하세요..." className="min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none placeholder:text-muted-soft" />
                     <button aria-label="메시지 보내기" className="theme-accent-bg flex h-9 w-9 items-center justify-center rounded-md"><SendIcon className="h-4 w-4" /></button>
                 </div>
-                <p className="mt-2 text-center text-[10px] text-muted-soft">AI의 조언은 투자 참고용이며 최종 결정은 본인의 책임입니다.</p>
+                <p className="mt-2 text-center text-[12px] text-muted-soft">AI의 조언은 투자 참고용이며 최종 결정은 본인의 책임입니다.</p>
             </form>
         </section>
     );

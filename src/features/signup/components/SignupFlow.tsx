@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getApiErrorMessage } from "@/lib/api/client";
+import { sendEmailVerificationCode, signup, verifyEmailCode } from "@/lib/api/auth";
 import {
     TERMS_AND_CONDITIONS,
     type TermDetail,
@@ -68,6 +71,7 @@ function createCheckedTerms(checked: boolean) {
 }
 
 export default function SignupFlow() {
+    const router = useRouter();
     const [currentStep, setCurrentStep] = useState<SignupStep>("terms");
     const [checkedTerms, setCheckedTerms] = useState<Record<string, boolean>>(
         () => createCheckedTerms(false),
@@ -79,6 +83,11 @@ export default function SignupFlow() {
     const [formErrors, setFormErrors] = useState<SignupFormErrors>({});
     const [selectedExperience, setSelectedExperience] =
         useState<InvestmentExperienceLevel | null>(null);
+    const [emailCode, setEmailCode] = useState("");
+    const [emailVerificationStatus, setEmailVerificationStatus] = useState<"idle" | "sent" | "verified">("idle");
+    const [isSendingEmailCode, setIsSendingEmailCode] = useState(false);
+    const [isVerifyingEmailCode, setIsVerifyingEmailCode] = useState(false);
+    const [isSubmittingSignup, setIsSubmittingSignup] = useState(false);
 
     useEffect(() => {
         if (!selectedTerm) {
@@ -130,6 +139,52 @@ export default function SignupFlow() {
             [field]: undefined,
             ...(field === "password" ? { passwordConfirm: undefined } : {}),
         }));
+
+        if (field === "emailLocal" || field === "emailDomain") {
+            setEmailCode("");
+            setEmailVerificationStatus("idle");
+        }
+    };
+
+    const email = `${formData.emailLocal.trim()}@${formData.emailDomain.trim()}`;
+
+    const handleSendEmailCode = async () => {
+        if (!formData.emailLocal.trim() || !formData.emailDomain.trim()) {
+            setFormErrors((current) => ({ ...current, emailVerification: "이메일 주소를 먼저 입력해 주세요." }));
+            return;
+        }
+
+        setIsSendingEmailCode(true);
+        setFormErrors((current) => ({ ...current, emailVerification: undefined }));
+
+        try {
+            await sendEmailVerificationCode(email);
+            setEmailCode("");
+            setEmailVerificationStatus("sent");
+        } catch (error) {
+            setFormErrors((current) => ({ ...current, emailVerification: getApiErrorMessage(error, "인증번호 발송에 실패했습니다.") }));
+        } finally {
+            setIsSendingEmailCode(false);
+        }
+    };
+
+    const handleVerifyEmailCode = async () => {
+        if (emailCode.length !== 6) {
+            setFormErrors((current) => ({ ...current, emailVerification: "인증번호 6자리를 입력해 주세요." }));
+            return;
+        }
+
+        setIsVerifyingEmailCode(true);
+        setFormErrors((current) => ({ ...current, emailVerification: undefined }));
+
+        try {
+            await verifyEmailCode(email, emailCode);
+            setEmailVerificationStatus("verified");
+        } catch (error) {
+            setFormErrors((current) => ({ ...current, emailVerification: getApiErrorMessage(error, "이메일 인증에 실패했습니다.") }));
+        } finally {
+            setIsVerifyingEmailCode(false);
+        }
     };
 
     const handleChangeBirthDate = (value: string) => {
@@ -184,6 +239,10 @@ export default function SignupFlow() {
             nextErrors.emailDomain = "이메일 도메인을 입력해 주세요.";
         }
 
+        if (emailVerificationStatus !== "verified") {
+            nextErrors.emailVerification = "이메일 인증을 완료해 주세요.";
+        }
+
         return nextErrors;
     };
 
@@ -199,12 +258,32 @@ export default function SignupFlow() {
         setCurrentStep("experience");
     };
 
-    const handleCompleteSignup = () => {
-        // TODO: Connect signup submission or navigation after API integration.
+    const handleCompleteSignup = async () => {
+        if (!selectedExperience) {
+            return;
+        }
+
+        setIsSubmittingSignup(true);
+        setFormErrors((current) => ({ ...current, submit: undefined }));
+
+        try {
+            await signup({
+                loginId: formData.userId.trim(),
+                password: formData.password,
+                name: formData.name.trim(),
+                email,
+                birthdate: `${birthDateInput.slice(0, 4)}-${birthDateInput.slice(4, 6)}-${birthDateInput.slice(6, 8)}`,
+            });
+            router.push("/welcome");
+        } catch (error) {
+            setFormErrors((current) => ({ ...current, submit: getApiErrorMessage(error, "회원가입 처리에 실패했습니다.") }));
+        } finally {
+            setIsSubmittingSignup(false);
+        }
     };
 
     return (
-        <SignupCard title={STEP_TITLE[currentStep]} onBack={handleBack}>
+        <SignupCard title={STEP_TITLE[currentStep]} onBack={handleBack} wide={currentStep === "experience"}>
             {currentStep === "terms" ? (
                 <TermsAgreementStep
                     checkedTerms={checkedTerms}
@@ -223,6 +302,16 @@ export default function SignupFlow() {
                     errors={formErrors}
                     onChange={handleChangeFormData}
                     onBirthDateChange={handleChangeBirthDate}
+                    emailCode={emailCode}
+                    emailVerificationStatus={emailVerificationStatus}
+                    isSendingEmailCode={isSendingEmailCode}
+                    isVerifyingEmailCode={isVerifyingEmailCode}
+                    onEmailCodeChange={(value) => {
+                        setEmailCode(value);
+                        setFormErrors((current) => ({ ...current, emailVerification: undefined }));
+                    }}
+                    onSendEmailCode={handleSendEmailCode}
+                    onVerifyEmailCode={handleVerifyEmailCode}
                     onNext={handleNextAccountStep}
                 />
             ) : null}
@@ -232,6 +321,8 @@ export default function SignupFlow() {
                     selectedExperience={selectedExperience}
                     onSelect={setSelectedExperience}
                     onNext={handleCompleteSignup}
+                    isSubmitting={isSubmittingSignup}
+                    error={formErrors.submit}
                 />
             ) : null}
 

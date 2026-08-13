@@ -1,18 +1,23 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { initialProfile, orders } from "../data";
+import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import type { AccountView, MyPageTab, ProfileErrors, ProfileField, RechargeRecord } from "../model";
 import { verifyProfilePassword } from "../services/profileAuth";
-import { validateProfile } from "../validation";
+import { hasProfileChanges, validateProfile } from "../validation";
 import AccountPanel from "./account/AccountPanel";
 import Modal from "./Modal";
 import { DesktopMyPageNavigation, MobileMyPageNavigation } from "./MyPageNavigation";
 import OrdersPanel from "./orders/OrdersPanel";
 import ProfilePanel from "./profile/ProfilePanel";
-import { PasswordCheckModal, ProfileSavedModal, WithdrawalModal } from "./profile/ProfileModals";
+import { PasswordCheckModal, ProfileSavedModal, UnsavedChangesModal, WithdrawalModal } from "./profile/ProfileModals";
 import ReturnsPanel from "./returns/ReturnsPanel";
+import { getApiErrorMessage, isAuthenticated } from "@/lib/api/client";
+import { getAccountProfit, getAccounts, getOrders } from "@/lib/api/portfolio";
+import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse } from "@/lib/api/types";
+import { getMyInfo, updateMyInfo } from "@/lib/api/user";
 
 export default function MyPageDashboard() {
   const [activeTab, setActiveTab] = useState<MyPageTab>("profile");
@@ -33,22 +38,107 @@ export default function MyPageDashboard() {
   const [requestComplete, setRequestComplete] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState<RechargeRecord | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState(orders[0].id);
+  const [accounts, setAccounts] = useState<AccountInfoResponse[] | null>(null);
+  const [accountProfit, setAccountProfit] = useState<ProfitResponse | null>(null);
+  const [apiOrders, setApiOrders] = useState<OrderHistoryResponse[] | null>(null);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState("");
+  const [profileSaveError, setProfileSaveError] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated()) return;
+
+    let cancelled = false;
+
+    const loadDashboard = async () => {
+      setIsDashboardLoading(true);
+      setDashboardError("");
+
+      try {
+        const [user, accountList] = await Promise.all([getMyInfo(), getAccounts()]);
+        if (cancelled) return;
+
+        setProfile((current) => ({
+          ...current,
+          userId: user.loginId,
+          name: user.name,
+          email: user.email,
+        }));
+        setDraftProfile((current) => ({
+          ...current,
+          userId: user.loginId,
+          name: user.name,
+          email: user.email,
+        }));
+        setAccounts(accountList);
+
+        const primaryAccount = accountList[0];
+        if (!primaryAccount) {
+          setApiOrders([]);
+          setAccountProfit(null);
+          return;
+        }
+
+        const [orderList, profit] = await Promise.all([
+          getOrders(primaryAccount.accountId),
+          getAccountProfit(primaryAccount.accountId),
+        ]);
+        if (cancelled) return;
+
+        setApiOrders(orderList);
+        setAccountProfit(profit);
+        if (orderList[0]) setSelectedOrderId(orderList[0].orderId);
+      } catch (error) {
+        if (!cancelled) setDashboardError(getApiErrorMessage(error, "마이페이지 정보를 불러오지 못했습니다."));
+      } finally {
+        if (!cancelled) setIsDashboardLoading(false);
+      }
+    };
+
+    void loadDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const requestedAmount = useMemo(
     () => selectedAmount ?? (Number(customAmount.replaceAll(",", "")) || 0),
     [customAmount, selectedAmount],
   );
 
+  const hasUnsavedProfileChanges = useMemo(
+    () => isEditing && hasProfileChanges(draftProfile, profile),
+    [draftProfile, isEditing, profile],
+  );
+
+  const {
+    isLeaveModalOpen,
+    requestNavigation,
+    stayOnPage,
+    leavePage,
+  } = useUnsavedChangesGuard(hasUnsavedProfileChanges);
+
   const changeTab = (tab: MyPageTab) => {
-    setActiveTab(tab);
-    if (tab === "account") setAccountView("summary");
+    if (tab === activeTab) return;
+
+    requestNavigation(() => {
+      if (activeTab === "profile") {
+        setDraftProfile(profile);
+        setProfileErrors({});
+        setIsEditing(false);
+      }
+
+      setActiveTab(tab);
+      if (tab === "account") setAccountView("summary");
+    });
   };
 
   const clearProfileError = (field: ProfileField) => {
     setProfileErrors((current) => ({ ...current, [field]: undefined }));
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     const nextErrors = validateProfile(draftProfile, profile);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -57,9 +147,32 @@ export default function MyPageDashboard() {
     }
 
     setProfileErrors({});
-    setProfile(draftProfile);
-    setIsEditing(false);
-    setShowSaved(true);
+    setProfileSaveError("");
+    setIsSavingProfile(true);
+
+    try {
+      let savedName = draftProfile.name;
+      let savedEmail = draftProfile.email;
+
+      if (isAuthenticated()) {
+        const updated = await updateMyInfo(draftProfile.name.trim(), draftProfile.email.trim());
+        savedName = updated.name;
+        savedEmail = updated.email;
+      }
+
+      setProfile({
+        ...draftProfile,
+        name: savedName,
+        email: savedEmail,
+        password: draftProfile.password || profile.password,
+      });
+      setIsEditing(false);
+      setShowSaved(true);
+    } catch (error) {
+      setProfileSaveError(getApiErrorMessage(error, "회원 정보를 저장하지 못했습니다."));
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const closePasswordCheck = () => {
@@ -92,7 +205,7 @@ export default function MyPageDashboard() {
         return;
       }
 
-      setDraftProfile(profile);
+      setDraftProfile({ ...profile, password: "" });
       setProfileErrors({});
       setIsEditing(true);
       setShowPasswordCheck(false);
@@ -112,6 +225,13 @@ export default function MyPageDashboard() {
     setAccountView("summary");
   };
 
+  const discardProfileChangesAndLeave = () => {
+    setDraftProfile(profile);
+    setProfileErrors({});
+    setIsEditing(false);
+    leavePage();
+  };
+
   return (
     <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] text-ink">
       <DesktopMyPageNavigation activeTab={activeTab} onChange={changeTab} />
@@ -126,11 +246,14 @@ export default function MyPageDashboard() {
               draftProfile={draftProfile}
               isEditing={isEditing}
               errors={profileErrors}
+              saveError={profileSaveError}
+              isSaving={isSavingProfile}
               onDraftChange={setDraftProfile}
               onEdit={() => setShowPasswordCheck(true)}
               onClearError={clearProfileError}
               onCancel={() => {
                 setProfileErrors({});
+                setProfileSaveError("");
                 setIsEditing(false);
               }}
               onSave={saveProfile}
@@ -162,11 +285,15 @@ export default function MyPageDashboard() {
                 setAccountView("detail");
               }}
               onResetRequest={resetRechargeRequest}
+              accounts={accounts}
+              profit={accountProfit}
+              isLoading={isDashboardLoading}
+              error={dashboardError}
             />
           )}
 
-          {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} />}
-          {activeTab === "returns" && <ReturnsPanel />}
+          {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} apiOrders={apiOrders} isLoading={isDashboardLoading} error={dashboardError} />}
+          {activeTab === "returns" && <ReturnsPanel profit={accountProfit} account={accounts?.[0] ?? null} />}
         </div>
       </section>
 
@@ -195,6 +322,12 @@ export default function MyPageDashboard() {
       )}
 
       {showWithdrawal && <WithdrawalModal onClose={() => setShowWithdrawal(false)} />}
+      {isLeaveModalOpen && (
+        <UnsavedChangesModal
+          onStay={stayOnPage}
+          onLeave={discardProfileChangesAndLeave}
+        />
+      )}
     </div>
   );
 }
