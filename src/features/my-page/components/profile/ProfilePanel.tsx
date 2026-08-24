@@ -160,7 +160,7 @@ export default function ProfilePanel({
           ) : (
             <>
               {renderRows(investmentRows)}
-              <div className="theme-accent-soft mt-4 rounded-lg px-3.5 py-2.5"><p className="theme-accent-text text-xs font-semibold leading-5">현재 선택한 성향을 기반으로 맞춤 분석이 제공되고 있습니다.</p></div>
+              <div className="theme-accent-soft mt-4 rounded-lg px-3.5 py-2.5"><p className="theme-accent-text text-pretty text-xs font-semibold leading-5">현재 선택한 성향을 기반으로 맞춤 분석이 제공되고 있습니다.</p></div>
             </>
           )}
         </section>

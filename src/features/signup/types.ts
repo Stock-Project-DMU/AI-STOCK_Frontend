@@ -11,6 +11,7 @@ export type SignupFormData = {
 };
 
 export type SignupFormErrors = Partial<Record<keyof SignupFormData, string>> & {
+    email?: string;
     emailVerification?: string;
     submit?: string;
 };

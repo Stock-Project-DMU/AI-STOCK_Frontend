@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { cancelOrder, createOrder } from "@/lib/api/portfolio";
 import type {
@@ -26,6 +27,7 @@ type TradePanelProps = {
 };
 
 export default function TradePanel({ stock, account, orders, holdings, onTradingDataChanged }: TradePanelProps) {
+    const { authReady, authenticated, requireLogin } = useAuthGuard();
     const [tab, setTab] = useState<OrderTab>("buy");
     const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(10);
@@ -39,8 +41,11 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     const maximumQuantity = tab === "sell" ? holding?.quantity ?? 0 : Math.floor((account?.balance ?? 0) / Math.max(price, 1));
     const pendingOrders = orders?.filter((order) => order.status === "PENDING") ?? null;
     const accent = tab === "sell" ? "blue" : "red";
+    const loginRequired = authReady && !authenticated;
 
     async function handleOrder() {
+        if (!requireLogin()) return;
+
         if (!account || !stock) {
             setRequestError("계좌와 종목 정보를 불러온 뒤 주문할 수 있습니다.");
             return;
@@ -69,6 +74,8 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     }
 
     async function handleCancel(orderId: number) {
+        if (!requireLogin()) return;
+
         setIsSubmitting(true);
         setRequestError("");
         setRequestMessage("");
@@ -85,7 +92,11 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     }
 
     return (
-        <aside className="self-start overflow-hidden rounded-lg border border-hairline bg-canvas xl:sticky xl:top-4">
+        <div className="relative self-start xl:sticky xl:top-4">
+        <aside
+            aria-hidden={loginRequired}
+            className={`overflow-hidden rounded-lg border border-hairline bg-canvas transition-[filter,opacity] duration-200 ${loginRequired ? "pointer-events-none select-none blur-[3px] opacity-65" : ""}`}
+        >
             <div className="border-b border-hairline px-4 py-3">
                 <div className="flex items-center justify-between"><h2 className="font-bold text-ink">주식 주문</h2><span className="rounded-xs bg-surface-strong px-2 py-1 text-[12px] text-muted">{account?.accountName ?? "계좌 정보 없음"}</span></div>
                 <div className="mt-3 grid grid-cols-3 rounded-lg bg-surface-soft p-1">
@@ -144,7 +155,7 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
                         {requestError && <p className="rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
                         {requestMessage && <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-600">{requestMessage}</p>}
 
-                        <button type="button" onClick={handleOrder} disabled={isSubmitting || !account || !stock || quantity < 1 || price < 1} className={`trade-action-button w-full rounded-lg py-3.5 text-sm font-black transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${tab === "buy" ? "bg-[var(--market-up)]" : "bg-[var(--market-down)]"}`}>{isSubmitting ? "처리 중..." : `${stockName} ${tab === "buy" ? "매수하기" : "매도하기"}`}</button>
+                        <button type="button" onClick={handleOrder} disabled={isSubmitting || quantity < 1 || price < 1} className={`trade-action-button w-full rounded-lg py-3.5 text-sm font-black transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${tab === "buy" ? "bg-[var(--market-up)]" : "bg-[var(--market-down)]"}`}>{isSubmitting ? "처리 중..." : `${stockName} ${tab === "buy" ? "매수하기" : "매도하기"}`}</button>
 
                         <Portfolio tab={tab} holding={holding} />
                     </div>
@@ -154,6 +165,22 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
             {tab === "pending" && requestError && <p className="mx-4 mb-4 rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
             {tab === "pending" && requestMessage && <p className="mx-4 mb-4 rounded-md bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-600">{requestMessage}</p>}
         </aside>
+
+        {loginRequired && (
+            <button
+                type="button"
+                onClick={() => requireLogin()}
+                className="absolute inset-0 z-10 flex cursor-pointer items-center justify-center rounded-lg bg-white/25 p-5 backdrop-blur-[1px]"
+                aria-label="로그인 후 주문하기"
+            >
+                <span className="rounded-xl border border-hairline bg-white/95 px-6 py-5 text-center shadow-[0_10px_30px_rgba(10,11,13,0.14)]">
+                    <strong className="block text-base font-black text-ink">로그인 후 이용 가능합니다</strong>
+                    <span className="mt-2 block text-[12px] font-medium text-muted">로그인하고 주식 주문을 시작해 보세요.</span>
+                    <span className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-white">로그인하기</span>
+                </span>
+            </button>
+        )}
+        </div>
     );
 }
 

@@ -18,10 +18,10 @@ export default function MarketDashboard({ side = "right" }: MarketDashboardProps
             </div>
             <div className="mt-4 overflow-hidden rounded-md border border-hairline border-t-2 border-t-primary">
                 {MARKET_INDEXES.map(([name, value, change, color]) => (
-                    <div key={name} className="grid grid-cols-[72px_1fr_auto] items-center border-b border-hairline-soft px-4 py-2.5 text-[12px] last:border-0">
-                        <strong className="text-ink">{name}</strong>
-                        <span className="text-right font-semibold text-ink">{value}</span>
-                        <span className={`ml-2 ${color}`}>{change}</span>
+                    <div key={name} className="grid grid-cols-[52px_minmax(0,1fr)_auto] items-center border-b border-hairline-soft px-3 py-2.5 text-[12px] last:border-0">
+                        <strong className="whitespace-nowrap text-ink">{name}</strong>
+                        <span className="whitespace-nowrap text-right font-semibold text-ink">{value}</span>
+                        <span className={`ml-1 whitespace-nowrap ${color}`}>{change}</span>
                     </div>
                 ))}
             </div>

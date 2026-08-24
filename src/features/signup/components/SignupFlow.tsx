@@ -19,6 +19,14 @@ import type {
     SignupFormData,
     SignupStep,
 } from "../types";
+import {
+    parseBirthDate,
+    validateBirthDate,
+    validateEmail,
+    validateEmailWhileTyping,
+    validateName,
+    validatePassword,
+} from "../validation";
 
 const INITIAL_FORM_DATA: SignupFormData = {
     userId: "",
@@ -31,31 +39,6 @@ const INITIAL_FORM_DATA: SignupFormData = {
 };
 
 type SignupTextField = Exclude<keyof SignupFormData, "birthDate">;
-
-function parseBirthDate(value: string) {
-    const match = /^(\d{4})(\d{2})(\d{2})$/.exec(value.trim());
-
-    if (!match) {
-        return null;
-    }
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    const date = new Date(0);
-    date.setFullYear(year, month - 1, day);
-    date.setHours(0, 0, 0, 0);
-
-    if (
-        date.getFullYear() !== year ||
-        date.getMonth() !== month - 1 ||
-        date.getDate() !== day
-    ) {
-        return null;
-    }
-
-    return date;
-}
 
 const STEP_TITLE: Record<SignupStep, string> = {
     terms: "약관 동의",
@@ -130,15 +113,41 @@ export default function SignupFlow() {
         field: SignupTextField,
         value: string,
     ) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-        setFormErrors((prev) => ({
-            ...prev,
-            [field]: undefined,
-            ...(field === "password" ? { passwordConfirm: undefined } : {}),
-        }));
+        const nextFormData = { ...formData, [field]: value };
+        setFormData(nextFormData);
+        setFormErrors((prev) => {
+            const nextErrors = { ...prev };
+
+            if (field === "password") {
+                nextErrors.password = validatePassword(value);
+                if (nextFormData.passwordConfirm) {
+                    nextErrors.passwordConfirm = value === nextFormData.passwordConfirm
+                        ? undefined
+                        : "비밀번호가 일치하지 않습니다.";
+                }
+            } else if (field === "passwordConfirm") {
+                nextErrors.passwordConfirm = !value
+                    ? "비밀번호 확인을 입력해 주세요."
+                    : value === nextFormData.password
+                        ? undefined
+                        : "비밀번호가 일치하지 않습니다.";
+            } else if (field === "name") {
+                nextErrors.name = validateName(value);
+            } else if (field === "emailLocal" || field === "emailDomain") {
+                nextErrors.email = validateEmailWhileTyping(
+                    nextFormData.emailLocal,
+                    nextFormData.emailDomain,
+                    field,
+                );
+                nextErrors.emailLocal = undefined;
+                nextErrors.emailDomain = undefined;
+                nextErrors.emailVerification = undefined;
+            } else {
+                nextErrors[field] = undefined;
+            }
+
+            return nextErrors;
+        });
 
         if (field === "emailLocal" || field === "emailDomain") {
             setEmailCode("");
@@ -149,8 +158,19 @@ export default function SignupFlow() {
     const email = `${formData.emailLocal.trim()}@${formData.emailDomain.trim()}`;
 
     const handleSendEmailCode = async () => {
-        if (!formData.emailLocal.trim() || !formData.emailDomain.trim()) {
-            setFormErrors((current) => ({ ...current, emailVerification: "이메일 주소를 먼저 입력해 주세요." }));
+        const emailError = validateEmail(
+            formData.emailLocal,
+            formData.emailDomain,
+        );
+
+        if (emailError) {
+            setFormErrors((current) => ({
+                ...current,
+                emailLocal: undefined,
+                emailDomain: undefined,
+                emailVerification: undefined,
+                email: emailError,
+            }));
             return;
         }
 
@@ -195,21 +215,20 @@ export default function SignupFlow() {
         }));
         setFormErrors((prev) => ({
             ...prev,
-            birthDate: undefined,
+            birthDate: validateBirthDate(value),
         }));
     };
 
     const validateAccountStep = () => {
         const nextErrors: SignupFormErrors = {};
-        const birthDatePattern = /^\d{8}$/;
-        const trimmedBirthDate = birthDateInput.trim();
 
         if (!formData.userId.trim()) {
             nextErrors.userId = "아이디를 입력해 주세요.";
         }
 
-        if (!formData.password) {
-            nextErrors.password = "비밀번호를 입력해 주세요.";
+        const passwordError = validatePassword(formData.password);
+        if (passwordError) {
+            nextErrors.password = passwordError;
         }
 
         if (!formData.passwordConfirm) {
@@ -218,28 +237,28 @@ export default function SignupFlow() {
             nextErrors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
         }
 
-        if (!formData.name.trim()) {
-            nextErrors.name = "이름을 입력해 주세요.";
+        const nameError = validateName(formData.name);
+        if (nameError) {
+            nextErrors.name = nameError;
         }
 
-        if (!trimmedBirthDate) {
-            nextErrors.birthDate = "생년월일을 입력해 주세요.";
-        } else if (
-            !birthDatePattern.test(trimmedBirthDate) ||
-            !formData.birthDate
+        const birthDateError = validateBirthDate(birthDateInput);
+        if (birthDateError) {
+            nextErrors.birthDate = birthDateError;
+        }
+
+        const emailError = validateEmail(
+            formData.emailLocal,
+            formData.emailDomain,
+        );
+        if (emailError) {
+            nextErrors.email = emailError;
+        }
+
+        if (
+            !emailError &&
+            emailVerificationStatus !== "verified"
         ) {
-            nextErrors.birthDate = "생년월일은 숫자 8자리로 입력해 주세요.";
-        }
-
-        if (!formData.emailLocal.trim()) {
-            nextErrors.emailLocal = "이메일 아이디를 입력해 주세요.";
-        }
-
-        if (!formData.emailDomain.trim()) {
-            nextErrors.emailDomain = "이메일 도메인을 입력해 주세요.";
-        }
-
-        if (emailVerificationStatus !== "verified") {
             nextErrors.emailVerification = "이메일 인증을 완료해 주세요.";
         }
 

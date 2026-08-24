@@ -1,4 +1,4 @@
-import { apiRequest, saveAuthTokens } from "./client";
+import { apiRequest, clearAuthTokens, saveAuthTokens } from "./client";
 import type { LoginResponse, SignupResponse } from "./types";
 
 export async function login(loginId: string, password: string) {
@@ -7,8 +7,19 @@ export async function login(loginId: string, password: string) {
         auth: false,
         body: JSON.stringify({ loginId, password }),
     });
-    saveAuthTokens(response);
+    saveAuthTokens(response, response.name);
     return response;
+}
+
+export async function logout() {
+    try {
+        await apiRequest<null>("/api/auth/logout", {
+            method: "POST",
+            retryOnUnauthorized: false,
+        });
+    } finally {
+        clearAuthTokens();
+    }
 }
 
 export function sendEmailVerificationCode(email: string) {
