@@ -45,7 +45,7 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
 
   return (
     <div className="mx-auto max-w-[1180px]">
-      <div className="mb-4"><h1 className="text-xl font-extrabold">주문내역</h1></div>
+      <div className="mb-4"><h1 className="text-xl font-bold">주문내역</h1></div>
       <div className="grid min-h-[420px] gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section className="overflow-hidden rounded-lg border border-hairline">
           <div className="flex items-center justify-between border-b border-hairline bg-surface-soft px-4 py-3"><div><h2 className="font-bold">주문 목록</h2><p className="mt-1 text-xs text-muted">총 {displayOrders.length}건</p></div><span className="theme-accent-soft theme-accent-text rounded-full px-2.5 py-1 text-xs font-bold">전체</span></div>
@@ -55,13 +55,13 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
               <button key={order.id} type="button" onClick={() => onSelect(order.id)} className={`relative grid w-full grid-cols-[minmax(0,1fr)_70px_110px] items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors sm:grid-cols-[minmax(0,1fr)_90px_130px] ${selectedOrderId === order.id ? "theme-accent-soft" : "bg-white hover:bg-surface-soft"}`}>
                 {selectedOrderId === order.id && <span className="absolute inset-y-0 left-0 w-0.5 bg-[var(--market-accent)]" />}
                 <span><strong className="block font-bold">{order.name}</strong><small className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold ${order.side.startsWith("매도") || order.side === "판매완료" ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"}`}>{order.side}</small></span>
-                <span className="num font-semibold">{order.quantity}</span><span className="num text-right font-extrabold">{order.price}</span>
+                <span className="num font-semibold">{order.quantity}</span><span className="num text-right font-bold">{order.price}</span>
               </button>
             ))}
           </div>
         </section>
         <aside className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3 border-b border-hairline pb-4"><div><p className="text-xs font-semibold text-muted">선택 주문</p><h2 className="mt-1 text-lg font-extrabold">{selected.name}</h2></div><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${isSell ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"}`}>{selected.side}</span></div>
+          <div className="flex items-start justify-between gap-3 border-b border-hairline pb-4"><div><p className="text-xs font-semibold text-muted">선택 주문</p><h2 className="mt-1 text-lg font-bold">{selected.name}</h2></div><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${isSell ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"}`}>{selected.side}</span></div>
           <dl className="mt-2 divide-y divide-gray-200">{detailRows.map(([label, value]) => <div key={label} className="grid grid-cols-[1fr_auto] gap-4 py-2 text-sm"><dt className="text-muted">{label}</dt><dd className="num text-right font-bold">{value}</dd></div>)}</dl>
           <div className="theme-accent-soft mt-4 rounded-lg p-3.5"><p className="text-xs font-semibold text-muted">주문 결과</p><p className="theme-accent-text mt-1 text-sm font-bold">{selected.side}</p></div>
         </aside>

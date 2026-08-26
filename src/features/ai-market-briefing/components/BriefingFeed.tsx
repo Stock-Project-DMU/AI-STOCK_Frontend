@@ -22,7 +22,7 @@ export default function BriefingFeed({ showDetail, onShowDetail, onSave }: Brief
 
             <div className="flex-1 overflow-y-auto p-6 lg:p-8">
                 <div className="mx-auto max-w-[680px]">
-                    <p className="text-xs font-black tracking-[0.12em] text-primary">오늘의 시황</p>
+                    <p className="text-xs font-bold tracking-[0.12em] text-primary">오늘의 시황</p>
                     <h1 className="mt-1.5 text-xl font-bold leading-snug text-ink">
                         좋은 아침입니다. 오늘 시장은 이렇게 움직이고 있어요.
                     </h1>
@@ -36,7 +36,7 @@ export default function BriefingFeed({ showDetail, onShowDetail, onSave }: Brief
                         <NewsSummary onSemiconductor={onShowDetail} />
                         {showDetail && <SemiconductorBriefing />}
 
-                        <button onClick={onSave} className="theme-accent-bg mt-5 rounded-pill px-6 py-2.5 text-xs font-bold">
+                        <button onClick={onSave} className="theme-accent-bg mt-5 rounded-md px-6 py-2.5 text-xs font-bold">
                             이 브리핑 저장
                         </button>
                     </div>

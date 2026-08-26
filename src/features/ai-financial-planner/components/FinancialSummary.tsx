@@ -11,7 +11,7 @@ export default function FinancialSummary() {
             <div className="always-dark relative mt-4 overflow-hidden rounded-lg p-5">
                 <span className="absolute -top-7 -right-7 h-24 w-24 rounded-full bg-primary/15" />
                 <p className="text-xs text-white/60">총 자산 합계</p>
-                <strong className="mt-2 block text-2xl">₩128,450,000</strong>
+                <strong className="num mt-2 block text-2xl font-bold">₩128,450,000</strong>
                 <div className="mt-6 flex items-end justify-between">
                     <div>
                         <p className="text-xs text-white/60">전월 대비 수익</p>
@@ -33,7 +33,7 @@ export default function FinancialSummary() {
             <div className="mt-1 rounded-md border border-hairline p-4">
                 <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-ink">재무 건강도</span>
-                    <strong className="text-2xl text-emerald-500">95<span className="ml-1 text-xs">%</span></strong>
+                    <strong className="num text-2xl font-bold text-emerald-500">95<span className="ml-1 text-xs font-semibold">%</span></strong>
                 </div>
                 <span className="rounded-sm bg-emerald-100 px-2 py-1 text-[12px] font-semibold text-emerald-600">우수</span>
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-strong"><div className="h-full w-[95%] rounded-full bg-emerald-400" /></div>

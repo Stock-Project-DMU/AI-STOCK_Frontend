@@ -144,7 +144,7 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
                         {requestError && <p className="rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
                         {requestMessage && <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-600">{requestMessage}</p>}
 
-                        <button type="button" onClick={handleOrder} disabled={isSubmitting || !account || !stock || quantity < 1 || price < 1} className={`trade-action-button w-full rounded-lg py-3.5 text-sm font-black transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${tab === "buy" ? "bg-[var(--market-up)]" : "bg-[var(--market-down)]"}`}>{isSubmitting ? "처리 중..." : `${stockName} ${tab === "buy" ? "매수하기" : "매도하기"}`}</button>
+                        <button type="button" onClick={handleOrder} disabled={isSubmitting || !account || !stock || quantity < 1 || price < 1} className={`trade-action-button w-full rounded-lg py-3.5 text-sm font-bold transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${tab === "buy" ? "bg-[var(--market-up)]" : "bg-[var(--market-down)]"}`}>{isSubmitting ? "처리 중..." : `${stockName} ${tab === "buy" ? "매수하기" : "매도하기"}`}</button>
 
                         <Portfolio tab={tab} holding={holding} />
                     </div>

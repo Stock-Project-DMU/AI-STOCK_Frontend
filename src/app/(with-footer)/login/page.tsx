@@ -54,17 +54,17 @@ export default function LoginPage() {
                 <section className="relative hidden min-h-[650px] overflow-hidden border-r border-hairline bg-surface-strong p-12 lg:flex lg:flex-col">
                     <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full border border-hairline" />
                     <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full border border-hairline" />
-                    <h1 className="max-w-sm text-4xl font-black leading-tight text-ink">데이터를 읽고,<br />나만의 투자 원칙을 만드세요.</h1>
+                    <h1 className="max-w-sm text-3xl font-bold leading-tight text-ink">데이터를 읽고,<br />나만의 투자 원칙을 만드세요.</h1>
                     <p className="mt-5 max-w-sm text-sm leading-7 text-body">시장 브리핑부터 자산 진단, 목표 시뮬레이션까지 하나의 투자 워크스페이스에서 연결합니다.</p>
                     <div className="mt-auto grid grid-cols-3 gap-3">
-                        {[['01', '시장 분석'], ['02', 'AI 진단'], ['03', '목표 관리']].map(([step, label]) => <div key={step} className="rounded-2xl border border-hairline bg-canvas p-4"><span className="theme-accent-text text-[12px] font-black">{step}</span><strong className="mt-2 block text-xs text-ink">{label}</strong></div>)}
+                        {[['01', '시장 분석'], ['02', 'AI 진단'], ['03', '목표 관리']].map(([step, label]) => <div key={step} className="rounded-2xl border border-hairline bg-canvas p-4"><span className="theme-accent-text text-[12px] font-bold">{step}</span><strong className="mt-2 block text-xs text-ink">{label}</strong></div>)}
                     </div>
                     <p className="mt-6 text-[12px] leading-5 text-muted">본 프로젝트의 모든 시장 수치는 화면 시연을 위한 샘플 데이터입니다.</p>
                 </section>
 
                 <section className="flex min-h-[650px] flex-col justify-center p-7 sm:p-12">
                     <div>
-                        <h2 className="text-3xl font-black text-ink">로그인</h2>
+                        <h2 className="text-2xl font-bold text-ink">로그인</h2>
                     </div>
 
                     <form className="mt-8 space-y-4" onSubmit={handleSubmit} noValidate>
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
                     <div className="my-6 flex items-center gap-3 text-[12px] text-muted"><span className="h-px flex-1 bg-hairline" />간편 로그인<span className="h-px flex-1 bg-hairline" /></div>
                     <div className="grid grid-cols-3 gap-2">
-                        {[['K', '카카오', 'bg-[#fee500] text-[#191919] hover:brightness-95'], ['N', '네이버', 'bg-[#03c75a] text-white hover:brightness-95'], ['G', 'Google', 'border border-hairline bg-canvas text-body hover:border-primary/40 hover:bg-surface-soft hover:text-ink']].map(([symbol, label, tone]) => <button key={label} type="button" aria-label={`${label} 로그인`} className={`rounded-xl py-3 text-xs font-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${tone}`}><span className="sm:hidden">{symbol}</span><span className="hidden sm:inline">{label}</span></button>)}
+                        {[['K', '카카오', 'bg-[#fee500] text-[#191919] hover:brightness-95'], ['N', '네이버', 'bg-[#03c75a] text-white hover:brightness-95'], ['G', 'Google', 'border border-hairline bg-canvas text-body hover:border-primary/40 hover:bg-surface-soft hover:text-ink']].map(([symbol, label, tone]) => <button key={label} type="button" aria-label={`${label} 로그인`} className={`rounded-xl py-3 text-xs font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${tone}`}><span className="sm:hidden">{symbol}</span><span className="hidden sm:inline">{label}</span></button>)}
                     </div>
 
                     <div className="mt-7 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted">

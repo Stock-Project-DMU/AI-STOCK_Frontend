@@ -17,7 +17,7 @@ export default function Header() {
             <div className="mx-auto grid h-full max-w-[1760px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
                 <Link href="/home" className="flex items-center gap-2.5" aria-label="AI STOCK 홈">
                     <img src="/Logo.png" alt="" className="h-9 w-9 object-contain" width={36} height={36} />
-                    <strong className="hidden text-base font-black tracking-[0.12em] text-ink sm:block">AI STOCK</strong>
+                    <strong className="hidden text-base font-bold tracking-[0.12em] text-ink sm:block">AI STOCK</strong>
                 </Link>
 
                 <nav className="flex min-w-0 items-center justify-center gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="주요 메뉴">
@@ -27,7 +27,7 @@ export default function Header() {
                             <Link
                                 key={link.label}
                                 href={link.href}
-                                className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold sm:px-3.5 sm:text-sm ${active ? "theme-accent-soft theme-accent-text" : "text-body hover:bg-surface-soft hover:text-ink"}`}
+                                className={`whitespace-nowrap rounded-md px-3 py-2 text-xs font-semibold sm:px-3.5 sm:text-sm ${active ? "theme-accent-soft theme-accent-text" : "text-body hover:bg-surface-soft hover:text-ink"}`}
                             >
                                 {link.label}
                             </Link>
@@ -39,13 +39,13 @@ export default function Header() {
                     <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[12px] font-bold text-emerald-700 xl:flex">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 모의투자
                     </span>
-                    <label className="hidden items-center rounded-full border border-hairline bg-surface-soft px-3.5 2xl:flex">
+                    <label className="hidden items-center rounded-md border border-hairline bg-surface-soft px-3.5 2xl:flex">
                         <SearchIcon className="h-4 w-4 text-muted" />
                         <input className="w-36 bg-transparent px-2 py-2 text-sm text-ink outline-none placeholder:text-muted-soft" placeholder="종목명·코드 검색" />
                     </label>
                     <Link
                         href="/login"
-                        className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full bg-primary px-4 text-xs font-bold text-white transition-colors hover:bg-primary-active sm:px-5 sm:text-sm"
+                        className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 text-xs font-semibold text-white transition-colors hover:bg-primary-active sm:px-5 sm:text-sm"
                     >
                         로그인
                     </Link>

@@ -21,7 +21,7 @@ export default function SignupCard({ title, onBack, children, wide = false }: Si
                         ←
                     </button>
 
-                    <h1 className="text-center text-2xl font-black text-ink">
+                    <h1 className="text-center text-2xl font-bold text-ink">
                         {title}
                     </h1>
                 </div>
