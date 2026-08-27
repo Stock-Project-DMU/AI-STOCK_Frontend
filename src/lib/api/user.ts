@@ -1,8 +1,8 @@
 import { apiRequest, saveAuthenticatedUserName } from "./client";
 import type { InvestmentProfileResponse, UserInfoResponse } from "./types";
 
-export function getMyInfo() {
-    return apiRequest<UserInfoResponse>("/api/users/me");
+export function getMyInfo(signal?: AbortSignal) {
+    return apiRequest<UserInfoResponse>("/api/users/me", { signal });
 }
 
 export async function updateMyInfo(name: string, email: string) {

@@ -6,6 +6,7 @@ import {
     useContext,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ import { UserIcon } from "@/components/icons/Icon";
 import { ProtectedPageSkeleton } from "@/components/common/PageSkeletons";
 import {
     AUTH_STATE_CHANGE_EVENT,
+    ApiError,
     getAuthenticatedUserName,
     isAuthenticated,
     saveAuthenticatedUserName,
@@ -34,6 +36,31 @@ type AuthGuardContextValue = {
 };
 
 const AuthGuardContext = createContext<AuthGuardContextValue | null>(null);
+const USER_INFO_RETRY_DELAYS_MS = [500, 1_500] as const;
+
+function isRetryableUserInfoError(error: unknown) {
+    return error instanceof ApiError && (error.status === 0 || error.status >= 500);
+}
+
+function waitForRetry(delayMs: number, signal: AbortSignal) {
+    return new Promise<boolean>((resolve) => {
+        if (signal.aborted) {
+            resolve(false);
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            signal.removeEventListener("abort", handleAbort);
+            resolve(true);
+        }, delayMs);
+        const handleAbort = () => {
+            window.clearTimeout(timeoutId);
+            resolve(false);
+        };
+
+        signal.addEventListener("abort", handleAbort, { once: true });
+    });
+}
 
 function isProtectedPath(pathname: string) {
     return PROTECTED_PATHS.some(
@@ -48,11 +75,15 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
     const [authenticated, setAuthenticated] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
     const [requestedModalOpen, setRequestedModalOpen] = useState(false);
+    const authSyncControllerRef = useRef<AbortController | null>(null);
     const directRouteBlocked = authReady && !authenticated && isProtectedPath(pathname);
     const modalOpen = directRouteBlocked || requestedModalOpen;
 
     useEffect(() => {
         const syncAuthState = async () => {
+            authSyncControllerRef.current?.abort();
+            const controller = new AbortController();
+            authSyncControllerRef.current = controller;
             const nextAuthenticated = isAuthenticated();
             const cachedUserName = nextAuthenticated
                 ? getAuthenticatedUserName()
@@ -64,11 +95,30 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
 
             if (!nextAuthenticated || cachedUserName) return;
 
-            try {
-                const user = await getMyInfo();
-                if (isAuthenticated()) saveAuthenticatedUserName(user.name);
-            } catch {
-                if (!isAuthenticated()) setUserName(null);
+            for (let attempt = 0; attempt <= USER_INFO_RETRY_DELAYS_MS.length; attempt += 1) {
+                try {
+                    const user = await getMyInfo(controller.signal);
+                    if (controller.signal.aborted || !isAuthenticated()) return;
+
+                    setUserName(user.name);
+                    saveAuthenticatedUserName(user.name);
+                    return;
+                } catch (error) {
+                    if (controller.signal.aborted) return;
+
+                    if (!isAuthenticated()) {
+                        setAuthenticated(false);
+                        setUserName(null);
+                        return;
+                    }
+
+                    const retryDelay = USER_INFO_RETRY_DELAYS_MS[attempt];
+                    if (retryDelay === undefined || !isRetryableUserInfoError(error)) {
+                        return;
+                    }
+
+                    if (!(await waitForRetry(retryDelay, controller.signal))) return;
+                }
             }
         };
 
@@ -78,16 +128,18 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
         window.addEventListener("storage", handleAuthStateChange);
 
         return () => {
+            authSyncControllerRef.current?.abort();
             window.removeEventListener(AUTH_STATE_CHANGE_EVENT, handleAuthStateChange);
             window.removeEventListener("storage", handleAuthStateChange);
         };
     }, []);
 
     const requireLogin = useCallback(() => {
+        if (!authReady) return false;
         if (authenticated) return true;
         setRequestedModalOpen(true);
         return false;
-    }, [authenticated]);
+    }, [authReady, authenticated]);
 
     const closeModal = useCallback(() => {
         setRequestedModalOpen(false);

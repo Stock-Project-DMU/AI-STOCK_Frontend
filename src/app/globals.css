@@ -158,7 +158,7 @@ a {
 }
 
 .market-theme {
-  background: var(--market-bg);
+  background-color: var(--market-bg);
   color: var(--market-text);
 }
 
