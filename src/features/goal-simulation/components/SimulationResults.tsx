@@ -27,7 +27,7 @@ export default function SimulationResults({ settings }: SimulationResultsProps) 
                         <strong className="block text-sm text-primary">▤　공격적 시나리오 추가 수익</strong>
                         <small className="text-muted">기본 대비 수익률 2.5%p 상승 시, {settings.years}년 후 추가로 확보 가능한 금액</small>
                     </span>
-                    <strong className="text-2xl text-up">+{formatWon(additionalReturn)}</strong>
+                    <strong className="num text-2xl font-bold text-up">+{formatWon(additionalReturn)}</strong>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">
@@ -65,7 +65,7 @@ function ResultCard({ title, years, value, principal, rate, accent }: ResultCard
     return (
         <article className={`rounded-lg border bg-canvas p-5 ${accent ? "border-t-2 border-primary" : "border-hairline"}`}>
             <p className={`text-xs ${accent ? "text-primary" : "text-muted"}`}>{title}</p>
-            <p className={`mt-2 text-2xl font-black ${accent ? "text-primary" : "text-ink"}`}>{Math.round(value).toLocaleString("ko-KR")}</p>
+            <p className={`mt-2 text-2xl font-bold ${accent ? "text-primary" : "text-ink"}`}>{Math.round(value).toLocaleString("ko-KR")}</p>
             <div className="mt-4 border-t border-hairline-soft pt-3 text-xs text-muted">
                 <div className="flex justify-between"><span>원금 합계</span><strong className="text-body">{Math.round(principal).toLocaleString("ko-KR")}</strong></div>
                 <div className="mt-1 flex justify-between"><span>예상 수익</span><strong className="text-up">+{Math.round(value - principal).toLocaleString("ko-KR")}</strong></div>

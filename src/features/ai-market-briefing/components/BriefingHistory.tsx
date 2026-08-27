@@ -12,7 +12,7 @@ export default function BriefingHistory({ onSelectToday }: BriefingHistoryProps)
             <button
                 type="button"
                 onClick={onSelectToday}
-                className="m-3 flex items-center gap-2.5 rounded-pill bg-primary px-5 py-3 text-left text-sm font-bold text-white transition-colors hover:bg-primary-active"
+                className="m-3 flex items-center gap-2.5 rounded-md bg-primary px-5 py-3 text-left text-sm font-bold text-white transition-colors hover:bg-primary-active"
             >
                 <NewsIcon className="h-4 w-4" />
                 오늘의 브리핑

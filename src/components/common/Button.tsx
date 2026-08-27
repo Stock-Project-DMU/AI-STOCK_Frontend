@@ -23,14 +23,14 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-    sm: "h-9 px-4 text-sm rounded-pill",
-    md: "h-11 px-5 text-sm rounded-pill",
-    lg: "h-14 px-8 text-base rounded-pill",
+    sm: "h-9 px-4 text-sm rounded-md",
+    md: "h-11 px-5 text-sm rounded-md",
+    lg: "h-14 px-8 text-base rounded-md",
 };
 
 /**
- * Shared pill-button primitive per DESIGN-coinbase.md's button tokens
- * (button-primary / button-secondary-light / button-outline / button-tertiary-text).
+ * Shared button primitive per DESIGN-toss.md's button tokens
+ * (button-primary / button-secondary) — rounded-md, not full pill.
  */
 export function Button({
     variant = "primary",

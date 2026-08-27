@@ -10,7 +10,7 @@ export default function PlannerHistory({ onNewDiagnosis }: PlannerHistoryProps) 
             <button
                 type="button"
                 onClick={onNewDiagnosis}
-                className="m-3 flex items-center rounded-pill bg-primary px-5 py-3 text-left text-sm font-bold text-white transition-colors hover:bg-primary-active"
+                className="m-3 flex items-center rounded-md bg-primary px-5 py-3 text-left text-sm font-bold text-white transition-colors hover:bg-primary-active"
             >
                 <PlusIcon className="mr-2.5 h-4 w-4" />새로운 진단 시작
             </button>

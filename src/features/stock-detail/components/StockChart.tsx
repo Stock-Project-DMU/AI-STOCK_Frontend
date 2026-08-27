@@ -231,7 +231,7 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
     const isUp = candle.close >= candle.open;
 
     return (
-        <div className="rounded-md border border-hairline bg-canvas px-3 py-2 text-[12px] shadow-[0_8px_24px_rgba(10,11,13,0.12)]">
+        <div className="rounded-md border border-hairline bg-canvas px-3 py-2 text-[12px] shadow-[0_0.6px_0.6px_-1.25px_rgba(10,11,13,.12),0_2.2px_2.2px_-2.5px_rgba(10,11,13,.1),0_10px_10px_-3.75px_rgba(10,11,13,.0425)]">
             <p className="mb-1.5 font-semibold text-ink">{candle.label}</p>
             <div className="space-y-0.5">
                 <TooltipRow label="시가" value={candle.open} />

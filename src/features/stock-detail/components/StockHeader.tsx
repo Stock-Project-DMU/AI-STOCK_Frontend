@@ -23,10 +23,10 @@ export default function StockHeader({ stock }: { stock?: StockPriceResponse | nu
                 <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
                     <div>
                         <div className="flex flex-wrap items-center gap-3">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base font-black text-white">S</span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base font-bold text-white">S</span>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h1 className="text-lg font-black text-ink">{stock?.stockName ?? "삼성전자"}</h1>
+                                    <h1 className="text-lg font-bold text-ink">{stock?.stockName ?? "삼성전자"}</h1>
                                     <span className="rounded-xs bg-surface-strong px-2 py-1 text-[12px] font-bold text-muted num">{stock?.stockCode ?? "005930"}</span>
                                     <span className="theme-accent-soft theme-accent-text rounded-xs px-2 py-1 text-[12px] font-bold">KOSPI</span>
                                 </div>
@@ -35,7 +35,7 @@ export default function StockHeader({ stock }: { stock?: StockPriceResponse | nu
                         </div>
 
                         <div className="mt-4 flex flex-wrap items-end gap-4">
-                            <strong className="num text-3xl font-black tracking-tight text-ink">{currentPrice.toLocaleString("ko-KR")}<span className="ml-1 text-base font-semibold text-muted">원</span></strong>
+                            <strong className="num text-3xl font-bold tracking-tight text-ink">{currentPrice.toLocaleString("ko-KR")}<span className="ml-1 text-base font-semibold text-muted">원</span></strong>
                             <div className="mb-1">
                                 <span className={`num rounded-md bg-[rgba(207,32,47,0.1)] px-3 py-1.5 text-sm font-bold ${changeTone}`}>{changePrefix} {Math.abs(changeAmount).toLocaleString("ko-KR")} ({Math.abs(changeRate).toFixed(2)}%)</span>
                                 <p className="mt-2 text-[12px] text-muted num">전일 종가 {previousClose.toLocaleString("ko-KR")}</p>

@@ -41,7 +41,7 @@ export default function Sidebar() {
                 }`}
             >
                 <div className="flex min-h-full w-[320px] min-w-[320px] flex-col">
-                    <div className="flex h-14 items-center border-b border-hairline bg-surface-soft px-4 text-sm font-black text-ink">
+                    <div className="flex h-14 items-center border-b border-hairline bg-surface-soft px-4 text-sm font-bold text-ink">
                         <span>{activeTab.label}</span>
                     </div>
 
