@@ -3,6 +3,8 @@ import type { ApiResponse, AuthTokens } from "./types";
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
 const ACCESS_TOKEN_KEY = "aistock.accessToken";
 const REFRESH_TOKEN_KEY = "aistock.refreshToken";
+const USER_NAME_KEY = "aistock.userName";
+export const AUTH_STATE_CHANGE_EVENT = "aistock:auth-state-change";
 
 let refreshRequest: Promise<boolean> | null = null;
 
@@ -28,12 +30,26 @@ export function getRefreshToken() {
     return getStorage()?.getItem(REFRESH_TOKEN_KEY) ?? null;
 }
 
-export function saveAuthTokens(tokens: AuthTokens) {
+export function getAuthenticatedUserName() {
+    return getStorage()?.getItem(USER_NAME_KEY) ?? null;
+}
+
+export function saveAuthTokens(tokens: AuthTokens, userName?: string) {
     const storage = getStorage();
     if (!storage) return;
 
     storage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
     storage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    if (userName !== undefined) storage.setItem(USER_NAME_KEY, userName);
+    window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
+}
+
+export function saveAuthenticatedUserName(userName: string) {
+    const storage = getStorage();
+    if (!storage) return;
+
+    storage.setItem(USER_NAME_KEY, userName);
+    window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
 }
 
 export function clearAuthTokens() {
@@ -42,6 +58,8 @@ export function clearAuthTokens() {
 
     storage.removeItem(ACCESS_TOKEN_KEY);
     storage.removeItem(REFRESH_TOKEN_KEY);
+    storage.removeItem(USER_NAME_KEY);
+    window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
 }
 
 export function isAuthenticated() {

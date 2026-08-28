@@ -233,7 +233,7 @@ export default function MyPageDashboard() {
   };
 
   return (
-    <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] text-ink">
+    <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] break-keep text-ink">
       <DesktopMyPageNavigation activeTab={activeTab} onChange={changeTab} />
 
       <section className="min-w-0 flex-1 px-3 py-4 sm:px-5 lg:px-8">

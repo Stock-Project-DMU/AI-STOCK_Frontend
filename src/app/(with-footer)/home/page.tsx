@@ -8,7 +8,7 @@ const marketPulse = [
 
 export default function Home() {
     return (
-        <div className="market-theme market-grid min-h-screen">
+        <div className="home-market-background market-theme min-h-screen">
             <section className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
                 <div className="mb-5 grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_500px]">
                     <div>

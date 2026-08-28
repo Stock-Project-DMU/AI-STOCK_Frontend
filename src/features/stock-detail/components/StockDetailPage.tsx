@@ -17,7 +17,7 @@ import StockHeader from "./StockHeader";
 import StockInformation from "./StockInformation";
 import TradePanel from "./TradePanel";
 
-export default function StockDetailPage() {
+export default function StockDetailPage({ stockCode }: { stockCode: string }) {
     const [tab, setTab] = useState<StockMainTab>("chart");
     const [stock, setStock] = useState<StockPriceResponse | null>(null);
     const [hoga, setHoga] = useState<HogaResponse | null>(null);
@@ -26,8 +26,6 @@ export default function StockDetailPage() {
     const [holdings, setHoldings] = useState<HoldingResponse[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
-    const stockCode = "005930";
-
     useEffect(() => {
         if (!isAuthenticated()) return;
 
@@ -85,7 +83,7 @@ export default function StockDetailPage() {
         return () => {
             active = false;
         };
-    }, []);
+    }, [stockCode]);
 
     async function refreshTradingData() {
         if (!account) return;

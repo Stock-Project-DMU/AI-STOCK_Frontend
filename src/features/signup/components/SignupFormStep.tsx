@@ -2,6 +2,8 @@ import type { ChangeEvent } from "react";
 import { Button } from "@/components/common/Button";
 import type { SignupFormData, SignupFormErrors } from "../types";
 
+const EMAIL_DOMAIN_OPTIONS = ["naver.com", "gmail.com", "daum.net", "hanmail.net", "kakao.com"] as const;
+
 type SignupTextField = Exclude<keyof SignupFormData, "birthDate">;
 
 type SignupFormStepProps = {
@@ -219,6 +221,7 @@ export default function SignupFormStep({
                                 type="text"
                                 id="signup-birth-date"
                                 inputMode="numeric"
+                                pattern="[0-9]*"
                                 maxLength={8}
                                 className={getInputClassName(
                                     Boolean(errors.birthDate),
@@ -227,7 +230,9 @@ export default function SignupFormStep({
                                 placeholder="생년월일 8자리 입력"
                                 value={birthDateInput}
                                 onChange={(event) =>
-                                    onBirthDateChange(event.target.value)
+                                    onBirthDateChange(
+                                        event.target.value.replace(/[^0-9]/g, ""),
+                                    )
                                 }
                                 aria-invalid={Boolean(errors.birthDate)}
                                 aria-describedby="signup-birth-date-helper"
@@ -246,60 +251,50 @@ export default function SignupFormStep({
                             >
                                 이메일
                             </label>
-                            <div className="flex items-start gap-2">
-                                <div className="min-w-0 flex-1">
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2">
+                                <div className="min-w-0">
                                     <input
                                         type="text"
                                         id="signup-email-local"
                                         className={getInputClassName(
-                                            Boolean(errors.emailLocal),
+                                            Boolean(errors.email),
                                             "w-full",
                                         )}
                                         placeholder="이메일 입력"
                                         value={formData.emailLocal}
                                         onChange={handleChange("emailLocal")}
-                                        aria-invalid={Boolean(
-                                            errors.emailLocal,
-                                        )}
-                                        aria-describedby={
-                                            errors.emailLocal
-                                                ? "signup-email-local-helper"
-                                                : undefined
-                                        }
+                                        aria-invalid={Boolean(errors.email)}
+                                        aria-describedby={errors.email ? "signup-email-helper" : undefined}
                                     />
-                                    {renderHelperText(
-                                        "signup-email-local-helper",
-                                        errors.emailLocal,
-                                    )}
                                 </div>
                                 <span className="pt-2.5 text-sm text-muted">
                                     @
                                 </span>
-                                <div className="min-w-0 flex-1">
+                                <div className="min-w-0">
                                     <input
                                         type="text"
                                         aria-label="이메일 도메인"
                                         className={getInputClassName(
-                                            Boolean(errors.emailDomain),
+                                            Boolean(errors.email),
                                             "w-full",
                                         )}
                                         value={formData.emailDomain}
                                         onChange={handleChange("emailDomain")}
-                                        aria-invalid={Boolean(
-                                            errors.emailDomain,
-                                        )}
-                                        aria-describedby={
-                                            errors.emailDomain
-                                                ? "signup-email-domain-helper"
-                                                : undefined
-                                        }
+                                        aria-invalid={Boolean(errors.email)}
+                                        aria-describedby={errors.email ? "signup-email-helper" : undefined}
                                     />
-                                    {renderHelperText(
-                                        "signup-email-domain-helper",
-                                        errors.emailDomain,
-                                    )}
                                 </div>
                             </div>
+                            <select
+                                aria-label="이메일 도메인 선택"
+                                className={`mt-2 h-11 w-full rounded-md border bg-canvas px-4 text-sm text-ink outline-none ${errors.email ? "border-red-400 focus:border-red-500" : "border-hairline focus:border-primary focus:ring-2 focus:ring-primary/15"}`}
+                                value={EMAIL_DOMAIN_OPTIONS.includes(formData.emailDomain as (typeof EMAIL_DOMAIN_OPTIONS)[number]) ? formData.emailDomain : ""}
+                                onChange={(event) => onChange("emailDomain", event.target.value)}
+                            >
+                                <option value="">직접 입력</option>
+                                {EMAIL_DOMAIN_OPTIONS.map((domain) => <option key={domain} value={domain}>{domain}</option>)}
+                            </select>
+                            {renderHelperText("signup-email-helper", errors.email)}
                             <div className="mt-3 flex gap-2">
                                 <Button
                                     variant="secondary"

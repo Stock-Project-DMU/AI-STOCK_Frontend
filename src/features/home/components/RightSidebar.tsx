@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { SparkleIcon, ArrowRightIcon } from "@/components/icons/Icon";
+import { ALL_NEWS_REPORTS } from "@/features/news-report/data";
 
-const news = [
-    ["시장 주요 이슈와 종목 영향 분석", "12분 전"],
-    ["미국 기술주 흐름 한눈에 보기", "28분 전"],
-    ["오늘의 투자 체크포인트", "41분 전"],
-] as const;
+const news = ALL_NEWS_REPORTS.slice(0, 3);
 
 export default function RightSidebar() {
     return (
-        <aside className="flex flex-col gap-3">
+        <aside className="flex flex-col gap-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
             <section className="always-dark rounded-lg border border-primary/25 bg-[linear-gradient(145deg,#16295c,#0a0b0d_68%)] p-4 shadow-[0_4px_16px_rgba(0,0,0,.22)]">
                 <div className="flex items-center justify-between">
                     <h2 className="text-sm font-bold text-white">재무 진단 브리핑</h2>
@@ -31,13 +28,23 @@ export default function RightSidebar() {
             </section>
 
             <section className="rounded-lg border border-hairline bg-white p-4">
-                <div className="flex items-center justify-between"><h2 className="text-sm font-bold text-ink">뉴스 리포트</h2><Link href="/ai-market-briefing" className="theme-accent-text text-[12px] font-bold">전체 보기</Link></div>
+                <div className="flex items-center justify-between"><h2 className="text-sm font-bold text-ink">뉴스 리포트</h2><Link href="/news-report" className="theme-accent-text text-[12px] font-bold">전체 보기</Link></div>
                 <div className="mt-2 divide-y divide-hairline-soft">
-                    {news.map(([title, age], index) => (
-                        <article key={title} className="grid grid-cols-[minmax(0,1fr)_72px] gap-3 py-2.5">
-                            <div><span className="theme-accent-text text-[12px] font-bold">0{index + 1}</span><h3 className="mt-1 text-xs font-bold leading-5 text-ink">{title}</h3><p className="mt-1 text-[12px] text-muted">{age}</p></div>
-                            <img src="/new1.png" alt="" className="h-14 w-[72px] rounded-md object-cover" width={72} height={56} />
-                        </article>
+                    {news.map((report, index) => (
+                        <Link
+                            key={report.id}
+                            href={`/news-report/${report.id}`}
+                            className="group relative grid grid-cols-[minmax(0,1fr)_72px] gap-3 overflow-hidden rounded-md py-2.5 pl-3 pr-1 transition-[background-color] duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:h-8 before:w-0.5 before:-translate-y-1/2 before:scale-y-0 before:rounded-full before:bg-primary before:transition-transform before:duration-300 before:ease-out hover:bg-primary/[0.045] hover:before:scale-y-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:before:transition-none"
+                        >
+                            <div className="transition-transform duration-300 ease-out group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none">
+                                <span className="text-[12px] font-black text-primary transition-colors duration-300 group-hover:text-primary-active">0{index + 1}</span>
+                                <h3 className="mt-1 text-xs font-bold leading-5 text-ink transition-colors duration-300 group-hover:text-primary">{report.title}</h3>
+                                <p className="mt-1 text-[12px] text-muted transition-colors duration-300 group-hover:text-body">{report.publishedAt}</p>
+                            </div>
+                            <span className="h-14 w-[72px] overflow-hidden rounded-md shadow-[0_2px_8px_rgba(10,11,13,0.08)] transition-shadow duration-300 group-hover:shadow-[0_5px_14px_rgba(10,11,13,0.16)]">
+                                <img src="/new1.png" alt="" className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 motion-reduce:transform-none motion-reduce:transition-none" width={72} height={56} />
+                            </span>
+                        </Link>
                     ))}
                 </div>
             </section>

@@ -152,7 +152,7 @@ function RangeField({
                 step={step}
                 value={value}
                 disabled={displayValue === "-"}
-                onChange={(event) => onChange(Number(event.target.value))}
+                onInput={(event) => onChange(Number(event.currentTarget.value))}
                 className="simulation-range mt-3 w-full cursor-pointer disabled:cursor-not-allowed"
                 style={{
                     background: `linear-gradient(to right, var(--control-accent) 0%, var(--control-accent) ${progress}%, var(--control-track) ${progress}%, var(--control-track) 100%)`,

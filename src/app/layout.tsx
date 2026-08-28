@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Header from "../components/layout/Header";
+import AuthGuardProvider, { ProtectedRouteGate } from "@/components/auth/AuthGuardProvider";
 
 const pretendard = localFont({
   variable: "--font-pretendard",
@@ -29,11 +30,15 @@ export default function RootLayout({
       className={`${pretendard.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col">
-        <Header />
+        <AuthGuardProvider>
+          <Header />
 
-        <div className="flex-1 flex flex-col">
-          {children}
-        </div>
+          <ProtectedRouteGate>
+            <div className="flex-1 flex flex-col">
+              {children}
+            </div>
+          </ProtectedRouteGate>
+        </AuthGuardProvider>
       </body>
     </html>
   );
