@@ -75,7 +75,7 @@ export default function StockTable() {
     return (
         <section ref={tableRef} className="scroll-mt-20 overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3">
-                <h2 className="text-base font-black text-ink">주요 종목</h2>
+                <h2 className="text-base font-bold text-ink">주요 종목</h2>
                 <div className="flex flex-wrap gap-1.5">
                     {(["현재가", "급상승", "급하락", "거래량", "거래대금"] as SortKey[]).map((label) => (
                         <Button

@@ -55,7 +55,7 @@ export default function Sidebar() {
                         isOpen ? "translate-x-0 opacity-100 delay-75" : "translate-x-4 opacity-0"
                     }`}
                 >
-                    <div className="flex h-14 items-center border-b border-hairline bg-surface-soft px-4 text-sm font-black text-ink">
+                    <div className="flex h-14 items-center border-b border-hairline bg-surface-soft px-4 text-sm font-bold text-ink">
                         <span>{activeTab.label}</span>
                     </div>
 

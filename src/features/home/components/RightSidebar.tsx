@@ -9,7 +9,7 @@ export default function RightSidebar() {
         <aside className="flex flex-col gap-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
             <section className="always-dark rounded-lg border border-primary/25 bg-[linear-gradient(145deg,#16295c,#0a0b0d_68%)] p-4 shadow-[0_4px_16px_rgba(0,0,0,.22)]">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-black text-white">재무 진단 브리핑</h2>
+                    <h2 className="text-sm font-bold text-white">재무 진단 브리핑</h2>
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white"><SparkleIcon className="h-4 w-4" /></span>
                 </div>
                 <div className="mt-4 rounded-md border border-white/10 bg-black/15 p-3 text-xs leading-6 text-white/70">
@@ -21,14 +21,14 @@ export default function RightSidebar() {
             </section>
 
             <section className="rounded-lg border border-hairline bg-white p-4">
-                <h2 className="text-sm font-black text-ink">전략 신호</h2>
+                <h2 className="text-sm font-bold text-ink">전략 신호</h2>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                     {[['시장', '중립'], ['변동성', '보통'], ['AI 신뢰도', '82%']].map(([label, value]) => <div key={label} className="rounded-md bg-surface-soft px-2 py-2.5"><p className="text-[12px] text-muted">{label}</p><strong className="num mt-1 block text-xs text-ink">{value}</strong></div>)}
                 </div>
             </section>
 
             <section className="rounded-lg border border-hairline bg-white p-4">
-                <div className="flex items-center justify-between"><h2 className="text-sm font-black text-ink">뉴스 리포트</h2><Link href="/news-report" className="group relative text-[12px] font-bold text-primary after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-200 hover:after:scale-x-100 motion-reduce:after:transition-none">전체 보기</Link></div>
+                <div className="flex items-center justify-between"><h2 className="text-sm font-bold text-ink">뉴스 리포트</h2><Link href="/news-report" className="theme-accent-text text-[12px] font-bold">전체 보기</Link></div>
                 <div className="mt-2 divide-y divide-hairline-soft">
                     {news.map((report, index) => (
                         <Link

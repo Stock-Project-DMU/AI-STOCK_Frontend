@@ -135,7 +135,7 @@ export default function ProfilePanel({
   return (
     <div className="mx-auto max-w-[1180px]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-xl font-extrabold">내 정보</h1>
+        <h1 className="text-xl font-bold">내 정보</h1>
         <div className="flex gap-2">
           {isEditing && <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>}
           <button type="button" onClick={isEditing ? onSave : onEdit} disabled={isSaving} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60">{isSaving ? "저장 중..." : isEditing ? "완료" : "정보 수정"}</button>
@@ -195,8 +195,8 @@ function ProfileChoiceGroup({ label, helper, options, selected, columns, scaleLa
         {options.map((option) => {
           const isSelected = selected === option.value;
           return (
-            <button key={option.value} type="button" role="radio" aria-checked={isSelected} onClick={() => onSelect(option.value)} className={`relative min-h-24 rounded-lg border px-3 py-3 text-center transition-all hover:-translate-y-0.5 hover:brightness-110 ${profileChoiceToneClasses[option.tone]} ${isSelected ? `${profileChoiceSelectedClasses[option.tone]} ring-offset-2 ring-offset-[var(--market-panel)] shadow-[0_10px_28px_rgba(0,0,0,.16)]` : "opacity-75 hover:opacity-100"}`}>
-              {isSelected && <span aria-hidden="true" className={`absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-xs font-black text-white ${profileChoiceCheckClasses[option.tone]}`}>✓</span>}
+            <button key={option.value} type="button" role="radio" aria-checked={isSelected} onClick={() => onSelect(option.value)} className={`relative min-h-24 rounded-lg border px-3 py-3 text-center transition-all hover:-translate-y-0.5 hover:brightness-110 ${profileChoiceToneClasses[option.tone]} ${isSelected ? `${profileChoiceSelectedClasses[option.tone]} ring-offset-2 ring-offset-[var(--market-panel)] shadow-[0_2px_4px_rgba(0,0,0,.16)]` : "opacity-75 hover:opacity-100"}`}>
+              {isSelected && <span aria-hidden="true" className={`absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white ${profileChoiceCheckClasses[option.tone]}`}>✓</span>}
               <strong className="block text-sm sm:text-base">{option.value}</strong>
               <span className="mt-2 block whitespace-pre-line text-xs font-semibold leading-5 opacity-80 sm:text-xs">{option.description}</span>
             </button>

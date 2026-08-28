@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 /*
-  Design tokens sourced from /DESIGN-coinbase.md (Coinbase marketing-site
-  analysis) plus the "AI-STOCK Dashboard Density Addendum" at the bottom of
-  that doc, which covers the trading/dashboard surfaces the source analysis
-  explicitly leaves out of scope.
+  Design tokens sourced from /DESIGN-toss.md (Toss Invest live-site CSS
+  analysis, measured 2026-08-25) — replaces the earlier Coinbase-derived
+  token set. Style only: colors, type, radius, weight, depth. Page layout
+  and component structure are unchanged.
 
   Single light-canvas theme only — no dark/light toggle. Korean securities
-  convention is used for price direction: up = red, down = blue (opposite of
-  Coinbase's own crypto green/red, but correct for this app's users).
+  convention is used for price direction: up = red, down = blue — unchanged
+  from before, this was already correct.
 */
 @theme {
-  --color-primary: #0052ff;
-  --color-primary-active: #003ecc;
-  --color-primary-disabled: #a8b8cc;
-  --color-ink: #0a0b0d;
-  --color-body: #5b616e;
-  --color-muted: #7c828a;
-  --color-muted-soft: #a8acb3;
-  --color-hairline: #dee1e6;
-  --color-hairline-soft: #eef0f3;
+  --color-primary: #3182f6;
+  --color-primary-active: #2272eb;
+  --color-primary-disabled: #bfdbfd;
+  --color-ink: #1c1f25;
+  --color-body: #4e535c;
+  --color-muted: #8f959e;
+  --color-muted-soft: #b8bdc5;
+  --color-hairline: #e8ebf0;
+  --color-hairline-soft: #f4f5f8;
   --color-canvas: #ffffff;
-  --color-surface-soft: #f7f7f7;
-  --color-surface-strong: #eef0f3;
+  --color-surface-soft: #fbfcfd;
+  --color-surface-strong: #f4f5f8;
   --color-surface-dark: #0a0b0d;
   --color-surface-dark-elevated: #16181c;
   --color-up: #cf202f;
@@ -33,20 +33,21 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-pill: 100px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
 
-  --font-sans: var(--font-geist-sans), -apple-system, system-ui, "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace,
+  --font-sans: var(--font-pretendard), -apple-system, BlinkMacSystemFont,
+    "Noto Sans KR", "Apple SD Gothic Neo", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-mono: var(--font-pretendard), ui-monospace, "JetBrains Mono",
     monospace;
 
-  --text-xs: 0.8125rem;
-  --text-xs--line-height: 1.25rem;
-  --text-sm: 0.9375rem;
-  --text-sm--line-height: 1.375rem;
-  --text-base: 1.0625rem;
-  --text-base--line-height: 1.625rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.2rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.35rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.5rem;
 }
 
 :root {
@@ -54,32 +55,32 @@
 
   /* Legacy --market-* names are kept because many components still consume
      them via var(--market-*) / inline styles; only their values change. */
-  --market-bg: #f7f7f7;
+  --market-bg: #fbfcfd;
   --market-surface: #ffffff;
   --market-panel: #ffffff;
-  --market-panel-strong: #eef0f3;
+  --market-panel-strong: #f4f5f8;
   --market-header: #ffffff;
-  --market-elevated: #eef0f3;
-  --market-line: #dee1e6;
-  --market-text: #0a0b0d;
-  --market-secondary: #5b616e;
-  --market-muted: #7c828a;
-  --market-accent: #0052ff;
-  --market-accent-hover: #003ecc;
-  --market-accent-soft: rgba(0, 82, 255, 0.1);
-  --market-accent-text: #0052ff;
+  --market-elevated: #f4f5f8;
+  --market-line: #e8ebf0;
+  --market-text: #1c1f25;
+  --market-secondary: #4e535c;
+  --market-muted: #8f959e;
+  --market-accent: #3182f6;
+  --market-accent-hover: #2272eb;
+  --market-accent-soft: rgba(49, 130, 246, 0.1);
+  --market-accent-text: #3182f6;
   --market-up: #cf202f;
   --market-down: #1d4ed8;
   --market-positive: #05b169;
-  --market-grid-line: rgba(10, 11, 13, 0.04);
-  --market-glow: rgba(0, 82, 255, 0.08);
-  --chart-grid: #eef0f3;
-  --chart-primary: #0052ff;
-  --chart-primary-soft: rgba(0, 82, 255, 0.14);
-  --chart-label: #7c828a;
-  --control-track: #dee1e6;
+  --market-grid-line: rgba(28, 31, 37, 0.04);
+  --market-glow: rgba(49, 130, 246, 0.08);
+  --chart-grid: #f4f5f8;
+  --chart-primary: #3182f6;
+  --chart-primary-soft: rgba(49, 130, 246, 0.14);
+  --chart-label: #8f959e;
+  --control-track: #e8ebf0;
   --control-thumb: #ffffff;
-  --control-accent: #0052ff;
+  --control-accent: #3182f6;
 }
 
 * {
@@ -96,6 +97,7 @@ body {
   color: var(--market-text);
   font-size: var(--text-base);
   line-height: var(--text-base--line-height);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
@@ -122,10 +124,12 @@ a {
   color: white;
 }
 
-/* Tabular, mono-leaning number rendering per DESIGN-coinbase.md's
-   "CoinbaseMono on every number" rule — apply to price/qty/balance cells. */
+/* Tabular semibold number rendering per DESIGN-toss.md's "number-tabular"
+   spec — Pretendard at weight 600, not a separate monospace face. Apply to
+   price/qty/balance cells. */
 .num {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -198,7 +202,10 @@ a {
 .auth-card {
   border: 1px solid var(--market-line);
   background: #ffffff;
-  box-shadow: 0 20px 60px rgba(10, 11, 13, 0.08);
+  box-shadow:
+    0 0.6px 0.6px -1.25px rgba(10, 11, 13, 0.12),
+    0 2.2px 2.2px -2.5px rgba(10, 11, 13, 0.1),
+    0 10px 10px -3.75px rgba(10, 11, 13, 0.0425);
 }
 
 .auth-card input,
@@ -238,7 +245,7 @@ a {
 }
 
 .theme-accent-shadow {
-  box-shadow: 0 12px 30px color-mix(in srgb, var(--market-accent) 23%, transparent);
+  box-shadow: 0 0 0 0.75px color-mix(in srgb, var(--market-accent) 34%, transparent);
 }
 
 .admin-button-secondary {
@@ -261,7 +268,7 @@ a {
 }
 
 .admin-button-primary {
-  box-shadow: 0 10px 26px rgba(0, 82, 255, 0.22);
+  box-shadow: 0 2px 4px rgba(49, 130, 246, 0.22);
 }
 
 .admin-button-primary:hover {
@@ -269,7 +276,7 @@ a {
 }
 
 .chat-user-bubble {
-  box-shadow: 0 12px 30px rgba(0, 82, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(49, 130, 246, 0.2);
 }
 
 .admin-filter-button {
@@ -287,7 +294,7 @@ a {
   border: 1px solid var(--market-accent);
   background-color: var(--market-accent);
   color: #ffffff;
-  box-shadow: 0 8px 22px rgba(0, 82, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(49, 130, 246, 0.2);
 }
 
 .admin-link-button {

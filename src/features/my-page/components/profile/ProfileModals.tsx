@@ -14,7 +14,7 @@ export function PasswordCheckModal({ value, error, isChecking, onValueChange, on
   return (
     <Modal ariaLabel="정보 수정 비밀번호 확인" onClose={onClose}>
       <form onSubmit={onSubmit} noValidate>
-        <h2 className="text-xl font-extrabold sm:text-2xl">비밀번호 확인</h2>
+        <h2 className="text-xl font-bold sm:text-2xl">비밀번호 확인</h2>
         <p className="mt-3 text-base leading-7 text-muted">회원 정보를 수정하려면 현재 비밀번호를 입력해 주세요.</p>
         <label className="mt-6 block text-left text-base font-bold" htmlFor="profile-password-check">현재 비밀번호</label>
         <input
@@ -51,8 +51,8 @@ export function ProfileSavedModal({ onClose }: { onClose: () => void }) {
 export function WithdrawalModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal ariaLabel="회원 탈퇴 확인" onClose={onClose}>
-      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10 text-lg font-black text-red-500">!</div>
-      <h2 className="mt-3 text-lg font-extrabold">정말 탈퇴하시겠어요?</h2>
+      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10 text-lg font-bold text-red-500">!</div>
+      <h2 className="mt-3 text-lg font-bold">정말 탈퇴하시겠어요?</h2>
       <p className="mt-2 break-keep text-pretty text-sm leading-6 text-muted">탈퇴하면 저장된 투자 성향, 주문 내역과 수익률 정보를 다시 확인할 수 없습니다.</p>
       <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2.5 text-left text-xs leading-5 text-red-500">이 작업은 되돌릴 수 없습니다. 계속하기 전에 필요한 정보를 확인해 주세요.</div>
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -66,8 +66,8 @@ export function WithdrawalModal({ onClose }: { onClose: () => void }) {
 export function UnsavedChangesModal({ onStay, onLeave }: { onStay: () => void; onLeave: () => void }) {
   return (
     <Modal ariaLabel="저장하지 않은 수정 사항" onClose={onStay}>
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-xl font-black text-amber-600">!</div>
-      <h2 className="mt-4 text-xl font-extrabold">수정 사항이 저장되지 않습니다</h2>
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-xl font-bold text-amber-600">!</div>
+      <h2 className="mt-4 text-xl font-bold">수정 사항이 저장되지 않습니다</h2>
       <p className="mt-3 text-base leading-7 text-muted">
         지금 페이지를 나가면 입력한 내용이 사라집니다. 계속 수정하시겠습니까?
       </p>

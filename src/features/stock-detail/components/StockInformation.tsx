@@ -54,7 +54,7 @@ function renderTab(tab: InformationTab) {
 function SectionTitle({ title, subtitle, badge }: { title: string; subtitle: string; badge?: string }) {
     return (
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-hairline pb-4">
-            <div><h2 className="text-lg font-black tracking-tight text-ink">{title}</h2><p className="mt-1 text-xs text-muted">{subtitle}</p></div>
+            <div><h2 className="text-lg font-bold tracking-tight text-ink">{title}</h2><p className="mt-1 text-xs text-muted">{subtitle}</p></div>
             {badge && <span className="rounded-pill border border-hairline bg-surface-soft px-3 py-1 text-[12px] font-bold text-muted">{badge}</span>}
         </div>
     );
@@ -65,7 +65,7 @@ function Overview() {
         <div>
             <SectionTitle title="기업 개요" subtitle="삼성전자 · 005930 · KOSPI" badge="전자·반도체" />
             <div className="theme-accent-border mt-5 rounded-lg border bg-[linear-gradient(90deg,var(--market-accent-soft),transparent)] p-4">
-                <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="theme-accent-text text-[12px] font-bold uppercase tracking-[0.16em]">Company Profile</p><h3 className="mt-2 text-base font-black text-ink">삼성전자</h3></div><button type="button" className="rounded-lg border border-hairline bg-surface-soft px-4 py-2 text-xs text-body hover:border-primary hover:text-ink">기업 홈페이지 ↗</button></div>
+                <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="theme-accent-text text-[12px] font-bold uppercase tracking-[0.16em]">Company Profile</p><h3 className="mt-2 text-base font-bold text-ink">삼성전자</h3></div><button type="button" className="rounded-lg border border-hairline bg-surface-soft px-4 py-2 text-xs text-body hover:border-primary hover:text-ink">기업 홈페이지 ↗</button></div>
                 <p className="mt-3 max-w-4xl text-sm leading-6 text-body">반도체, 모바일, 디스플레이, 가전 등 다양한 사업을 영위하는 글로벌 전자·IT 기업입니다. 메모리 반도체와 스마트폰 시장에서 높은 글로벌 점유율을 확보하고 있습니다.</p>
             </div>
 
@@ -91,7 +91,7 @@ function Info({ label, value, change, positive }: { label: string; value: string
 }
 
 function MiniMetric({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
-    return <dl><dt className="text-[12px] text-muted">{label}</dt><dd className={`num mt-1 text-base font-black ${positive ? "text-up" : "text-ink"}`}>{value}</dd></dl>;
+    return <dl><dt className="text-[12px] text-muted">{label}</dt><dd className={`num mt-1 text-base font-bold ${positive ? "text-up" : "text-ink"}`}>{value}</dd></dl>;
 }
 
 function Legend({ color, label, value }: { color: string; label: string; value: string }) {
@@ -128,8 +128,8 @@ function Analysts() {
         <div>
             <SectionTitle title="애널리스트 컨센서스" subtitle="최근 3개 리포트 및 목표주가" badge="매수 우위" />
             <div className="mt-5 grid gap-3 xl:grid-cols-[1fr_280px]">
-                <div className="space-y-2.5">{ANALYSTS.map((analyst) => <article key={analyst.name} className="flex items-center gap-4 rounded-lg border border-hairline bg-surface-soft p-4 transition-colors hover:border-muted-soft"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-xs font-black text-white ${analyst.tone === "green" ? "bg-emerald-500" : "bg-amber-500"}`}>{analyst.opinion}</span><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><strong className="text-ink">{analyst.name}</strong><span className="text-[12px] text-muted">{analyst.firm} · {analyst.date}</span></div><p className="mt-1.5 text-xs text-body">목표가 <em className="num text-sm font-black not-italic text-up">{analyst.target}</em>　현재 대비 <span className="num text-up">{analyst.upside}</span></p></div><span className={`rounded-md px-3 py-1.5 text-[12px] font-bold ${analyst.tone === "green" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>{analyst.opinion === "BUY" ? "매수" : "중립"}</span></article>)}</div>
-                <aside className="rounded-lg border border-hairline bg-surface-soft p-4"><p className="text-[12px] font-bold uppercase tracking-[0.16em] text-muted">Consensus</p><h3 className="mt-2 font-bold text-ink">투자의견</h3><div className="mt-4 flex items-end gap-2"><strong className="text-2xl font-black text-up">매수</strong><span className="mb-1 text-xs text-muted">21 / 28</span></div><div className="mt-4 flex h-2 overflow-hidden rounded-pill"><span className="w-3/4 bg-[var(--market-up)]" /><span className="w-[21%] bg-amber-500" /><span className="flex-1 bg-[var(--market-down)]" /></div><div className="mt-2 flex justify-between text-[12px] text-muted"><span>매수 21</span><span>중립 6</span><span>매도 1</span></div><div className="mt-5 border-t border-hairline pt-4"><p className="text-[12px] text-muted">평균 목표가</p><strong className="num mt-2 block text-xl text-up">$94.00</strong><span className="num mt-1 block text-xs text-up">현재 대비 +20.5%</span></div></aside>
+                <div className="space-y-2.5">{ANALYSTS.map((analyst) => <article key={analyst.name} className="flex items-center gap-4 rounded-lg border border-hairline bg-surface-soft p-4 transition-colors hover:border-muted-soft"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white ${analyst.tone === "green" ? "bg-emerald-500" : "bg-amber-500"}`}>{analyst.opinion}</span><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><strong className="text-ink">{analyst.name}</strong><span className="text-[12px] text-muted">{analyst.firm} · {analyst.date}</span></div><p className="mt-1.5 text-xs text-body">목표가 <em className="num text-sm font-bold not-italic text-up">{analyst.target}</em>　현재 대비 <span className="num text-up">{analyst.upside}</span></p></div><span className={`rounded-md px-3 py-1.5 text-[12px] font-bold ${analyst.tone === "green" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>{analyst.opinion === "BUY" ? "매수" : "중립"}</span></article>)}</div>
+                <aside className="rounded-lg border border-hairline bg-surface-soft p-4"><p className="text-[12px] font-bold uppercase tracking-[0.16em] text-muted">Consensus</p><h3 className="mt-2 font-bold text-ink">투자의견</h3><div className="mt-4 flex items-end gap-2"><strong className="text-2xl font-bold text-up">매수</strong><span className="mb-1 text-xs text-muted">21 / 28</span></div><div className="mt-4 flex h-2 overflow-hidden rounded-pill"><span className="w-3/4 bg-[var(--market-up)]" /><span className="w-[21%] bg-amber-500" /><span className="flex-1 bg-[var(--market-down)]" /></div><div className="mt-2 flex justify-between text-[12px] text-muted"><span>매수 21</span><span>중립 6</span><span>매도 1</span></div><div className="mt-5 border-t border-hairline pt-4"><p className="text-[12px] text-muted">평균 목표가</p><strong className="num mt-2 block text-xl text-up">$94.00</strong><span className="num mt-1 block text-xs text-up">현재 대비 +20.5%</span></div></aside>
             </div>
         </div>
     );

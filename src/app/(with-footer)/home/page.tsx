@@ -10,39 +10,20 @@ export default function Home() {
     return (
         <div className="home-market-background market-theme min-h-screen">
             <section className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-                <section className="relative mb-7 py-5 sm:py-7">
-                    <div className="relative grid items-center gap-8 xl:grid-cols-[minmax(0,1fr)_620px] xl:gap-12">
-                        <div className="flex flex-col justify-center xl:min-h-48">
-                            <h1 className="max-w-2xl text-2xl font-black leading-tight tracking-[-0.035em] text-ink sm:text-3xl lg:text-[2.25rem]">
-                                시장 흐름과 주요 종목을
-                                <span className="block text-primary">빠르게 비교해보세요</span>
-                            </h1>
-                        </div>
-
-                        <div className="grid divide-y divide-hairline sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-                            {marketPulse.map(([name, value, change, tone]) => {
-                                const rising = change.startsWith("+");
-                                return (
-                                    <article
-                                        key={name}
-                                        className="group flex min-h-32 flex-col justify-between px-5 py-4 transition-transform duration-200 hover:-translate-y-0.5"
-                                    >
-                                        <div className="flex items-center justify-between gap-2">
-                                            <p className="text-[12px] font-black tracking-[0.1em] text-muted">{name}</p>
-                                            <span className={`h-2 w-2 rounded-full ${rising ? "bg-up" : "bg-down"}`} />
-                                        </div>
-                                        <div>
-                                            <strong className="num block whitespace-nowrap text-lg font-black tracking-tight text-ink">{value}</strong>
-                                            <span className={`num mt-2 inline-flex rounded-full px-2.5 py-1 text-[12px] font-black ${tone} ${rising ? "bg-red-500/8" : "bg-blue-500/8"}`}>
-                                                {change}
-                                            </span>
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
+                <div className="mb-5 grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_500px]">
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">오늘의 시장을 한 화면에서 읽으세요</h1>
                     </div>
-                </section>
+                    <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
+                        {marketPulse.map(([name, value, change, tone]) => (
+                            <div key={name} className="border-r border-hairline px-3 py-3 last:border-0">
+                                <p className="text-[12px] font-bold tracking-wider text-muted">{name}</p>
+                                <strong className="num mt-1.5 block text-lg text-ink">{value}</strong>
+                                <span className={`num mt-0.5 block text-xs font-bold ${tone}`}>{change}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_350px]">
                     <StockTable />

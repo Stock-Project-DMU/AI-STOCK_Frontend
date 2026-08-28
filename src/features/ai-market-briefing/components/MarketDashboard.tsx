@@ -14,7 +14,7 @@ export default function MarketDashboard({ side = "right" }: MarketDashboardProps
         >
             <div className="flex items-center justify-between">
                 <h2 className="flex items-center gap-1.5 text-sm font-bold text-ink"><TrendUpIcon className="h-3.5 w-3.5" /> 시장 현황</h2>
-                <span className="theme-accent-soft theme-accent-text rounded-pill px-2 py-1 text-[12px] font-black">데모</span>
+                <span className="theme-accent-soft theme-accent-text rounded-pill px-2 py-1 text-[12px] font-bold">데모</span>
             </div>
             <div className="mt-4 overflow-hidden rounded-md border border-hairline border-t-2 border-t-primary">
                 {MARKET_INDEXES.map(([name, value, change, color]) => (
@@ -45,7 +45,7 @@ export default function MarketDashboard({ side = "right" }: MarketDashboardProps
                 <h3 className="text-sm font-bold text-ink">시장 심리 지수</h3>
                 <div className="mt-4 flex items-end justify-between">
                     <span className="text-xs font-semibold text-emerald-600">탐욕 72%</span>
-                    <strong className="text-2xl text-emerald-500">72<span className="ml-1 text-xs text-muted-soft">/100</span></strong>
+                    <strong className="num text-2xl font-bold text-emerald-500">72<span className="ml-1 text-xs font-semibold text-muted-soft">/100</span></strong>
                 </div>
                 <div className="mt-3 flex h-2 overflow-hidden rounded-full">
                     <span className="w-[72%] bg-emerald-500" />

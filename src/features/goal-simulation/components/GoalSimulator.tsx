@@ -35,7 +35,7 @@ export default function GoalSimulator() {
                 <section className="mx-auto max-w-[1220px] rounded-lg border border-hairline bg-canvas p-5 shadow-[0_4px_12px_rgba(0,0,0,.04)] sm:p-6">
                     <div className="flex items-start justify-between gap-4">
                         <div className="border-l-4 border-primary pl-3">
-                            <h1 className="text-xl font-black text-ink">목표 도달 시뮬레이션</h1>
+                            <h1 className="text-xl font-bold text-ink">목표 도달 시뮬레이션</h1>
                             <p className="mt-1 text-xs text-muted">
                                 {resultSettings?.aggressive
                                     ? "기본 시나리오와 공격적 투자 시나리오를 비교합니다."

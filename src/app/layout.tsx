@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Header from "../components/layout/Header";
 import AuthGuardProvider, { ProtectedRouteGate } from "@/components/auth/AuthGuardProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const pretendard = localFont({
+  variable: "--font-pretendard",
+  src: [
+    { path: "./fonts/pretendard/Pretendard-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/pretendard/Pretendard-SemiBold.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/pretendard/Pretendard-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${pretendard.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col">
         <AuthGuardProvider>
