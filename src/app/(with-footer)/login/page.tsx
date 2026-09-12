@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
+import { startOAuth, type OAuthProvider } from "@/lib/api/oauth";
 import { login } from "@/lib/api/auth";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { getLoginDestination } from "@/lib/api/auth-navigation";
 
 type LoginFormData = { userId: string; password: string };
 type LoginFormErrors = Partial<Record<keyof LoginFormData, string>>;
@@ -20,6 +22,11 @@ export default function LoginPage() {
     const [requestError, setRequestError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    async function socialLogin(provider: OAuthProvider) {
+        setIsSubmitting(true); setRequestError("");
+        try { await startOAuth(provider); }
+        catch (error) { setRequestError(getApiErrorMessage(error, "소셜 로그인에 실패했습니다.")); setIsSubmitting(false); }
+    }
     const handleChange = (field: keyof LoginFormData) => (event: ChangeEvent<HTMLInputElement>) => {
         setFormData((prev) => ({ ...prev, [field]: event.target.value }));
         setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -40,7 +47,7 @@ export default function LoginPage() {
 
         try {
             await login(formData.userId.trim(), formData.password);
-            router.push("/home");
+            router.replace(await getLoginDestination());
         } catch (error) {
             setRequestError(getApiErrorMessage(error, "로그인 중 오류가 발생했습니다."));
         } finally {
@@ -59,7 +66,7 @@ export default function LoginPage() {
                     <div className="mt-auto grid grid-cols-3 gap-3">
                         {[['01', '시장 분석'], ['02', 'AI 진단'], ['03', '목표 관리']].map(([step, label]) => <div key={step} className="rounded-2xl border border-hairline bg-canvas p-4"><span className="theme-accent-text text-[12px] font-bold">{step}</span><strong className="mt-2 block text-xs text-ink">{label}</strong></div>)}
                     </div>
-                    <p className="mt-6 text-[12px] leading-5 text-muted">본 프로젝트의 모든 시장 수치는 화면 시연을 위한 샘플 데이터입니다.</p>
+                    <p className="mt-6 text-[12px] leading-5 text-muted">모의투자 서비스입니다. 시장 정보의 제공 범위와 지연 여부는 연결된 데이터 제공자에 따릅니다.</p>
                 </section>
 
                 <section className="flex min-h-[650px] flex-col justify-center p-7 sm:p-12">
@@ -80,7 +87,7 @@ export default function LoginPage() {
 
                     <div className="my-6 flex items-center gap-3 text-[12px] text-muted"><span className="h-px flex-1 bg-hairline" />간편 로그인<span className="h-px flex-1 bg-hairline" /></div>
                     <div className="grid grid-cols-3 gap-2">
-                        {[['K', '카카오', 'bg-[#fee500] text-[#191919] hover:brightness-95'], ['N', '네이버', 'bg-[#03c75a] text-white hover:brightness-95'], ['G', 'Google', 'border border-hairline bg-canvas text-body hover:border-primary/40 hover:bg-surface-soft hover:text-ink']].map(([symbol, label, tone]) => <button key={label} type="button" aria-label={`${label} 로그인`} className={`rounded-xl py-3 text-xs font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${tone}`}><span className="sm:hidden">{symbol}</span><span className="hidden sm:inline">{label}</span></button>)}
+                        {[['K', '카카오', 'bg-[#fee500] text-[#191919] hover:brightness-95'], ['N', '네이버', 'bg-[#03c75a] text-white hover:brightness-95'], ['G', 'Google', 'border border-hairline bg-canvas text-body hover:border-primary/40 hover:bg-surface-soft hover:text-ink']].map(([symbol, label, tone]) => <button key={label} type="button" disabled={isSubmitting} onClick={() => void socialLogin(symbol === "K" ? "KAKAO" : symbol === "N" ? "NAVER" : "GOOGLE")} aria-label={`${label} 로그인`} className={`rounded-xl py-3 text-xs font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${tone}`}><span className="sm:hidden">{symbol}</span><span className="hidden sm:inline">{label}</span></button>)}
                     </div>
 
                     <div className="mt-7 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted">

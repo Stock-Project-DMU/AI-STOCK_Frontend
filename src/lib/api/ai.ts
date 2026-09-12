@@ -1,0 +1,25 @@
+import { apiRequest } from "./client";
+import type { SimulationSettings } from "@/features/goal-simulation/types";
+export type PlanningSession = { sessionId: number; title: string | null; status: string; createdAt: string; updatedAt: string };
+export type PlanningMessage = { messageId: number; role: "USER" | "ASSISTANT" | "MODEL"; content: string; createdAt: string };
+export const getPlanningSessions = () => apiRequest<PlanningSession[]>("/api/ai/planning/sessions");
+export const createPlanningSession = () => apiRequest<PlanningSession>("/api/ai/planning/sessions", { method: "POST" });
+export const getPlanningMessages = (id: number) => apiRequest<PlanningMessage[]>(`/api/ai/planning/sessions/${id}/messages`);
+export const sendPlanningMessage = (id: number, content: string) => apiRequest<PlanningMessage>(`/api/ai/planning/sessions/${id}/messages`, { method: "POST", body: JSON.stringify({ content }) });
+export type GoalPlan = { planId: number; settings: SimulationSettings; futureValue: number; aggressiveFutureValue: number; saved: boolean; createdAt: string };
+export const createGoalPlan = (settings: SimulationSettings) => apiRequest<GoalPlan>("/api/goal-plans", { method: "POST", body: JSON.stringify(settings) });
+export const getGoalPlans = () => apiRequest<GoalPlan[]>("/api/goal-plans");
+export const saveGoalPlan = (id: number) => apiRequest<GoalPlan>(`/api/goal-plans/${id}/saved`, { method: "PATCH" });
+export type NewsOutlet = { outletDomain: string; outletName: string };
+export type NewsBriefing = NewsOutlet & { briefingDate: string; content: string; sources: { title: string; link: string; outlet: string }[] };
+export const getNewsOutlets = () => apiRequest<NewsOutlet[]>("/api/ai/news/outlets");
+export const getNewsSetting = () => apiRequest<NewsOutlet | null>("/api/ai/news/settings");
+export const saveNewsSetting = (outletDomain: string) => apiRequest<NewsOutlet>("/api/ai/news/settings", { method: "PUT", body: JSON.stringify({ outletDomain }) });
+export const getBriefingHistory = () => apiRequest<NewsBriefing[]>("/api/ai/news/briefings");
+export type NewsChatTurn = { role: "USER" | "ASSISTANT"; content: string };
+export type NewsChatAnswer = { content: string; searchedAt: string; sources: { title: string; description: string; link: string; pubDate: string; outlet: string }[] };
+export const sendNewsChat = (content: string, history: NewsChatTurn[]) => apiRequest<NewsChatAnswer>("/api/ai/news/chat", { method: "POST", body: JSON.stringify({ content, history }) });
+
+export type PlanningPreferences = { savedBriefingDates: string[]; linkedBriefingDates: string[]; linkedGoalPlanIds: number[] };
+export const getPlanningPreferences = () => apiRequest<PlanningPreferences>("/api/ai/planning/preferences");
+export const savePlanningPreferences = (request: PlanningPreferences) => apiRequest<PlanningPreferences>("/api/ai/planning/preferences", { method: "PUT", body: JSON.stringify(request) });

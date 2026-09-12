@@ -40,7 +40,14 @@ export default function Sidebar() {
     }
 
     return (
-        <aside className="flex min-h-full shrink-0 justify-end border-l border-hairline bg-canvas text-xs text-body md:sticky md:top-[72px] md:h-[calc(100vh-72px)] md:min-h-0 md:self-start">
+        <>
+            <div
+                aria-hidden="true"
+                className={`hidden shrink-0 transition-[width] duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:block ${
+                    isOpen ? "w-[388px]" : "w-[68px]"
+                }`}
+            />
+            <aside className="flex min-h-full shrink-0 justify-end border-l border-hairline bg-canvas text-xs text-body md:fixed md:bottom-0 md:right-0 md:top-[72px] md:z-40 md:h-auto md:min-h-0">
             <section
                 id="portfolio-sidebar-panel"
                 aria-hidden={!isOpen}
@@ -98,6 +105,7 @@ export default function Sidebar() {
                     ))}
                 </div>
             </nav>
-        </aside>
+            </aside>
+        </>
     );
 }

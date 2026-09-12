@@ -21,16 +21,12 @@ export function validateProfile(profile: Profile, savedProfile: Profile) {
     birthday.getMonth() === birthMonth - 1 &&
     birthday.getDate() === birthDay;
 
-  if (!/^[A-Za-z0-9_-]{4,20}$/.test(profile.userId.trim())) {
-    errors.userId = "아이디는 영문, 숫자, 밑줄, 하이픈을 사용해 4~20자로 입력해 주세요.";
-  }
-
   if (profile.password && profile.password !== savedProfile.password && !/^(?=.*[A-Za-z])(?=.*\d).{8,20}$/.test(profile.password)) {
     errors.password = "비밀번호는 영문과 숫자를 포함해 8~20자로 입력해 주세요.";
   }
 
-  if (!/^[가-힣A-Za-z][가-힣A-Za-z\s]{1,29}$/.test(profile.name.trim())) {
-    errors.name = "이름은 한글 또는 영문으로 2~30자 입력해 주세요.";
+  if (!profile.name.trim() || profile.name.trim().length > 50) {
+    errors.name = "이름은 1~50자로 입력해 주세요.";
   }
 
   if (!isValidBirthday || birthday > today) {

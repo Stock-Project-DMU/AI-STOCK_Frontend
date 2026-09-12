@@ -9,5 +9,5 @@ export default async function StockDetailRoute({ searchParams }: StockDetailRout
     const requestedCode = Array.isArray(rawCode) ? rawCode[0] : rawCode;
     const stockCode = requestedCode && /^\d{6}$/.test(requestedCode) ? requestedCode : "005930";
 
-    return <StockDetailPage stockCode={stockCode} />;
+    return <StockDetailPage key={stockCode} stockCode={stockCode} />;
 }

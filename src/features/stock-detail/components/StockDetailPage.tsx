@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isAuthenticated, getApiErrorMessage } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/client";
+import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getAccounts, getHoldings, getOrders } from "@/lib/api/portfolio";
 import { getStockHoga, getStockPrice, recordRecentView } from "@/lib/api/stock";
 import type {
@@ -15,9 +16,12 @@ import type { StockMainTab } from "../types";
 import StockChart from "./StockChart";
 import StockHeader from "./StockHeader";
 import StockInformation from "./StockInformation";
+import NotificationPanel from "./NotificationPanel";
 import TradePanel from "./TradePanel";
+import { subscribeStock } from "@/lib/api/realtime";
 
 export default function StockDetailPage({ stockCode }: { stockCode: string }) {
+    const { authenticated } = useAuthGuard();
     const [tab, setTab] = useState<StockMainTab>("chart");
     const [stock, setStock] = useState<StockPriceResponse | null>(null);
     const [hoga, setHoga] = useState<HogaResponse | null>(null);
@@ -26,27 +30,35 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
     const [holdings, setHoldings] = useState<HoldingResponse[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+    const [recentError, setRecentError] = useState("");
+    const [liveStatus, setLiveStatus] = useState("");
+    const [ticks, setTicks] = useState<(StockPriceResponse & { receivedAt: string })[]>([]);
+    useEffect(() => subscribeStock(stockCode, price => {
+        setStock(price);
+        setTicks(current => [{ ...price, receivedAt: new Date().toLocaleTimeString("ko-KR") }, ...current].slice(0, 30));
+    }, setHoga, setLiveStatus), [stockCode, authenticated]);
     useEffect(() => {
-        if (!isAuthenticated()) return;
-
         let active = true;
 
         async function loadStockDetail() {
             setIsLoading(true);
             setError("");
+            setRecentError("");
 
             try {
                 const [stockResult, hogaResult, accountResult] = await Promise.allSettled([
                     getStockPrice(stockCode),
                     getStockHoga(stockCode),
-                    getAccounts(),
+                    authenticated ? getAccounts() : Promise.resolve([]),
                 ]);
 
                 if (!active) return;
 
                 if (stockResult.status === "fulfilled") {
                     setStock(stockResult.value);
-                    void recordRecentView(stockCode).catch(() => undefined);
+                    if (authenticated) void recordRecentView(stockCode).catch(requestError => {
+                        if (active) setRecentError(getApiErrorMessage(requestError, "최근 본 종목을 저장하지 못했습니다."));
+                    });
                 }
                 if (hogaResult.status === "fulfilled") setHoga(hogaResult.value);
 
@@ -62,6 +74,8 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
                     if (!active) return;
                     if (ordersResult.status === "fulfilled") setOrders(ordersResult.value);
                     if (holdingsResult.status === "fulfilled") setHoldings(holdingsResult.value);
+                } else {
+                    setAccount(null); setOrders(null); setHoldings(null);
                 }
 
                 const firstFailure = [stockResult, hogaResult, accountResult].find(
@@ -83,21 +97,25 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
         return () => {
             active = false;
         };
-    }, [stockCode]);
+    }, [stockCode, authenticated]);
 
     async function refreshTradingData() {
         if (!account) return;
-        const [nextOrders, nextHoldings] = await Promise.all([
+        const [nextOrders, nextHoldings, nextAccounts] = await Promise.all([
             getOrders(account.accountId),
             getHoldings(account.accountId),
+            getAccounts(),
         ]);
         setOrders(nextOrders);
         setHoldings(nextHoldings);
+        setAccount(nextAccounts.find(item => item.accountId === account.accountId) ?? null);
     }
 
     return (
         <div className="market-theme market-grid min-h-[calc(100vh-4rem)] min-w-0 bg-[var(--market-bg)] text-[var(--market-text)]">
             <StockHeader stock={stock} />
+            {liveStatus && <p role="status" className="px-4 py-1 text-xs text-muted">{liveStatus}</p>}
+            {recentError && <p role="alert" className="px-4 py-2 text-xs text-up">최근 본 종목 저장 실패: {recentError}</p>}
 
             {(isLoading || error) && (
                 <div className="border-b border-hairline bg-canvas px-4 py-2 text-center text-xs">
@@ -118,16 +136,16 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
                     <div className="hidden items-center gap-3 text-[12px] text-muted md:flex">
                         <span>원화</span>
                         <span>실시간</span>
-                        <span className="rounded-pill border border-hairline px-3 py-1 text-body">알림 설정</span>
+                        {authenticated && <NotificationPanel />}
                     </div>
                 </div>
             </nav>
 
             {tab === "chart" ? (
                 <div className="mx-auto grid max-w-[1540px] gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_330px] xl:gap-4 xl:p-4">
-                    <StockChart stock={stock} hoga={hoga} />
-                    <TradePanel
-                        stock={stock}
+                    <StockChart stockCode={stockCode} stock={stock} hoga={hoga} ticks={ticks} />
+                    <TradePanel key={stockCode}
+                        stock={stock?.stockCode === stockCode ? stock : null}
                         account={account}
                         orders={orders}
                         holdings={holdings}
@@ -135,7 +153,7 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
                     />
                 </div>
             ) : (
-                <StockInformation />
+                <StockInformation stockCode={stockCode} />
             )}
         </div>
     );

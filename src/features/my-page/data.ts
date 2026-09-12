@@ -8,14 +8,14 @@ export const navItems: { id: MyPageTab; label: string; description: string }[] =
 ];
 
 export const initialProfile: Profile = {
-  userId: "jin050183",
-  password: "**********",
-  name: "김진우",
-  birthday: "2000-05-01",
-  email: "jin0501833@naver.com",
-  investmentProfile: "적극투자형",
-  fundProfile: "수익추구형",
-  investmentLevel: "숙련 투자자",
+  userId: "",
+  password: "",
+  name: "",
+  birthday: "",
+  email: "",
+  investmentProfile: "",
+  fundProfile: "",
+  investmentLevel: "",
 };
 
 export const investmentProfileChoices: ProfileChoice[] = [

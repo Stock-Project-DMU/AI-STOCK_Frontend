@@ -1,30 +1,13 @@
 import { PlusIcon } from "@/components/icons/Icon";
-
-type PlannerHistoryProps = {
-    onNewDiagnosis: () => void;
-};
-
-export default function PlannerHistory({ onNewDiagnosis }: PlannerHistoryProps) {
-    return (
-        <aside className="hidden w-[240px] shrink-0 border-r border-hairline bg-canvas lg:flex lg:flex-col">
-            <button
-                type="button"
-                onClick={onNewDiagnosis}
-                className="m-3 flex items-center rounded-md bg-primary px-5 py-3 text-left text-sm font-bold text-white transition-colors hover:bg-primary-active"
-            >
-                <PlusIcon className="mr-2.5 h-4 w-4" />새로운 진단 시작
-            </button>
-
-            <p className="px-6 pb-2 text-xs font-medium text-muted">최근 대화</p>
-            <button className="border-l-2 border-primary bg-primary/6 px-6 py-3 text-left text-sm font-semibold text-primary">
-                포트폴리오 리밸런싱 제안
-            </button>
-            <button className="px-6 py-3 text-left text-sm text-body hover:bg-surface-soft">
-                연금 저축 절세 전략
-            </button>
-            <button className="px-6 py-3 text-left text-sm text-body hover:bg-surface-soft">
-                미국 테크주 전망 분석
-            </button>
-        </aside>
-    );
+import type { PlanningSession } from "@/lib/api/ai";
+export default function PlannerHistory({ onNewDiagnosis, onNewChat, loading, sessions, selectedId, onSelect }: {
+    onNewDiagnosis: () => void; onNewChat: () => void; loading: boolean; sessions: PlanningSession[]; selectedId: number | null; onSelect: (id: number) => void;
+}) {
+    return <aside className="flex shrink-0 flex-col border-b border-hairline bg-canvas lg:w-[240px] lg:border-r lg:border-b-0">
+        <div className="flex gap-2 p-3 lg:flex-col"><button type="button" disabled={loading} onClick={onNewChat} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white disabled:opacity-50"><PlusIcon className="h-4 w-4" />새 채팅</button>
+        <button type="button" disabled={loading} onClick={onNewDiagnosis} className="rounded-lg border border-hairline px-4 py-2 text-sm text-muted disabled:opacity-50">투자 성향 다시 진단</button></div>
+        <p className="hidden px-6 pb-2 text-xs text-muted lg:block">최근 대화</p>
+        <div className="flex max-h-24 overflow-auto lg:max-h-none lg:flex-1 lg:flex-col">{sessions.map(session => <button type="button" key={session.sessionId} onClick={() => onSelect(session.sessionId)} aria-pressed={selectedId === session.sessionId} className={`shrink-0 px-6 py-3 text-left text-sm ${selectedId === session.sessionId ? "bg-primary/10 text-primary" : "hover:bg-surface-soft"}`}>{session.title || "새 상담"}</button>)}</div>
+        {!loading && !sessions.length && <p className="hidden px-6 text-xs text-muted lg:block">아직 대화 기록이 없습니다.</p>}
+    </aside>;
 }

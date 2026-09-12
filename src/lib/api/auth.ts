@@ -1,6 +1,18 @@
 import { apiRequest, clearAuthTokens, saveAuthTokens } from "./client";
 import type { LoginResponse, SignupResponse } from "./types";
 
+export function checkLoginId(loginId: string) {
+    return apiRequest<{ loginId: string; available: boolean }>(`/api/auth/login-id/availability?loginId=${encodeURIComponent(loginId)}`, { auth: false });
+}
+
+export type AccountRecoveryRequest = { loginId?: string; name: string; email: string; birthdate?: string; code: string; newPassword?: string };
+export function findLoginId(request: AccountRecoveryRequest) {
+    return apiRequest<string>("/api/auth/find-id", { method: "POST", auth: false, body: JSON.stringify(request) });
+}
+export function resetPassword(request: AccountRecoveryRequest) {
+    return apiRequest<null>("/api/auth/password/reset", { method: "POST", auth: false, body: JSON.stringify(request) });
+}
+
 export async function login(loginId: string, password: string) {
     const response = await apiRequest<LoginResponse>("/api/auth/login", {
         method: "POST",
@@ -44,6 +56,7 @@ export function signup(request: {
     name: string;
     email: string;
     birthdate: string;
+    investmentLevel?: "BEGINNER" | "INTERMEDIATE" | "EXPERT";
 }) {
     return apiRequest<SignupResponse>("/api/auth/signup", {
         method: "POST",

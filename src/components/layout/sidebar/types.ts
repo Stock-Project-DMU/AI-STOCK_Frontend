@@ -9,6 +9,7 @@ export type SidebarTab = {
 };
 
 export type Holding = {
+    stockCode?: string;
     name: string;
     quantity: number;
     amountValue: number;
@@ -21,4 +22,10 @@ export type SidebarStockItem = {
     meta: string;
     priceValue: number;
     rate: string;
+};
+
+export type FavoriteActions = {
+    favoriteCodes: Set<string>;
+    pendingCodes: Set<string>;
+    onFavorite: (stockCode: string, favorite: boolean) => void;
 };
