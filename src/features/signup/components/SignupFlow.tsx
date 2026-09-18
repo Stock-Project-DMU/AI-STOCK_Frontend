@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { sendEmailVerificationCode, signup, verifyEmailCode } from "@/lib/api/auth";
+import { checkLoginId, sendEmailVerificationCode, signup, verifyEmailCode } from "@/lib/api/auth";
 import {
     TERMS_AND_CONDITIONS,
     type TermDetail,
@@ -71,6 +71,21 @@ export default function SignupFlow() {
     const [isSendingEmailCode, setIsSendingEmailCode] = useState(false);
     const [isVerifyingEmailCode, setIsVerifyingEmailCode] = useState(false);
     const [isSubmittingSignup, setIsSubmittingSignup] = useState(false);
+    const [checkedLoginId, setCheckedLoginId] = useState("");
+    const [checkingLoginId, setCheckingLoginId] = useState(false);
+
+    const handleCheckLoginId = async () => {
+        const loginId = formData.userId.trim();
+        setCheckingLoginId(true);
+        setCheckedLoginId("");
+        try {
+            const result = await checkLoginId(loginId);
+            if (result.available) setCheckedLoginId(loginId);
+            setFormErrors(current => ({ ...current, userId: result.available ? undefined : "이미 사용 중인 아이디입니다." }));
+        } catch (error) {
+            setFormErrors(current => ({ ...current, userId: getApiErrorMessage(error, "중복 확인에 실패했습니다.") }));
+        } finally { setCheckingLoginId(false); }
+    };
 
     useEffect(() => {
         if (!selectedTerm) {
@@ -115,6 +130,7 @@ export default function SignupFlow() {
     ) => {
         const nextFormData = { ...formData, [field]: value };
         setFormData(nextFormData);
+        if (field === "userId") setCheckedLoginId("");
         setFormErrors((prev) => {
             const nextErrors = { ...prev };
 
@@ -224,6 +240,8 @@ export default function SignupFlow() {
 
         if (!formData.userId.trim()) {
             nextErrors.userId = "아이디를 입력해 주세요.";
+        } else if (checkedLoginId !== formData.userId.trim()) {
+            nextErrors.userId = "아이디 중복 확인을 완료해 주세요.";
         }
 
         const passwordError = validatePassword(formData.password);
@@ -291,6 +309,7 @@ export default function SignupFlow() {
                 password: formData.password,
                 name: formData.name.trim(),
                 email,
+                investmentLevel: selectedExperience === "beginner" ? "BEGINNER" : selectedExperience === "intermediate" ? "INTERMEDIATE" : "EXPERT",
                 birthdate: `${birthDateInput.slice(0, 4)}-${birthDateInput.slice(4, 6)}-${birthDateInput.slice(6, 8)}`,
             });
             router.push("/welcome");
@@ -332,6 +351,9 @@ export default function SignupFlow() {
                     onSendEmailCode={handleSendEmailCode}
                     onVerifyEmailCode={handleVerifyEmailCode}
                     onNext={handleNextAccountStep}
+                    onCheckLoginId={handleCheckLoginId}
+                    checkingLoginId={checkingLoginId}
+                    loginIdAvailable={checkedLoginId === formData.userId.trim() && checkedLoginId !== ""}
                 />
             ) : null}
 

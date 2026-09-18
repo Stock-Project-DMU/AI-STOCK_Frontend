@@ -22,6 +22,7 @@ export type SignupResponse = {
 };
 
 export type UserInfoResponse = {
+    birthdate: string | null;
     userId: number;
     loginId: string;
     name: string;
@@ -33,7 +34,7 @@ export type UserInfoResponse = {
 export type InvestmentProfileResponse = {
     investmentTendency: number;
     fundTendency: number;
-    investmentLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+    investmentLevel: "BEGINNER" | "INTERMEDIATE" | "EXPERT";
 };
 
 export type AccountInfoResponse = {

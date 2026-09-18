@@ -7,6 +7,9 @@ import RecoveryField from "@/features/account-recovery/components/RecoveryField"
 import RecoveryModal from "@/features/account-recovery/components/RecoveryModal";
 import { Button } from "@/components/common/Button";
 import type { FindIdFormData } from "../types";
+import { findLoginId } from "@/lib/api/auth";
+import { getApiErrorMessage } from "@/lib/api/client";
+import RecoveryVerification from "@/features/account-recovery/components/RecoveryVerification";
 
 const INITIAL_FORM_DATA: FindIdFormData = {
     name: "",
@@ -18,7 +21,6 @@ const INITIAL_FORM_DATA: FindIdFormData = {
 type FindIdFormErrors = Partial<Record<keyof FindIdFormData, string>>;
 type FindIdTextField = Exclude<keyof FindIdFormData, "birthDate">;
 
-const MOCK_FOUND_USER_ID = "user123";
 
 function parseBirthDate(value: string) {
     const match = /^(\d{4})(\d{2})(\d{2})$/.exec(value.trim());
@@ -51,6 +53,9 @@ export default function FindIdCard() {
     const [birthDateInput, setBirthDateInput] = useState("");
     const [errors, setErrors] = useState<FindIdFormErrors>({});
     const [foundUserId, setFoundUserId] = useState<string | null>(null);
+    const [code, setCode] = useState("");
+    const [busy, setBusy] = useState(false);
+    const [requestError, setRequestError] = useState("");
 
     const handleChange =
         (field: FindIdTextField) =>
@@ -108,8 +113,9 @@ export default function FindIdCard() {
         return nextErrors;
     };
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (busy) return;
 
         const nextErrors = validateForm();
 
@@ -120,8 +126,12 @@ export default function FindIdCard() {
 
         setErrors({});
 
-        // TODO: 아이디 찾기 API 요청
-        setFoundUserId(MOCK_FOUND_USER_ID);
+        setBusy(true);
+        setRequestError("");
+        try {
+            setFoundUserId(await findLoginId({ name: formData.name.trim(), email: `${formData.emailLocal.trim()}@${formData.emailDomain.trim()}`, birthdate: `${birthDateInput.slice(0, 4)}-${birthDateInput.slice(4, 6)}-${birthDateInput.slice(6, 8)}`, code }));
+        } catch (error) { setRequestError(getApiErrorMessage(error, "아이디 찾기에 실패했습니다.")); }
+        finally { setBusy(false); }
     };
 
     return (
@@ -225,7 +235,9 @@ export default function FindIdCard() {
                     </div>
                 </div>
 
-                <Button type="submit" fullWidth size="md" className="mt-10">
+                <RecoveryVerification email={`${formData.emailLocal.trim()}@${formData.emailDomain.trim()}`} code={code} onCodeChange={setCode} />
+                {requestError && <p role="alert" className="mt-2 text-sm text-red-500">{requestError}</p>}
+                <Button type="submit" disabled={busy || code.length !== 6} fullWidth size="md" className="mt-10">
                     확인
                 </Button>
             </form>

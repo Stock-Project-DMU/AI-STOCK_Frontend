@@ -24,6 +24,7 @@ type ProfilePanelProps = {
   onCancel: () => void;
   onSave: () => void;
   onRequestWithdrawal: () => void;
+  onStartSurvey: () => void;
 };
 
 const rows: { key: ProfileField; label: string }[] = [
@@ -45,22 +46,6 @@ const profileChoiceToneClasses: Record<ProfileChoiceTone, string> = {
   orange: "border-orange-500/45 bg-orange-500/10 text-orange-500",
 };
 
-const profileChoiceSelectedClasses: Record<ProfileChoiceTone, string> = {
-  emerald: "ring-2 ring-emerald-500",
-  teal: "ring-2 ring-teal-500",
-  blue: "ring-2 ring-blue-500",
-  amber: "ring-2 ring-amber-500",
-  orange: "ring-2 ring-orange-500",
-};
-
-const profileChoiceCheckClasses: Record<ProfileChoiceTone, string> = {
-  emerald: "bg-emerald-500",
-  teal: "bg-teal-500",
-  blue: "bg-blue-500",
-  amber: "bg-amber-500",
-  orange: "bg-orange-500",
-};
-
 const choicesByKey: Partial<Record<ProfileField, ProfileChoice[]>> = {
   investmentProfile: investmentProfileChoices,
   fundProfile: fundProfileChoices,
@@ -80,11 +65,12 @@ export default function ProfilePanel({
   onCancel,
   onSave,
   onRequestWithdrawal,
+  onStartSurvey,
 }: ProfilePanelProps) {
   const accountRows = rows.slice(0, 5);
   const investmentRows = rows.slice(5);
 
-  const renderRows = (items: typeof rows) => (
+  const renderRows = (items: typeof rows, editable = isEditing) => (
     <dl className="divide-y divide-gray-200">
       {items.map((row) => {
         const selectedChoice = choicesByKey[row.key]?.find((choice) => choice.value === profile[row.key]);
@@ -98,10 +84,11 @@ export default function ProfilePanel({
           <div key={row.key} className="grid min-h-12 grid-cols-[100px_minmax(0,1fr)] items-center gap-3 py-2 sm:grid-cols-[110px_minmax(0,1fr)]">
             <dt className="text-xs font-semibold text-muted sm:text-sm">{row.label}</dt>
             <dd className="min-w-0">
-              {isEditing ? (
+              {editable ? (
                 <input
                   aria-label={row.label}
-                  type={row.key === "birthday" ? "date" : row.key === "email" ? "email" : "text"}
+                  type={row.key === "password" ? "password" : row.key === "birthday" ? "date" : row.key === "email" ? "email" : "text"}
+                  readOnly={row.key === "userId"}
                   autoComplete={row.key === "password" ? "new-password" : row.key === "email" ? "email" : row.key === "name" ? "name" : undefined}
                   placeholder={row.key === "password" ? "변경할 비밀번호 입력" : undefined}
                   value={draftProfile[row.key]}
@@ -121,10 +108,10 @@ export default function ProfilePanel({
                     ? "**********"
                     : row.key === "birthday"
                       ? profile[row.key].replaceAll("-", ".")
-                      : profile[row.key]}
+                      : profile[row.key] || "미설정"}
                 </span>
               )}
-              {isEditing && error && <p id={`profile-${row.key}-error`} role="alert" className="mt-1.5 text-xs font-semibold text-red-500">{error}</p>}
+              {editable && error && <p id={`profile-${row.key}-error`} role="alert" className="mt-1.5 text-xs font-semibold text-red-500">{error}</p>}
             </dd>
           </div>
         );
@@ -151,18 +138,9 @@ export default function ProfilePanel({
 
         <section className="rounded-lg border border-hairline p-4 sm:p-5">
           <div className="mb-2"><h2 className="font-bold">투자 프로필</h2></div>
-          {isEditing ? (
-            <div className="mt-5 space-y-6">
-              <ProfileChoiceGroup label="투자 성향" helper="감당할 수 있는 위험 수준을 선택해 주세요." options={investmentProfileChoices} selected={draftProfile.investmentProfile} columns={5} scaleLabels={["낮은 위험", "높은 위험"]} onSelect={(value) => onDraftChange({ ...draftProfile, investmentProfile: value })} />
-              <ProfileChoiceGroup label="자금 성향" helper="투자 자금의 목적과 운용 방식을 선택해 주세요." options={fundProfileChoices} selected={draftProfile.fundProfile} columns={4} scaleLabels={["저축·보존", "수익·유동성"]} onSelect={(value) => onDraftChange({ ...draftProfile, fundProfile: value })} />
-              <ProfileChoiceGroup label="투자 경험 레벨" helper="현재 투자 경험에 가장 가까운 단계를 선택해 주세요." options={investmentLevelChoices} selected={draftProfile.investmentLevel} columns={3} onSelect={(value) => onDraftChange({ ...draftProfile, investmentLevel: value })} />
-            </div>
-          ) : (
-            <>
-              {renderRows(investmentRows)}
-              <div className="theme-accent-soft mt-4 rounded-lg px-3.5 py-2.5"><p className="theme-accent-text text-pretty text-xs font-semibold leading-5">현재 선택한 성향을 기반으로 맞춤 분석이 제공되고 있습니다.</p></div>
-            </>
-          )}
+          {renderRows(investmentRows, false)}
+          <p className="mt-4 text-xs leading-5 text-muted">투자 성향, 자금 성향, 투자 레벨은 설문 결과로 자동 결정됩니다.</p>
+          <button type="button" onClick={onStartSurvey} disabled={isSaving} className="theme-accent-bg mt-3 rounded-lg px-4 py-2 text-sm font-bold disabled:opacity-60">{profile.investmentProfile ? "투자 성향 설문 다시 하기" : "투자 성향 설문 시작하기"}</button>
         </section>
       </div>
 
@@ -174,36 +152,3 @@ export default function ProfilePanel({
   );
 }
 
-type ProfileChoiceGroupProps = {
-  label: string;
-  helper: string;
-  options: ProfileChoice[];
-  selected: string;
-  columns: 3 | 4 | 5;
-  scaleLabels?: [string, string];
-  onSelect: (value: string) => void;
-};
-
-function ProfileChoiceGroup({ label, helper, options, selected, columns, scaleLabels, onSelect }: ProfileChoiceGroupProps) {
-  const columnClass = columns === 5 ? "sm:grid-cols-2 lg:grid-cols-5" : columns === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3";
-
-  return (
-    <fieldset>
-      <legend className="text-sm font-bold sm:text-base">{label}</legend>
-      <p className="mt-1 text-xs text-muted">{helper}</p>
-      <div role="radiogroup" aria-label={label} className={`mt-3 grid gap-2.5 ${columnClass}`}>
-        {options.map((option) => {
-          const isSelected = selected === option.value;
-          return (
-            <button key={option.value} type="button" role="radio" aria-checked={isSelected} onClick={() => onSelect(option.value)} className={`relative min-h-24 rounded-lg border px-3 py-3 text-center transition-all hover:-translate-y-0.5 hover:brightness-110 ${profileChoiceToneClasses[option.tone]} ${isSelected ? `${profileChoiceSelectedClasses[option.tone]} ring-offset-2 ring-offset-[var(--market-panel)] shadow-[0_2px_4px_rgba(0,0,0,.16)]` : "opacity-75 hover:opacity-100"}`}>
-              {isSelected && <span aria-hidden="true" className={`absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white ${profileChoiceCheckClasses[option.tone]}`}>✓</span>}
-              <strong className="block text-sm sm:text-base">{option.value}</strong>
-              <span className="mt-2 block whitespace-pre-line text-xs font-semibold leading-5 opacity-80 sm:text-xs">{option.description}</span>
-            </button>
-          );
-        })}
-      </div>
-      {scaleLabels && <div aria-hidden="true" className="mt-4 flex items-center gap-3 text-xs font-semibold text-muted"><span className="shrink-0">{scaleLabels[0]}</span><span className="h-px flex-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-orange-500" /><span className="shrink-0">{scaleLabels[1]}</span></div>}
-    </fieldset>
-  );
-}

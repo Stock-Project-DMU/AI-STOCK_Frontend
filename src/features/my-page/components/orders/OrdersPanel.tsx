@@ -1,5 +1,4 @@
 import { EmptyPortfolioIcon } from "@/components/icons/Icon";
-import { orders } from "../../data";
 import type { OrderHistoryResponse } from "@/lib/api/types";
 
 type OrdersPanelProps = {
@@ -16,7 +15,7 @@ const formatDate = (value: string | null) => value ? new Intl.DateTimeFormat("ko
 export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLoading, error }: OrdersPanelProps) {
   if (isLoading) return <div className="flex min-h-[500px] items-center justify-center text-sm font-semibold text-muted">주문 내역을 불러오는 중입니다.</div>;
   if (error) return <div role="alert" className="flex min-h-[500px] items-center justify-center text-sm font-semibold text-red-500">{error}</div>;
-  if (apiOrders?.length === 0) return <EmptyOrders />;
+  if (!apiOrders?.length) return <EmptyOrders />;
 
   const displayOrders = apiOrders
     ? apiOrders.map((order) => ({
@@ -30,7 +29,7 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
         executedAt: formatDate(order.executedAt),
         priceType: order.priceType === "MARKET" ? "시장가" : "지정가",
       }))
-    : orders.map((order) => ({ ...order, averagePrice: "1,000,000원", orderedAt: "2026.05.04 16:44", executedAt: "2026.05.04 16:46", priceType: "지정가" }));
+    : [];
 
   const selected = displayOrders.find((order) => order.id === selectedOrderId) ?? displayOrders[0];
   const isSell = selected.side.startsWith("매도") || selected.side === "판매완료";

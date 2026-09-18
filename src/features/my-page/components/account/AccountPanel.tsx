@@ -1,9 +1,11 @@
 import { CheckIcon, CloseIcon } from "@/components/icons/Icon";
-import { rechargeAmounts, rechargeHistory, won } from "../../data";
+import { rechargeAmounts, won } from "../../data";
 import type { AccountView, RechargeRecord } from "../../model";
 import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";
 
 type AccountPanelProps = {
+  chargeHistory: RechargeRecord[];
+  requestingCharge: boolean;
   view: AccountView;
   selectedAmount: number | null;
   customAmount: string;
@@ -24,6 +26,8 @@ type AccountPanelProps = {
 };
 
 export default function AccountPanel({
+  chargeHistory,
+  requestingCharge,
   view,
   selectedAmount,
   customAmount,
@@ -58,9 +62,11 @@ export default function AccountPanel({
         {view === "summary" && <AccountSummary accounts={accounts} profit={profit} isLoading={isLoading} error={error} />}
         {view === "recharge" && <RechargeAmount selectedAmount={selectedAmount} customAmount={customAmount} onSelectAmount={onSelectAmount} onCustomAmount={onCustomAmount} onCancel={onResetRequest} onNext={() => requestedAmount > 0 && onViewChange("reason")} />}
         {view === "reason" && <RechargeReason amount={requestedAmount} reason={reason} onReasonChange={onReasonChange} onBack={() => onViewChange("recharge")} onRequest={onRequest} />}
-        {view === "history" && <RechargeHistory onBack={() => onViewChange("summary")} onSelect={onSelectHistory} />}
+        {view === "history" && <RechargeHistory rechargeHistory={chargeHistory} onBack={() => onViewChange("summary")} onSelect={onSelectHistory} />}
         {view === "detail" && selectedHistory && <RechargeDetail record={selectedHistory} onBack={() => onViewChange("history")} />}
       </div>
+      {requestingCharge && <p role="status">충전 요청 중...</p>}
+      {view !== "summary" && error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
     </div>
   );
 }
@@ -147,14 +153,14 @@ function RechargeReason({ amount, reason, onReasonChange, onBack, onRequest }: {
   );
 }
 
-function RechargeHistory({ onBack, onSelect }: { onBack: () => void; onSelect: (record: RechargeRecord) => void }) {
+function RechargeHistory({ onBack, onSelect, rechargeHistory }: { onBack: () => void; onSelect: (record: RechargeRecord) => void; rechargeHistory: RechargeRecord[] }) {
   return (
     <div>
       <button type="button" onClick={onBack} className="mb-4 text-sm font-bold text-muted hover:text-ink">← 계좌 요약으로</button>
       <div className="overflow-x-auto rounded-lg border border-hairline bg-white">
         <table className="w-full min-w-[680px] border-collapse text-left text-xs sm:text-sm">
           <thead className="bg-surface-soft"><tr>{["요청 일시", "유형", "요청 금액", "충전 전 잔액", "처리 상태"].map((head) => <th key={head} className="border-b border-hairline px-3 py-2 text-xs font-semibold text-muted">{head}</th>)}</tr></thead>
-          <tbody>{rechargeHistory.map((record) => <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-hairline last:border-0 hover:bg-surface-soft"><td className="whitespace-nowrap px-3 py-2.5 text-muted">{record.date}</td><td className="px-3 py-2.5 font-bold">{record.type}</td><td className="num px-3 py-2.5 text-right font-bold">+{won(record.amount)}</td><td className="num px-3 py-2.5 text-right font-semibold">{won(record.balance)}</td><td className="px-3 py-2.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td></tr>)}</tbody>
+          <tbody>{rechargeHistory.map((record) => <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-hairline last:border-0 hover:bg-surface-soft"><td className="whitespace-nowrap px-3 py-2.5 text-muted">{record.date}</td><td className="px-3 py-2.5 font-bold">{record.type}</td><td className="num px-3 py-2.5 text-right font-bold">+{won(record.amount)}</td><td className="num px-3 py-2.5 text-right font-semibold">{record.balance === null ? "—" : won(record.balance)}</td><td className="px-3 py-2.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td></tr>)}</tbody>
         </table>
       </div>
     </div>
@@ -175,7 +181,7 @@ function RechargeDetail({ record, onBack }: { record: RechargeRecord; onBack: ()
           <DetailCell label="요청자" value={record.requester} />
           <DetailCell label={approved ? "지급 금액" : "요청 금액"} value={`₩${record.amount.toLocaleString("ko-KR")}`} tone={approved ? "text-[#44cc88]" : "text-[#ff4444]"} />
           <DetailCell label={approved ? "지급 전 잔액" : "현재 잔액"} value="₩0" tone="text-[#ff4444]" />
-          <DetailCell label={approved ? "지급 후 잔액" : "누적 지급액"} value={`₩${record.balance.toLocaleString("ko-KR")}`} tone={approved ? "text-[#44cc88]" : "text-[#ffaa44]"} />
+          <DetailCell label={approved ? "지급 후 잔액" : "누적 지급액"} value={record.balance === null ? "제공되지 않음" : `₩${record.balance.toLocaleString("ko-KR")}`} tone={approved ? "text-[#44cc88]" : "text-[#ffaa44]"} />
           {approved && <DetailCell label="누적 지급 총액" value="₩200,000,000" tone="text-[#ffaa44]" />}
           {approved && <DetailCell label="처리 일시" value={record.date} />}
         </div>

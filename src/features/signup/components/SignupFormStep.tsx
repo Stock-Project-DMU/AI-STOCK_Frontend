@@ -7,6 +7,9 @@ const EMAIL_DOMAIN_OPTIONS = ["naver.com", "gmail.com", "daum.net", "hanmail.net
 type SignupTextField = Exclude<keyof SignupFormData, "birthDate">;
 
 type SignupFormStepProps = {
+    onCheckLoginId: () => void;
+    checkingLoginId: boolean;
+    loginIdAvailable: boolean;
     formData: SignupFormData;
     birthDateInput: string;
     errors: SignupFormErrors;
@@ -23,6 +26,9 @@ type SignupFormStepProps = {
 };
 
 export default function SignupFormStep({
+    onCheckLoginId,
+    checkingLoginId,
+    loginIdAvailable,
     formData,
     birthDateInput,
     errors,
@@ -103,16 +109,19 @@ export default function SignupFormStep({
                                     }
                                 />
                                 <Button
+                                    onClick={onCheckLoginId}
+                                    disabled={checkingLoginId}
                                     variant="secondary"
                                     size="md"
                                     className="shrink-0 !rounded-md !px-4 !text-xs"
                                 >
-                                    중복확인
+                                    {checkingLoginId ? "확인 중" : "중복확인"}
                                 </Button>
                             </div>
                             {renderHelperText(
                                 "signup-user-id-helper",
                                 errors.userId,
+                                loginIdAvailable ? "사용 가능한 아이디입니다." : "영문, 숫자, 밑줄 4~50자",
                             )}
                         </div>
 

@@ -1,4 +1,6 @@
 import type { FormEvent } from "react";
+import { useState } from "react";
+import { apiRequest, clearAuthTokens, getApiErrorMessage } from "@/lib/api/client";
 import Modal from "../Modal";
 
 type PasswordCheckModalProps = {
@@ -49,15 +51,30 @@ export function ProfileSavedModal({ onClose }: { onClose: () => void }) {
 }
 
 export function WithdrawalModal({ onClose }: { onClose: () => void }) {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function withdraw() {
+    if (busy || !password) return;
+    setBusy(true); setError("");
+    try {
+      await apiRequest<null>("/api/users/me", { method: "DELETE", retryOnUnauthorized: false, body: JSON.stringify({ password }) });
+      clearAuthTokens();
+      window.location.assign("/home");
+    } catch (error) { setError(getApiErrorMessage(error, "탈퇴 처리에 실패했습니다.")); }
+    finally { setBusy(false); }
+  }
   return (
     <Modal ariaLabel="회원 탈퇴 확인" onClose={onClose}>
       <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10 text-lg font-bold text-red-500">!</div>
       <h2 className="mt-3 text-lg font-bold">정말 탈퇴하시겠어요?</h2>
+      <label className="mt-4 block text-left text-sm">현재 비밀번호<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 w-full rounded border border-hairline p-3" /></label>
+      {error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
       <p className="mt-2 break-keep text-pretty text-sm leading-6 text-muted">탈퇴하면 저장된 투자 성향, 주문 내역과 수익률 정보를 다시 확인할 수 없습니다.</p>
       <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2.5 text-left text-xs leading-5 text-red-500">이 작업은 되돌릴 수 없습니다. 계속하기 전에 필요한 정보를 확인해 주세요.</div>
       <div className="mt-5 grid grid-cols-2 gap-3">
         <button type="button" onClick={onClose} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>
-        <button type="button" onClick={onClose} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600">탈퇴하기</button>
+        <button type="button" disabled={busy || !password} onClick={() => void withdraw()} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600 disabled:opacity-50">{busy ? "처리 중..." : "탈퇴하기"}</button>
       </div>
     </Modal>
   );
