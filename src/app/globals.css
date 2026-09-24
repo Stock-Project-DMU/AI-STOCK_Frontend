@@ -133,6 +133,17 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+.app-content-container {
+  container-name: app-content;
+  container-type: inline-size;
+}
+
+@container app-content (min-width: 48rem) {
+  .cq-home-main {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, min(350px, 28%));
+  }
+}
+
 .market-grid {
   background-color: var(--market-bg);
   background-image:

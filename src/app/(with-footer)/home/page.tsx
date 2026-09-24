@@ -25,7 +25,7 @@ export default function Home() {
                     </div>
                 </div>
 
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_350px]">
+                <div className="cq-home-main grid min-w-0 gap-4">
                     <StockTable />
                     <RightSidebar />
                 </div>
