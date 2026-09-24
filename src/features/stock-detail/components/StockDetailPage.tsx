@@ -142,7 +142,7 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
             </nav>
 
             {tab === "chart" ? (
-                <div className="mx-auto grid max-w-[1540px] gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_330px] xl:gap-4 xl:p-4">
+                <div className="cq-stock-layout mx-auto grid max-w-[1540px] gap-3 p-3">
                     <StockChart stockCode={stockCode} stock={stock} hoga={hoga} ticks={ticks} />
                     <TradePanel key={stockCode}
                         stock={stock?.stockCode === stockCode ? stock : null}

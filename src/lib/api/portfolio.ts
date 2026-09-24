@@ -5,6 +5,7 @@ import type {
     HoldingResponse,
     OrderHistoryResponse,
     ProfitResponse,
+    RealizedReturnResponse,
 } from "./types";
 
 export function getAccounts() {
@@ -21,6 +22,10 @@ export function requestCharge(accountId: number, amount: number, reason: string)
 
 export function getAccountProfit(accountId: number) {
     return apiRequest<ProfitResponse>(`/api/accounts/${accountId}/profit`);
+}
+
+export function getRealizedReturns(accountId: number) {
+    return apiRequest<RealizedReturnResponse[]>(`/api/accounts/${accountId}/returns`);
 }
 
 export function chargeAccount(accountId: number) {

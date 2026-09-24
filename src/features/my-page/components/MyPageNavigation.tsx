@@ -8,7 +8,7 @@ type MyPageNavigationProps = {
 
 export function DesktopMyPageNavigation({ activeTab, onChange }: MyPageNavigationProps) {
   return (
-    <aside className="hidden w-[250px] shrink-0 border-r border-hairline bg-white lg:flex lg:flex-col">
+    <aside className="cq-mypage-desktop hidden w-[250px] shrink-0 flex-col border-r border-hairline bg-white">
         <div className="theme-accent-bg m-3 rounded-lg px-4 py-3">
           <strong className="block text-sm">마이페이지</strong>
           <span className="mt-1 block text-xs opacity-75">투자 계정 관리 센터</span>
@@ -28,7 +28,7 @@ export function DesktopMyPageNavigation({ activeTab, onChange }: MyPageNavigatio
 
 export function MobileMyPageNavigation({ activeTab, onChange }: MyPageNavigationProps) {
   return (
-    <div className="mb-3 flex gap-1 overflow-x-auto rounded-lg border border-hairline bg-white p-1 lg:hidden">
+    <div className="cq-mypage-mobile mb-3 flex gap-1 overflow-x-auto rounded-lg border border-hairline bg-white p-1">
       {navItems.map((item) => (
         <button key={item.id} type="button" onClick={() => onChange(item.id)} className={`shrink-0 cursor-pointer rounded-md px-3 py-2 text-sm font-bold transition-colors ${activeTab === item.id ? "theme-accent-bg" : "text-muted hover:bg-surface-soft hover:text-ink"}`}>
           {item.label}

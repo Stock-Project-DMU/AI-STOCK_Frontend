@@ -130,7 +130,7 @@ export default function ProfilePanel({
       </div>
       {saveError ? <p role="alert" className="mb-3 rounded-lg bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-500">{saveError}</p> : null}
 
-      <div className={isEditing ? "space-y-4" : "grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,.65fr)]"}>
+      <div className={isEditing ? "space-y-4" : "cq-profile-layout grid gap-4"}>
         <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
           <div className="mb-2"><h2 className="font-bold">기본 정보</h2></div>
           {renderRows(accountRows)}

@@ -6,14 +6,14 @@ export default function Home() {
     return (
         <div className="home-market-background market-theme min-h-screen">
             <section className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-                <div className="mb-5 grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_500px]">
+                <div className="cq-home-hero mb-5 grid items-center gap-4">
                     <div>
                         <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">오늘의 시장을 한 화면에서 읽으세요</h1>
                     </div>
                     <MarketPulse />
                 </div>
 
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_350px]">
+                <div className="cq-home-main grid gap-4">
                     <StockTable />
                     <RightSidebar />
                 </div>

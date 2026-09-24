@@ -5,7 +5,7 @@ import type { NewsReport } from "../types";
 
 export default function FeaturedNews({ report }: { report: NewsReport }) {
     return (
-        <Link href={`/news-report/${report.id}`} className="group grid overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)] hover:border-primary/25 hover:shadow-[0_10px_26px_rgba(10,11,13,0.08)] lg:grid-cols-[minmax(0,1fr)_360px]">
+        <Link href={`/news-report/${report.id}`} className="cq-featured-news group grid overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)] hover:border-primary/25 hover:shadow-[0_10px_26px_rgba(10,11,13,0.08)]">
             <div className="flex flex-col p-5 sm:p-7">
                 <div className="flex items-center gap-2 text-[12px] font-bold">
                     <span className="rounded-full bg-primary/10 px-2.5 py-1 text-primary">주요 리포트</span>

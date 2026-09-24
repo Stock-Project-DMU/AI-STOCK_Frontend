@@ -24,13 +24,13 @@ export function HomePageSkeleton() {
         <main role="status" className="market-theme market-grid min-h-screen">
             <LoadingStatus />
             <section className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-                <div className="mb-5 grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_500px]">
+                <div className="cq-home-hero mb-5 grid items-center gap-4">
                     <Skeleton className="h-9 w-full max-w-xl" />
                     <Card className="grid grid-cols-3 gap-3">
                         {[0, 1, 2].map((item) => <Skeleton key={item} className="h-14" />)}
                     </Card>
                 </div>
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_350px]">
+                <div className="cq-home-main grid gap-4">
                     <Card className="overflow-hidden p-0">
                         <div className="flex items-center justify-between border-b border-hairline p-4">
                             <Skeleton className="h-6 w-28" />
@@ -114,7 +114,7 @@ export function GoalSimulationSkeleton() {
             <div className="mx-auto w-full max-w-[1500px]">
                 <Skeleton className="h-9 w-64" />
                 <Skeleton className="mt-3 h-5 w-96 max-w-full" />
-                <div className="mt-6 grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
+                <div className="cq-simulation-skeleton mt-6 grid gap-4">
                     <Card className="space-y-5">
                         {[0, 1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-16 w-full" />)}
                         <Skeleton className="h-12 w-full" />
@@ -170,8 +170,8 @@ export function StockDetailSkeleton() {
                     </div>
                 </div>
             </section>
-            <div className="mx-auto grid w-full max-w-[1540px] gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_330px]">
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="cq-stock-layout mx-auto grid w-full max-w-[1540px] gap-4 p-4">
+                <div className="cq-stock-chart grid gap-3">
                     <Card><Skeleton className="h-8 w-40" /><Skeleton className="mt-5 h-[430px] w-full" /></Card>
                     <Card className="space-y-2">{[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => <Skeleton key={item} className="h-8 w-full" />)}</Card>
                 </div>
@@ -189,7 +189,7 @@ export function NewsReportSkeleton() {
                 <Skeleton className="h-5 w-36" />
                 <Skeleton className="mt-3 h-11 w-56" />
                 <Skeleton className="mt-3 h-5 w-full max-w-2xl" />
-                <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="cq-report-layout mt-6 grid gap-4">
                     <div className="space-y-5">
                         <Card className="grid min-h-80 gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
                             <div className="space-y-4"><Skeleton className="h-7 w-32" /><Skeleton className="h-20 w-full" /><Skeleton className="h-16 w-full" /></div>
@@ -211,7 +211,7 @@ export function NewsArticleSkeleton() {
             <LoadingStatus />
             <div className="mx-auto w-full max-w-[1320px] px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
                 <Skeleton className="h-6 w-28" />
-                <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+                <div className="cq-news-article mt-6 grid gap-5">
                     <Card className="overflow-hidden p-0">
                         <div className="px-5 py-7 sm:px-9 lg:px-12">
                             <Skeleton className="h-7 w-48" />

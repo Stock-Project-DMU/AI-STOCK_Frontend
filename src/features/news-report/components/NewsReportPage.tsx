@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { getMarketNews, type MarketNews } from "@/lib/api/market";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { formatDateTime } from "@/lib/format/dateTime";
 const categories = ["코스피", "코스닥", "반도체", "금리", "환율", "미국 증시"];
 export default function NewsReportPage() {
     const [query, setQuery] = useState("코스피");
@@ -25,6 +26,6 @@ export default function NewsReportPage() {
         <div className="mb-5 flex flex-wrap gap-2">{categories.map(category => <button key={category} onClick={() => { setSearch(category); setQuery(category); }} className={`rounded border px-3 py-2 text-sm ${query === category ? "bg-primary text-white" : "bg-canvas"}`}>{category}</button>)}</div>
         {loading && <p role="status">뉴스를 불러오는 중...</p>}{error && <p role="alert" className="text-red-500">{error}</p>}
         {!loading && !error && !news.length && <p>검색 결과가 없습니다.</p>}
-        <div className="space-y-4">{news.map((item, index) => /^https?:\/\//.test(item.link) && <article key={item.link + index} className="rounded-lg border border-hairline bg-canvas p-5"><a href={item.link} target="_blank" rel="noopener noreferrer" className="text-lg font-bold hover:text-primary">{item.title}</a><p className="mt-3 text-sm leading-6 text-body">{item.description}</p><p className="mt-3 text-xs text-muted">{item.outlet} · {item.pubDate}</p></article>)}</div>
+        <div className="space-y-4">{news.map((item, index) => /^https?:\/\//.test(item.link) && <article key={item.link + index} className="rounded-lg border border-hairline bg-canvas p-5"><a href={item.link} target="_blank" rel="noopener noreferrer" className="text-lg font-bold hover:text-primary">{item.title}</a><p className="mt-3 text-sm leading-6 text-body">{item.description}</p><p className="mt-3 text-xs text-muted">{item.outlet} · {formatDateTime(item.pubDate)}</p></article>)}</div>
     </section></main>;
 }

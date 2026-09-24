@@ -54,6 +54,18 @@ export type ProfitResponse = {
     profitRate: number;
 };
 
+export type RealizedReturnResponse = {
+    orderId: number;
+    stockCode: string;
+    stockName: string;
+    quantity: number;
+    averageCost: number;
+    sellPrice: number;
+    profitAmount: number;
+    profitRate: number;
+    executedAt: string;
+};
+
 export type OrderHistoryResponse = {
     orderId: number;
     stockCode: string;

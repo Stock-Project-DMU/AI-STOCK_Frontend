@@ -2,9 +2,10 @@ import type { MyPageTab, Order, Profile, ProfileChoice, RechargeRecord } from ".
 
 export const navItems: { id: MyPageTab; label: string; description: string }[] = [
   { id: "profile", label: "내 정보", description: "회원 정보 및 투자 성향" },
-  { id: "account", label: "계좌관리", description: "가상계좌와 충전 내역" },
+  { id: "account", label: "계좌 정보", description: "계좌 상태 및 수익 정보" },
   { id: "orders", label: "주문내역", description: "완료된 주문 확인" },
   { id: "returns", label: "수익률", description: "실현수익과 종목 분석" },
+  { id: "recharge", label: "가상계좌 충전", description: "가상캐시 충전 요청 및 이력" },
 ];
 
 export const initialProfile: Profile = {

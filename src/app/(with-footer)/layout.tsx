@@ -9,7 +9,7 @@ export default function WithFooterLayout({
   return (
     <>
       <main className="grid min-h-screen grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto]">
-        {children}
+        <div className="app-content-container min-w-0 overflow-x-clip">{children}</div>
         <Sidebar />
       </main>
 

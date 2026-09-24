@@ -105,7 +105,7 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     }
 
     return (
-        <div className="relative self-start xl:sticky xl:top-4">
+        <div className="cq-wide-sticky relative top-4 self-start">
         <aside
             aria-hidden={loginRequired}
             className={`overflow-hidden rounded-lg border border-hairline bg-canvas transition-[filter,opacity] duration-200 ${loginRequired ? "pointer-events-none select-none blur-[3px] opacity-65" : ""}`}
