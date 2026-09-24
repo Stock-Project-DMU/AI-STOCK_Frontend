@@ -133,6 +133,18 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* Layouts respond to the width left after the global portfolio sidebar. */
+.app-content-container {
+  container-name: app-content;
+  container-type: inline-size;
+}
+
+@container app-content (min-width: 48rem) {
+  .cq-home-main {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, min(350px, 28%));
+  }
+}
+
 .market-grid {
   background-color: var(--market-bg);
   background-image:
@@ -164,13 +176,6 @@ a {
 .market-theme {
   background-color: var(--market-bg);
   color: var(--market-text);
-}
-
-/* Page layouts respond to the width left after the global portfolio sidebar,
-   rather than to the full browser viewport. */
-.app-content-container {
-  container-name: app-content;
-  container-type: inline-size;
 }
 
 @container app-content (min-width: 64rem) {

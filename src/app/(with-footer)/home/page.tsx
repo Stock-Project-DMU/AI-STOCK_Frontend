@@ -13,7 +13,7 @@ export default function Home() {
                     <MarketPulse />
                 </div>
 
-                <div className="cq-home-main grid gap-4">
+                <div className="cq-home-main grid min-w-0 gap-4">
                     <StockTable />
                     <RightSidebar />
                 </div>
