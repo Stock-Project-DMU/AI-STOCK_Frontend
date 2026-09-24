@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { getGoalPlans, saveGoalPlan, type GoalPlan } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { formatDateTime } from "@/lib/format/dateTime";
 export default function SaveSimulationModal({ onClose, onSelect }: { onClose: () => void; onSelect: (plan: GoalPlan) => void }) {
     const [plans, setPlans] = useState<GoalPlan[]>([]);
     const [error, setError] = useState("");
@@ -20,7 +21,7 @@ export default function SaveSimulationModal({ onClose, onSelect }: { onClose: ()
             {error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
             {!plans.length && <p className="my-6 text-sm text-muted">시뮬레이션을 먼저 실행해 주세요.</p>}
             {plans.map(plan => <div key={plan.planId} className="mt-3 flex items-center gap-3 rounded border border-hairline p-3">
-                <button className="flex-1 text-left text-sm" onClick={() => onSelect(plan)}>{plan.settings.goal === "house" ? "내 집 마련" : "노후 준비"} · {plan.settings.years}년 · 월 {plan.settings.monthlyPayment.toLocaleString()}원<br /><small>{plan.createdAt.replace("T", " ")}</small></button>
+                <button className="flex-1 text-left text-sm" onClick={() => onSelect(plan)}>{plan.settings.goal === "house" ? "내 집 마련" : "노후 준비"} · {plan.settings.years}년 · 월 {plan.settings.monthlyPayment.toLocaleString()}원<br /><small>{formatDateTime(plan.createdAt)}</small></button>
                 <button disabled={busy || plan.saved} onClick={() => void save(plan)} className="rounded bg-primary px-3 py-2 text-sm text-white disabled:opacity-50">{plan.saved ? "저장됨" : "저장"}</button>
             </div>)}
         </div>

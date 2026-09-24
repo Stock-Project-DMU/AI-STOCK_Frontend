@@ -19,7 +19,7 @@ export default function NewsArticlePage({ article, report, relatedReports }: New
                     </Link>
                 </nav>
 
-                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+                <div className="cq-news-article grid gap-5">
                     <article className="min-w-0 overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_8px_28px_rgba(10,11,13,0.05)]">
                         <header className="px-5 pb-7 pt-6 sm:px-9 sm:pb-9 sm:pt-8 lg:px-12">
                             <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold">
@@ -87,7 +87,7 @@ export default function NewsArticlePage({ article, report, relatedReports }: New
                         </div>
                     </article>
 
-                    <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+                    <aside className="cq-wide-sticky top-24 self-start space-y-4">
                         <section className="rounded-xl border border-hairline bg-white p-5">
                             <div className="text-[12px] font-black tracking-[0.14em] text-primary">REPORT INFO</div>
                             <dl className="mt-4 divide-y divide-hairline-soft text-sm">

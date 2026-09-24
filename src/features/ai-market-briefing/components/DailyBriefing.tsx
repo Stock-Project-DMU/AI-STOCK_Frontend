@@ -48,7 +48,7 @@ export default function DailyBriefing() {
         finally { setBusy(false); }
     }
     return <div className="market-theme market-grid flex min-h-[calc(100vh-72px)] min-w-0">
-        <aside className="hidden w-[240px] shrink-0 border-r border-hairline bg-canvas p-4 lg:block">
+        <aside className="cq-medium-show hidden w-[240px] shrink-0 border-r border-hairline bg-canvas p-4">
             <h2 className="mb-4 font-bold">브리핑 기록</h2>
             {briefings.map(item => <button key={item.briefingDate} onClick={() => setSelected(item)} className="mb-2 block w-full rounded p-3 text-left text-sm hover:bg-surface-soft">{item.briefingDate}<br />{item.outletName}</button>)}
         </aside>

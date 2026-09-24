@@ -40,7 +40,7 @@ export default function StockChart({ stockCode, stock, hoga, ticks }: { stockCod
         void load(); return () => { active = false; };
     }, [stockCode, months]);
     const candles = useMemo(() => aggregate(history, period), [history, period]);
-    return <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+    return <div className="cq-stock-chart grid min-w-0 gap-3">
         <div className="min-w-0 space-y-3">
             <section className="rounded-lg border border-hairline bg-canvas p-3"><div className="mb-3 flex justify-between"><h2 className="font-bold">주가 차트</h2><div className="flex gap-1">{(["일", "주", "월", "년"] as Period[]).map(value => <button key={value} onClick={() => setPeriod(value)} className={`rounded px-3 py-1 text-sm ${period === value ? "bg-primary text-white" : "bg-surface-soft"}`}>{value}</button>)}</div></div>
                 {loading && <p role="status">차트 조회 중...</p>}{error && <p role="alert" className="text-sm text-red-500">{error}</p>}

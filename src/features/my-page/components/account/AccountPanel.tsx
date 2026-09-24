@@ -2,8 +2,10 @@ import { CheckIcon, CloseIcon } from "@/components/icons/Icon";
 import { rechargeAmounts, won } from "../../data";
 import type { AccountView, RechargeRecord } from "../../model";
 import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";
+import { formatDateTime } from "@/lib/format/dateTime";
 
 type AccountPanelProps = {
+  mode: "info" | "recharge";
   chargeHistory: RechargeRecord[];
   requestingCharge: boolean;
   view: AccountView;
@@ -21,11 +23,13 @@ type AccountPanelProps = {
   onResetRequest: () => void;
   accounts: AccountInfoResponse[] | null;
   profit: ProfitResponse | null;
+  realizedProfit: number;
   isLoading: boolean;
   error: string;
 };
 
 export default function AccountPanel({
+  mode,
   chargeHistory,
   requestingCharge,
   view,
@@ -43,35 +47,39 @@ export default function AccountPanel({
   onResetRequest,
   accounts,
   profit,
+  realizedProfit,
   isLoading,
   error,
 }: AccountPanelProps) {
   return (
     <div className="mx-auto max-w-[1180px]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-xl font-bold">계좌관리</h1>
-        {view === "summary" && (
+        <div>
+          <h1 className="text-xl font-bold">{mode === "info" ? "계좌 정보" : "가상계좌 충전"}</h1>
+          <p className="mt-1 text-sm text-muted">{mode === "info" ? "계좌 상태와 적용 정책, 누적 수익을 확인할 수 있습니다." : "가상캐시 충전을 요청하고 처리 이력을 확인할 수 있습니다."}</p>
+        </div>
+        {mode === "recharge" && (
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => onViewChange("history")} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">충전 이력</button>
-            <button type="button" onClick={() => onViewChange("recharge")} className="theme-accent-bg rounded-lg px-3.5 py-2 text-sm font-bold">가상캐시 재충전</button>
+            <button type="button" onClick={() => onViewChange("history")} className={`rounded-lg border px-3.5 py-2 text-sm font-bold ${view === "history" || view === "detail" ? "theme-accent-soft border-[var(--market-accent)] theme-accent-text" : "border-hairline hover:bg-surface-soft"}`}>충전 이력</button>
+            <button type="button" onClick={() => onViewChange("recharge")} className={`rounded-lg px-3.5 py-2 text-sm font-bold ${view === "recharge" || view === "reason" ? "theme-accent-bg" : "border border-hairline hover:bg-surface-soft"}`}>충전 요청</button>
           </div>
         )}
       </div>
 
       <div className="min-h-[360px] rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
-        {view === "summary" && <AccountSummary accounts={accounts} profit={profit} isLoading={isLoading} error={error} />}
-        {view === "recharge" && <RechargeAmount selectedAmount={selectedAmount} customAmount={customAmount} onSelectAmount={onSelectAmount} onCustomAmount={onCustomAmount} onCancel={onResetRequest} onNext={() => requestedAmount > 0 && onViewChange("reason")} />}
-        {view === "reason" && <RechargeReason amount={requestedAmount} reason={reason} onReasonChange={onReasonChange} onBack={() => onViewChange("recharge")} onRequest={onRequest} />}
-        {view === "history" && <RechargeHistory rechargeHistory={chargeHistory} onBack={() => onViewChange("summary")} onSelect={onSelectHistory} />}
-        {view === "detail" && selectedHistory && <RechargeDetail record={selectedHistory} onBack={() => onViewChange("history")} />}
+        {mode === "info" && <AccountSummary accounts={accounts} profit={profit} realizedProfit={realizedProfit} isLoading={isLoading} error={error} />}
+        {mode === "recharge" && view === "recharge" && <RechargeAmount selectedAmount={selectedAmount} customAmount={customAmount} onSelectAmount={onSelectAmount} onCustomAmount={onCustomAmount} onCancel={onResetRequest} onNext={() => requestedAmount > 0 && onViewChange("reason")} />}
+        {mode === "recharge" && view === "reason" && <RechargeReason amount={requestedAmount} reason={reason} onReasonChange={onReasonChange} onBack={() => onViewChange("recharge")} onRequest={onRequest} />}
+        {mode === "recharge" && view === "history" && <RechargeHistory rechargeHistory={chargeHistory} onBack={() => onViewChange("recharge")} onSelect={onSelectHistory} />}
+        {mode === "recharge" && view === "detail" && selectedHistory && <RechargeDetail record={selectedHistory} onBack={() => onViewChange("history")} />}
       </div>
       {requestingCharge && <p role="status">충전 요청 중...</p>}
-      {view !== "summary" && error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
+      {mode === "recharge" && error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
     </div>
   );
 }
 
-function AccountSummary({ accounts, profit, isLoading, error }: { accounts: AccountInfoResponse[] | null; profit: ProfitResponse | null; isLoading: boolean; error: string }) {
+function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: { accounts: AccountInfoResponse[] | null; profit: ProfitResponse | null; realizedProfit: number; isLoading: boolean; error: string }) {
   if (isLoading) {
     return <div className="flex min-h-72 items-center justify-center text-sm font-semibold text-muted">계좌 정보를 불러오는 중입니다.</div>;
   }
@@ -93,20 +101,56 @@ function AccountSummary({ accounts, profit, isLoading, error }: { accounts: Acco
     { label: "평가 손익", value: won(profit?.profitAmount ?? 0) },
     { label: "자동 충전 사용", value: `${account.chargeCount}/3회` },
   ];
+  const accountDetails = [
+    { label: "예치 이자율", value: "연 0.00%" },
+    { label: "거래 수수료", value: "0.00%" },
+    { label: "누적 판매 수익", value: won(realizedProfit), tone: realizedProfit > 0 ? "text-red-500" : realizedProfit < 0 ? "text-blue-500" : "" },
+    { label: "누적 배당금", value: won(0) },
+    { label: "누적 이자", value: won(0) },
+  ];
 
   return (
-    <div className="space-y-4">
-      <section className="theme-accent-soft rounded-lg border border-[var(--market-accent)]/20 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div><p className="text-xs font-semibold text-muted">{account.accountName}</p><p className="num mt-1.5 text-base font-bold tracking-[0.06em] sm:text-lg">{account.accountNumber}</p></div>
-          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${account.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{account.status === "ACTIVE" ? "정상" : "정지"}</span>
+    <article className="overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_6px_20px_rgba(10,11,13,.04)]">
+      <header className="theme-accent-soft px-4 py-5 sm:px-6 sm:py-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold text-muted">{account.accountName}</p>
+            <p className="num mt-1.5 text-base font-bold tracking-[0.06em] sm:text-lg">{account.accountNumber}</p>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${account.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-500"}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${account.status === "ACTIVE" ? "bg-emerald-500" : "bg-red-500"}`} />
+            계좌 상태 {account.status === "ACTIVE" ? "정상" : "정지"}
+          </span>
         </div>
-        <div className="mt-5 border-t border-[var(--market-accent)]/15 pt-4"><p className="text-xs font-semibold text-muted">총 주문 가능 금액</p><strong className="num mt-1 block text-xl font-bold sm:text-2xl">{won(account.balance)}</strong></div>
-      </section>
-      <dl className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-        {metrics.map((metric) => <div key={metric.label} className="rounded-lg border border-hairline bg-white p-3"><dt className="text-xs font-semibold text-muted">{metric.label}</dt><dd className="num mt-1.5 text-right text-sm font-bold">{metric.value}</dd></div>)}
-      </dl>
-    </div>
+        <div className="mt-6">
+          <p className="text-xs font-semibold text-muted">총 주문 가능 금액</p>
+          <strong className="num mt-1 block text-2xl font-bold tracking-tight sm:text-3xl">{won(account.balance)}</strong>
+        </div>
+      </header>
+
+      <div className="px-4 py-5 sm:px-6 sm:py-6">
+        <section>
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <h2 className="text-sm font-bold">자산 현황</h2>
+            <span className="text-xs text-muted">실시간 계좌 기준</span>
+          </div>
+          <dl className="grid border-b border-hairline sm:grid-cols-2 lg:grid-cols-3">
+            {metrics.map((metric) => <div key={metric.label} className="flex min-h-20 flex-col justify-between border-t border-hairline px-1 py-4 sm:px-4"><dt className="text-xs font-semibold text-muted">{metric.label}</dt><dd className="num mt-2 text-right text-base font-bold">{metric.value}</dd></div>)}
+          </dl>
+        </section>
+
+        <section className="mt-6">
+          <div className="mb-2">
+            <h2 className="text-sm font-bold">수익 및 적용 조건</h2>
+            <p className="mt-1 text-xs text-muted">누적 지급 내역과 현재 계좌에 적용되는 조건입니다.</p>
+          </div>
+          <dl className="grid border-b border-hairline sm:grid-cols-2 lg:grid-cols-3">
+            {accountDetails.map((detail) => <div key={detail.label} className="flex min-h-20 flex-col justify-between border-t border-hairline px-1 py-4 sm:px-4"><dt className="text-xs font-semibold text-muted">{detail.label}</dt><dd className={`num mt-2 text-right text-base font-bold ${detail.tone ?? ""}`}>{detail.value}</dd></div>)}
+          </dl>
+          <p className="mt-4 rounded-lg bg-surface-soft px-3.5 py-3 text-xs leading-5 text-muted">현재 모의투자에서는 예치 이자와 배당금이 지급되지 않으며, 거래 수수료도 부과되지 않습니다.</p>
+        </section>
+      </div>
+    </article>
   );
 }
 
@@ -160,7 +204,7 @@ function RechargeHistory({ onBack, onSelect, rechargeHistory }: { onBack: () => 
       <div className="overflow-x-auto rounded-lg border border-hairline bg-white">
         <table className="w-full min-w-[680px] border-collapse text-left text-xs sm:text-sm">
           <thead className="bg-surface-soft"><tr>{["요청 일시", "유형", "요청 금액", "충전 전 잔액", "처리 상태"].map((head) => <th key={head} className="border-b border-hairline px-3 py-2 text-xs font-semibold text-muted">{head}</th>)}</tr></thead>
-          <tbody>{rechargeHistory.map((record) => <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-hairline last:border-0 hover:bg-surface-soft"><td className="whitespace-nowrap px-3 py-2.5 text-muted">{record.date}</td><td className="px-3 py-2.5 font-bold">{record.type}</td><td className="num px-3 py-2.5 text-right font-bold">+{won(record.amount)}</td><td className="num px-3 py-2.5 text-right font-semibold">{record.balance === null ? "—" : won(record.balance)}</td><td className="px-3 py-2.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td></tr>)}</tbody>
+          <tbody>{rechargeHistory.map((record) => <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-hairline last:border-0 hover:bg-surface-soft"><td className="whitespace-nowrap px-3 py-2.5 text-muted">{formatDateTime(record.date)}</td><td className="px-3 py-2.5 font-bold">{record.type}</td><td className="num px-3 py-2.5 text-right font-bold">+{won(record.amount)}</td><td className="num px-3 py-2.5 text-right font-semibold">{record.balance === null ? "—" : won(record.balance)}</td><td className="px-3 py-2.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td></tr>)}</tbody>
         </table>
       </div>
     </div>
@@ -183,7 +227,7 @@ function RechargeDetail({ record, onBack }: { record: RechargeRecord; onBack: ()
           <DetailCell label={approved ? "지급 전 잔액" : "현재 잔액"} value="₩0" tone="text-[#ff4444]" />
           <DetailCell label={approved ? "지급 후 잔액" : "누적 지급액"} value={record.balance === null ? "제공되지 않음" : `₩${record.balance.toLocaleString("ko-KR")}`} tone={approved ? "text-[#44cc88]" : "text-[#ffaa44]"} />
           {approved && <DetailCell label="누적 지급 총액" value="₩200,000,000" tone="text-[#ffaa44]" />}
-          {approved && <DetailCell label="처리 일시" value={record.date} />}
+          {approved && <DetailCell label="처리 일시" value={formatDateTime(record.date)} />}
         </div>
         <div className={`mt-4 rounded-lg border-l-4 bg-surface-soft p-3.5 ${approved ? "border-emerald-500" : "border-red-500"}`}><p className="text-xs font-semibold text-muted">{approved ? "관리자 메모" : "거절 사유"}</p><p className="mt-2 text-sm leading-6">{record.note}</p></div>
       </article>

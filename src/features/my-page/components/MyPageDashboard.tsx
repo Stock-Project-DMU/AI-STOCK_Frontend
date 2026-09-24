@@ -16,8 +16,8 @@ import { PasswordCheckModal, ProfileSavedModal, UnsavedChangesModal, WithdrawalM
 import ReturnsPanel from "./returns/ReturnsPanel";
 import InvestmentSurvey from "@/features/ai-financial-planner/components/InvestmentSurvey";
 import { getApiErrorMessage, isAuthenticated } from "@/lib/api/client";
-import { getAccountProfit, getAccounts, getOrders, getChargeRequests, requestCharge } from "@/lib/api/portfolio";
-import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse } from "@/lib/api/types";
+import { getAccountProfit, getAccounts, getOrders, getChargeRequests, getRealizedReturns, requestCharge } from "@/lib/api/portfolio";
+import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse, RealizedReturnResponse } from "@/lib/api/types";
 import { getMyInfo, updateProfile, getInvestmentProfile } from "@/lib/api/user";
 
 export default function MyPageDashboard() {
@@ -46,6 +46,7 @@ export default function MyPageDashboard() {
   const [accounts, setAccounts] = useState<AccountInfoResponse[] | null>(null);
   const [accountProfit, setAccountProfit] = useState<ProfitResponse | null>(null);
   const [apiOrders, setApiOrders] = useState<OrderHistoryResponse[] | null>(null);
+  const [realizedReturns, setRealizedReturns] = useState<RealizedReturnResponse[]>([]);
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState("");
   const [profileSaveError, setProfileSaveError] = useState("");
@@ -87,18 +88,21 @@ export default function MyPageDashboard() {
         if (!primaryAccount) {
           setApiOrders([]);
           setAccountProfit(null);
+          setRealizedReturns([]);
           return;
         }
 
-        const [orderList, profit, charges] = await Promise.all([
+        const [orderList, profit, charges, returns] = await Promise.all([
           getOrders(primaryAccount.accountId),
           getAccountProfit(primaryAccount.accountId),
           getChargeRequests(primaryAccount.accountId),
+          getRealizedReturns(primaryAccount.accountId),
         ]);
         if (cancelled) return;
 
         setApiOrders(orderList);
         setAccountProfit(profit);
+        setRealizedReturns(returns);
         setChargeHistory(charges.content.map(item => ({ id: item.requestId, date: item.requestedAt, type: "추가 충전", amount: item.amount, balance: null, status: item.status === "APPROVED" ? "승인" : item.status === "REJECTED" ? "거절" : "대기", requester: user.name, note: item.decisionReason ?? item.reason })));
         if (orderList[0]) setSelectedOrderId(orderList[0].orderId);
       } catch (error) {
@@ -143,6 +147,7 @@ export default function MyPageDashboard() {
 
       setActiveTab(tab);
       if (tab === "account") setAccountView("summary");
+      if (tab === "recharge") setAccountView("recharge");
     });
   };
 
@@ -242,7 +247,7 @@ export default function MyPageDashboard() {
     setCustomAmount("");
     setReason("");
     setRequestComplete(false);
-    setAccountView("summary");
+    setAccountView("recharge");
   };
 
   const submitRechargeRequest = async () => {
@@ -316,6 +321,7 @@ export default function MyPageDashboard() {
 
           {activeTab === "account" && (
             <AccountPanel
+              mode="info"
               view={accountView}
               selectedAmount={selectedAmount}
               customAmount={customAmount}
@@ -342,13 +348,49 @@ export default function MyPageDashboard() {
               onResetRequest={resetRechargeRequest}
               accounts={accounts}
               profit={accountProfit}
+              realizedProfit={realizedReturns.reduce((sum, row) => sum + row.profitAmount, 0)}
+              isLoading={isDashboardLoading}
+              error={dashboardError}
+            />
+          )}
+
+          {activeTab === "recharge" && (
+            <AccountPanel
+              mode="recharge"
+              view={accountView}
+              selectedAmount={selectedAmount}
+              customAmount={customAmount}
+              requestedAmount={requestedAmount}
+              reason={reason}
+              selectedHistory={selectedHistory}
+              onViewChange={setAccountView}
+              onSelectAmount={(amount) => {
+                setSelectedAmount(amount);
+                setCustomAmount("");
+              }}
+              onCustomAmount={(value) => {
+                setCustomAmount(value.replace(/[^0-9]/g, ""));
+                setSelectedAmount(null);
+              }}
+              onReasonChange={setReason}
+              onRequest={() => void submitRechargeRequest()}
+              chargeHistory={chargeHistory}
+              requestingCharge={requestingCharge}
+              onSelectHistory={(record) => {
+                setSelectedHistory(record);
+                setAccountView("detail");
+              }}
+              onResetRequest={resetRechargeRequest}
+              accounts={accounts}
+              profit={accountProfit}
+              realizedProfit={realizedReturns.reduce((sum, row) => sum + row.profitAmount, 0)}
               isLoading={isDashboardLoading}
               error={dashboardError}
             />
           )}
 
           {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} apiOrders={apiOrders} isLoading={isDashboardLoading} error={dashboardError} />}
-          {activeTab === "returns" && <ReturnsPanel profit={accountProfit} account={accounts?.[0] ?? null} />}
+          {activeTab === "returns" && <ReturnsPanel profit={accountProfit} rows={realizedReturns} />}
         </div>
       </section>
 

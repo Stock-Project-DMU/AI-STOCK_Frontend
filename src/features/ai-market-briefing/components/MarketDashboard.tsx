@@ -18,7 +18,7 @@ export default function MarketDashboard({ side = "right" }: { side?: "left" | "r
         });
         return () => { active = false; };
     }, []);
-    return <aside className={`hidden w-[280px] shrink-0 bg-canvas p-4 xl:block ${side === "left" ? "border-r border-hairline" : "border-l border-hairline"}`}>
+    return <aside className={`cq-wide-show hidden w-[280px] shrink-0 bg-canvas p-4 ${side === "left" ? "border-r border-hairline" : "border-l border-hairline"}`}>
         <h2 className="font-bold">시장 현황</h2>
         {error && <p role="alert" className="mt-4 text-xs text-red-500">{error}</p>}
         {indexes.map(index => <div key={index.industryCode} className="mt-3 rounded border border-hairline p-3 text-sm"><strong>{index.industryName}</strong><p className="mt-2">{index.indexValue?.toLocaleString() ?? "—"} · {index.changeRate ?? "—"}%</p></div>)}

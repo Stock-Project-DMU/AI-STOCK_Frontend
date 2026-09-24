@@ -63,7 +63,7 @@ export default function GoalSimulator() {
                     {busy && <p role="status" className="mt-3 text-sm">시뮬레이션 계산 중...</p>}
                     {error && <p role="alert" className="mt-3 text-sm text-red-500">{error}</p>}
                     {result && <p className="mt-3 text-sm">예상 자산: {result.futureValue.toLocaleString("ko-KR")}원</p>}
-                    <div className="mt-5 grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+                    <div className="cq-goal-controls mt-5 grid gap-4">
                         <SimulationControls settings={settings} onChange={setSettings} onRun={runSimulation} />
                         <GrowthChart
                             monthlyPayment={resultSettings?.monthlyPayment ?? settings.monthlyPayment}
