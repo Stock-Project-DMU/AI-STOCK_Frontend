@@ -2,7 +2,7 @@ import { MARKET_SNAPSHOT, TRENDING_KEYWORDS } from "../data";
 
 export default function NewsSidebar() {
     return (
-        <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
+        <aside className="cq-wide-sticky top-24 self-start space-y-3">
             <section className="rounded-xl border border-hairline bg-white p-4">
                 <div className="flex items-center justify-between"><h2 className="text-sm font-black text-ink">시장 스냅샷</h2><span className="text-[12px] text-muted">샘플</span></div>
                 <div className="mt-3 divide-y divide-hairline-soft">

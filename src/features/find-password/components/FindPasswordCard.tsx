@@ -7,6 +7,9 @@ import RecoveryField from "@/features/account-recovery/components/RecoveryField"
 import RecoveryModal from "@/features/account-recovery/components/RecoveryModal";
 import { Button } from "@/components/common/Button";
 import type { FindPasswordFormData } from "../types";
+import { resetPassword } from "@/lib/api/auth";
+import { getApiErrorMessage } from "@/lib/api/client";
+import RecoveryVerification from "@/features/account-recovery/components/RecoveryVerification";
 
 const INITIAL_FORM_DATA: FindPasswordFormData = {
     userId: "",
@@ -24,6 +27,10 @@ export default function FindPasswordCard() {
         useState<FindPasswordFormData>(INITIAL_FORM_DATA);
     const [errors, setErrors] = useState<FindPasswordFormErrors>({});
     const [isComplete, setIsComplete] = useState(false);
+    const [email, setEmail] = useState("");
+    const [code, setCode] = useState("");
+    const [busy, setBusy] = useState(false);
+    const [requestError, setRequestError] = useState("");
 
     const handleChange =
         (field: keyof FindPasswordFormData) =>
@@ -63,8 +70,9 @@ export default function FindPasswordCard() {
         return nextErrors;
     };
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (busy) return;
 
         const nextErrors = validateForm();
 
@@ -75,8 +83,13 @@ export default function FindPasswordCard() {
 
         setErrors({});
 
-        // TODO: 비밀번호 재설정 API 요청
-        setIsComplete(true);
+        setBusy(true);
+        setRequestError("");
+        try {
+            await resetPassword({ loginId: formData.userId.trim(), name: formData.name.trim(), email: email.trim(), code, newPassword: formData.password });
+            setIsComplete(true);
+        } catch (error) { setRequestError(getApiErrorMessage(error, "비밀번호 변경에 실패했습니다.")); }
+        finally { setBusy(false); }
     };
 
     return (
@@ -130,7 +143,10 @@ export default function FindPasswordCard() {
                     />
                 </div>
 
-                <Button type="submit" fullWidth size="md" className="mt-10">
+                <label className="mt-4 block text-sm">가입 이메일<input type="email" required value={email} onChange={event => { setEmail(event.target.value); setCode(""); }} className="mt-2 w-full rounded border border-hairline px-3 py-2" /></label>
+                <RecoveryVerification email={email.trim()} code={code} onCodeChange={setCode} />
+                {requestError && <p role="alert" className="mt-2 text-sm text-red-500">{requestError}</p>}
+                <Button type="submit" disabled={busy || code.length !== 6} fullWidth size="md" className="mt-10">
                     확인
                 </Button>
             </form>

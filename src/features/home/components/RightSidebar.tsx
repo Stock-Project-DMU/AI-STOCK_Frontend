@@ -1,53 +1,14 @@
+"use client";
 import Link from "next/link";
-import { SparkleIcon, ArrowRightIcon } from "@/components/icons/Icon";
-import { ALL_NEWS_REPORTS } from "@/features/news-report/data";
-
-const news = ALL_NEWS_REPORTS.slice(0, 3);
-
+import { useEffect, useState } from "react";
+import { getMarketNews, type MarketNews } from "@/lib/api/market";
+import { getApiErrorMessage } from "@/lib/api/client";
 export default function RightSidebar() {
-    return (
-        <aside className="flex flex-col gap-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
-            <section className="always-dark rounded-lg border border-primary/25 bg-[linear-gradient(145deg,#16295c,#0a0b0d_68%)] p-4 shadow-[0_4px_16px_rgba(0,0,0,.22)]">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-white">재무 진단 브리핑</h2>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white"><SparkleIcon className="h-4 w-4" /></span>
-                </div>
-                <div className="mt-4 rounded-md border border-white/10 bg-black/15 p-3 text-xs leading-6 text-white/70">
-                    보유 자산과 투자 성향을 연결해 리밸런싱 시나리오를 확인할 수 있습니다.
-                </div>
-                <Link href="/ai-financial-planner" className="mt-3 flex items-center justify-between rounded-md bg-primary px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-active">
-                    AI 분석 시작하기 <ArrowRightIcon className="h-3.5 w-3.5" />
-                </Link>
-            </section>
-
-            <section className="rounded-lg border border-hairline bg-white p-4">
-                <h2 className="text-sm font-bold text-ink">전략 신호</h2>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                    {[['시장', '중립'], ['변동성', '보통'], ['AI 신뢰도', '82%']].map(([label, value]) => <div key={label} className="rounded-md bg-surface-soft px-2 py-2.5"><p className="text-[12px] text-muted">{label}</p><strong className="num mt-1 block text-xs text-ink">{value}</strong></div>)}
-                </div>
-            </section>
-
-            <section className="rounded-lg border border-hairline bg-white p-4">
-                <div className="flex items-center justify-between"><h2 className="text-sm font-bold text-ink">뉴스 리포트</h2><Link href="/news-report" className="theme-accent-text text-[12px] font-bold">전체 보기</Link></div>
-                <div className="mt-2 divide-y divide-hairline-soft">
-                    {news.map((report, index) => (
-                        <Link
-                            key={report.id}
-                            href={`/news-report/${report.id}`}
-                            className="group relative grid grid-cols-[minmax(0,1fr)_72px] gap-3 overflow-hidden rounded-md py-2.5 pl-3 pr-1 transition-[background-color] duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:h-8 before:w-0.5 before:-translate-y-1/2 before:scale-y-0 before:rounded-full before:bg-primary before:transition-transform before:duration-300 before:ease-out hover:bg-primary/[0.045] hover:before:scale-y-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:before:transition-none"
-                        >
-                            <div className="transition-transform duration-300 ease-out group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none">
-                                <span className="text-[12px] font-black text-primary transition-colors duration-300 group-hover:text-primary-active">0{index + 1}</span>
-                                <h3 className="mt-1 text-xs font-bold leading-5 text-ink transition-colors duration-300 group-hover:text-primary">{report.title}</h3>
-                                <p className="mt-1 text-[12px] text-muted transition-colors duration-300 group-hover:text-body">{report.publishedAt}</p>
-                            </div>
-                            <span className="h-14 w-[72px] overflow-hidden rounded-md shadow-[0_2px_8px_rgba(10,11,13,0.08)] transition-shadow duration-300 group-hover:shadow-[0_5px_14px_rgba(10,11,13,0.16)]">
-                                <img src="/new1.png" alt="" className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 motion-reduce:transform-none motion-reduce:transition-none" width={72} height={56} />
-                            </span>
-                        </Link>
-                    ))}
-                </div>
-            </section>
-        </aside>
-    );
+    const [news, setNews] = useState<MarketNews[]>([]);
+    const [error, setError] = useState("");
+    useEffect(() => { let active = true; getMarketNews("코스피").then(result => { if (active) setNews(result.results.slice(0, 5)); }).catch(error => { if (active) setError(getApiErrorMessage(error, "뉴스를 불러오지 못했습니다.")); }); return () => { active = false; }; }, []);
+    return <aside className="cq-wide-sticky top-20 flex flex-col gap-3 self-start">
+        <section className="always-dark rounded-lg p-5"><h2 className="font-bold">재무 진단 브리핑</h2><p className="mt-3 text-xs leading-6">보유 자산과 투자 성향을 연결해 상담할 수 있습니다.</p><Link href="/ai-financial-planner" className="mt-4 block rounded bg-primary p-3 text-center text-sm font-bold text-white">AI 분석 시작하기</Link></section>
+        <section className="rounded-lg border border-hairline bg-canvas p-4"><div className="flex justify-between"><h2 className="font-bold">뉴스 리포트</h2><Link href="/news-report" className="text-xs text-primary">전체 보기</Link></div>{error && <p role="alert" className="mt-3 text-xs text-red-500">{error}</p>}{news.map((item, index) => /^https?:\/\//.test(item.link) && <a key={index} href={item.link} target="_blank" rel="noopener noreferrer" className="mt-3 block border-t border-hairline pt-3 text-sm"><strong>{item.title}</strong><p className="mt-2 text-xs text-muted">{item.outlet}</p></a>)}</section>
+    </aside>;
 }

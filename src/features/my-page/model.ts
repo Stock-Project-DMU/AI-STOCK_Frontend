@@ -1,13 +1,13 @@
-export type MyPageTab = "profile" | "account" | "orders" | "returns";
+export type MyPageTab = "profile" | "account" | "recharge" | "orders" | "returns";
 export type AccountView = "summary" | "recharge" | "reason" | "history" | "detail";
-export type RechargeStatus = "승인" | "거절";
+export type RechargeStatus = "승인" | "거절" | "대기";
 
 export type RechargeRecord = {
   id: number;
   date: string;
   type: string;
   amount: number;
-  balance: number;
+  balance: number | null;
   status: RechargeStatus;
   requester: string;
   note: string;

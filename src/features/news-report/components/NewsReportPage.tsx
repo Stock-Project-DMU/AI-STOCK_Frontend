@@ -1,50 +1,31 @@
 "use client";
-
-import { useMemo, useState } from "react";
-import { NEWS_CATEGORIES, NEWS_REPORTS, FEATURED_REPORT } from "../data";
-import type { NewsCategory } from "../types";
-import FeaturedNews from "./FeaturedNews";
-import NewsList from "./NewsList";
-import NewsSidebar from "./NewsSidebar";
-
+import { useEffect, useState } from "react";
+import { getMarketNews, type MarketNews } from "@/lib/api/market";
+import { getApiErrorMessage } from "@/lib/api/client";
+import { formatDateTime } from "@/lib/format/dateTime";
+const categories = ["코스피", "코스닥", "반도체", "금리", "환율", "미국 증시"];
 export default function NewsReportPage() {
-    const [category, setCategory] = useState<NewsCategory>("전체");
-    const filteredReports = useMemo(
-        () => category === "전체" ? NEWS_REPORTS : NEWS_REPORTS.filter((report) => report.category === category),
-        [category],
-    );
-
-    return (
-        <main className="market-theme market-grid min-h-screen">
-            <section className="mx-auto w-full max-w-[1540px] px-4 py-6 sm:px-6 lg:px-8">
-                <header className="flex flex-wrap items-end justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-2 text-[12px] font-black tracking-[0.16em] text-primary"><span className="h-px w-6 bg-primary" /> NEWS REPORT</div>
-                        <h1 className="mt-3 text-3xl font-black tracking-tight text-ink sm:text-4xl">뉴스 리포트</h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-body">시장 흐름과 종목 영향을 빠르게 파악할 수 있도록 주요 이슈를 한곳에 정리했습니다.</p>
-                    </div>
-                    <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-[12px] font-bold text-primary">화면 확인용 샘플 데이터</span>
-                </header>
-
-                <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-                    <div className="min-w-0 space-y-5">
-                        <FeaturedNews report={FEATURED_REPORT} />
-
-                        <section>
-                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                <div><h2 className="text-xl font-black text-ink">최신 리포트</h2><p className="mt-1 text-[12px] text-muted">선택한 주제의 시장 리포트를 확인하세요.</p></div>
-                                <div className="flex flex-wrap gap-1.5 rounded-lg border border-hairline bg-white p-1.5">
-                                    {NEWS_CATEGORIES.map((item) => (
-                                        <button key={item} type="button" onClick={() => setCategory(item)} className={`rounded-md px-3 py-1.5 text-[12px] font-bold ${category === item ? "bg-primary text-white" : "text-muted hover:bg-surface-soft hover:text-ink"}`}>{item}</button>
-                                    ))}
-                                </div>
-                            </div>
-                            <NewsList reports={filteredReports} />
-                        </section>
-                    </div>
-                    <NewsSidebar />
-                </div>
-            </section>
-        </main>
-    );
+    const [query, setQuery] = useState("코스피");
+    const [search, setSearch] = useState("코스피");
+    const [news, setNews] = useState<MarketNews[]>([]);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        const controller = new AbortController();
+        async function load() {
+            setLoading(true); setError("");
+            try { const result = await getMarketNews(query, controller.signal); if (!controller.signal.aborted) setNews(result.results); }
+            catch (error) { if (!controller.signal.aborted) { setNews([]); setError(getApiErrorMessage(error, "뉴스를 불러오지 못했습니다.")); } }
+            finally { if (!controller.signal.aborted) setLoading(false); }
+        }
+        void load(); return () => controller.abort();
+    }, [query]);
+    return <main className="market-theme market-grid min-h-screen p-5 lg:p-8"><section className="mx-auto max-w-[1200px]">
+        <p className="text-xs font-bold tracking-widest text-primary">NEWS REPORT</p><h1 className="mt-3 text-3xl font-bold">뉴스 리포트</h1><p className="mt-3 text-sm text-muted">종목과 시장 키워드로 검색하고 언론사 원문에서 내용을 확인하세요.</p>
+        <form onSubmit={event => { event.preventDefault(); if (search.trim()) setQuery(search.trim()); }} className="my-5 flex gap-2"><input aria-label="뉴스 검색어" value={search} maxLength={100} onChange={event => setSearch(event.target.value)} className="min-w-0 flex-1 rounded border border-hairline bg-canvas p-3" /><button className="rounded bg-primary px-5 text-white">검색</button></form>
+        <div className="mb-5 flex flex-wrap gap-2">{categories.map(category => <button key={category} onClick={() => { setSearch(category); setQuery(category); }} className={`rounded border px-3 py-2 text-sm ${query === category ? "bg-primary text-white" : "bg-canvas"}`}>{category}</button>)}</div>
+        {loading && <p role="status">뉴스를 불러오는 중...</p>}{error && <p role="alert" className="text-red-500">{error}</p>}
+        {!loading && !error && !news.length && <p>검색 결과가 없습니다.</p>}
+        <div className="space-y-4">{news.map((item, index) => /^https?:\/\//.test(item.link) && <article key={item.link + index} className="rounded-lg border border-hairline bg-canvas p-5"><a href={item.link} target="_blank" rel="noopener noreferrer" className="text-lg font-bold hover:text-primary">{item.title}</a><p className="mt-3 text-sm leading-6 text-body">{item.description}</p><p className="mt-3 text-xs text-muted">{item.outlet} · {formatDateTime(item.pubDate)}</p></article>)}</div>
+    </section></main>;
 }

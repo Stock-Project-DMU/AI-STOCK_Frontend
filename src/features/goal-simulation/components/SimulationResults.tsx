@@ -36,8 +36,8 @@ export default function SimulationResults({ settings }: SimulationResultsProps) 
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">
-                    <TextCard title="AI 인사이트">공격적 시나리오를 채택할 경우 기본 대비 약 <em>{formatWon(additionalReturn)}</em>의 추가 수익이 발생합니다. 높은 수익률을 위해서는 <em>주식 비중 70%</em> 이상의 공격적 포트폴리오가 필요합니다.</TextCard>
-                    <TextCard title="전략 팁">두 시나리오의 중간 지점인 <em>6.25%</em>를 목표로 주식 60% + 채권 30% + 대체 10% 배분 전략을 추천합니다.</TextCard>
+                    <TextCard title="계산 해설">가정 수익률을 2.5%p 높였을 때 계산상 차이는 <em>{formatWon(additionalReturn)}</em>입니다. 실제 수익을 보장하는 값이 아닙니다.</TextCard>
+                    <TextCard title="계산 가정">매월 말 동일 금액을 납입하고 일정한 월 복리 수익률을 적용합니다. 세금·수수료·물가 상승은 반영하지 않습니다.</TextCard>
                 </div>
             </div>
         );
@@ -46,8 +46,8 @@ export default function SimulationResults({ settings }: SimulationResultsProps) 
     return (
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
             <ResultCard title={`${settings.years}년 후 예상 자산`} years={settings.years} value={baseValue} principal={principal} rate={settings.annualReturn} />
-            <TextCard title="AI 인사이트">현재 설정된 연 {settings.annualReturn.toFixed(1)}%의 수익률은 <em>안정적인 복리 성장</em>을 보이고 있습니다. 목표 달성을 위해 꾸준한 납입과 장기 투자가 중요합니다.</TextCard>
-            <TextCard title="전략 팁">납입 금액을 <em>20%</em> 조정하거나 수익률을 높이면 목표 도달 시점을 앞당길 수 있습니다. 시장 상황에 맞춰 정기적으로 재점검하세요.</TextCard>
+            <TextCard title="계산 해설">연 {settings.annualReturn.toFixed(1)}%를 고정 가정하여 월 복리로 계산한 예상값입니다. 실제 투자에서는 손실이 발생할 수 있습니다.</TextCard>
+            <TextCard title="계산 가정">매월 말 납입 기준이며 세금·수수료·물가 상승은 제외합니다. 설정을 변경하여 가정별 결과를 비교할 수 있습니다.</TextCard>
         </div>
     );
 }

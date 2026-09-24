@@ -1,0 +1,10 @@
+import { apiRequest } from "./client";
+export type MarketRanking = { rank: number; stockCode: string; stockName: string; price: number | null; changeAmount: number | null; changeRate: number | null; volume: number | null; extraInfo: string | null };
+export type HistoricalPrice = { date: string; open: number; high: number; low: number; close: number; volume: number; changeRate: number | null };
+export type MarketIndex = { industryCode: string; industryName: string; indexValue: number | null; changeRate: number | null };
+export type MarketNews = { title: string; description: string; link: string; pubDate: string; outlet: string };
+export const getMarketRankings = (sort = "volume", signal?: AbortSignal) => apiRequest<MarketRanking[]>(`/api/market/rankings?sort=${encodeURIComponent(sort)}`, { signal, auth: false });
+export const getStockHistory = (code: string, months: number) => apiRequest<HistoricalPrice[]>(`/api/market/stocks/${encodeURIComponent(code)}/history?months=${months}`, { auth: false });
+export const getStockResearch = (code: string, section: string) => apiRequest<unknown>(`/api/market/stocks/${encodeURIComponent(code)}/${section === "overview" ? "detail" : "research?section=" + encodeURIComponent(section)}`, { auth: false });
+export const getMarketIndexes = () => apiRequest<MarketIndex[]>("/api/market/indexes", { auth: false });
+export const getMarketNews = (query: string, signal?: AbortSignal) => apiRequest<{ results: MarketNews[] }>(`/api/market/news?query=${encodeURIComponent(query)}`, { signal, auth: false });

@@ -133,6 +133,7 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* Layouts respond to the width left after the global portfolio sidebar. */
 .app-content-container {
   container-name: app-content;
   container-type: inline-size;
@@ -175,6 +176,105 @@ a {
 .market-theme {
   background-color: var(--market-bg);
   color: var(--market-text);
+}
+
+@container app-content (min-width: 64rem) {
+  .cq-medium-show {
+    display: block;
+  }
+
+  .cq-medium-flex-row,
+  .cq-stock-information {
+    flex-direction: row;
+  }
+
+  .cq-medium-flex-col,
+  .cq-planner-session-list,
+  .cq-stock-information-nav {
+    flex-direction: column;
+  }
+
+  .cq-planner-history {
+    width: 240px;
+    border-right: 1px solid var(--market-line);
+    border-bottom-width: 0;
+  }
+
+  .cq-planner-session-list {
+    max-height: none;
+    flex: 1;
+  }
+
+  .cq-stock-information-nav {
+    width: 12rem;
+    flex-shrink: 0;
+  }
+
+  .cq-stock-chart {
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+
+  .cq-goal-controls {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+
+  .cq-featured-news {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+}
+
+@container app-content (min-width: 72rem) {
+  .cq-mypage-desktop {
+    display: flex;
+  }
+
+  .cq-mypage-mobile {
+    display: none;
+  }
+}
+
+@container app-content (min-width: 48rem) {
+  .cq-orders-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+
+  .cq-profile-layout {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+  }
+}
+
+@container app-content (min-width: 80rem) {
+  .cq-wide-show {
+    display: block;
+  }
+
+  .cq-wide-sticky {
+    position: sticky;
+  }
+
+  .cq-home-hero {
+    grid-template-columns: minmax(0, 1fr) 500px;
+  }
+
+  .cq-home-main {
+    grid-template-columns: minmax(0, 1fr) 350px;
+  }
+
+  .cq-stock-layout {
+    grid-template-columns: minmax(0, 1fr) 330px;
+  }
+
+  .cq-news-article {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .cq-report-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+
+  .cq-simulation-skeleton {
+    grid-template-columns: 380px minmax(0, 1fr);
+  }
 }
 
 .market-theme input,

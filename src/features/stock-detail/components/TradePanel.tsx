@@ -30,15 +30,17 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     const { authReady, authenticated, requireLogin } = useAuthGuard();
     const [tab, setTab] = useState<OrderTab>("buy");
     const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
-    const [quantity, setQuantity] = useState(10);
+    const [quantity, setQuantity] = useState(1);
+    const [priceType, setPriceType] = useState<"LIMIT" | "MARKET">("LIMIT");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [requestError, setRequestError] = useState("");
     const [requestMessage, setRequestMessage] = useState("");
-    const price = selectedPrice ?? stock?.currentPrice ?? 191_500;
-    const stockCode = stock?.stockCode ?? "005930";
-    const stockName = stock?.stockName ?? "삼성전자";
+    const price = priceType === "MARKET" ? stock?.currentPrice ?? 0 : selectedPrice ?? stock?.currentPrice ?? 0;
+    const stockCode = stock?.stockCode ?? "";
+    const stockName = stock?.stockName ?? "종목 조회 중";
     const holding = holdings?.find((item) => item.stockCode === stockCode) ?? null;
-    const maximumQuantity = tab === "sell" ? holding?.quantity ?? 0 : Math.floor((account?.balance ?? 0) / Math.max(price, 1));
+    const reservedQuantity = orders?.filter(order => order.stockCode === stockCode && order.status === "PENDING" && order.orderType === "SELL").reduce((sum, order) => sum + order.quantity, 0) ?? 0;
+    const maximumQuantity = tab === "sell" ? Math.max(0, (holding?.quantity ?? 0) - reservedQuantity) : Math.floor((account?.balance ?? 0) / Math.max(price, 1));
     const pendingOrders = orders?.filter((order) => order.status === "PENDING") ?? null;
     const accent = tab === "sell" ? "blue" : "red";
     const loginRequired = authReady && !authenticated;
@@ -46,8 +48,17 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     async function handleOrder() {
         if (!requireLogin()) return;
 
+        if (isSubmitting) return;
         if (!account || !stock) {
             setRequestError("계좌와 종목 정보를 불러온 뒤 주문할 수 있습니다.");
+            return;
+        }
+        if (!Number.isSafeInteger(quantity) || quantity < 1 || !Number.isSafeInteger(price) || price < 1 || !Number.isSafeInteger(price * quantity)) {
+            setRequestError("가격과 수량을 올바른 양의 정수로 입력해 주세요.");
+            return;
+        }
+        if (quantity > maximumQuantity) {
+            setRequestError(tab === "sell" ? "미체결 매도 예약 수량을 제외한 보유 수량이 부족합니다." : "주문 가능 금액이 부족합니다. 수량을 줄이거나 계좌 잔고를 확인해 주세요.");
             return;
         }
 
@@ -56,16 +67,17 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
         setRequestMessage("");
 
         try {
-            await createOrder({
+            const result = await createOrder({
                 accountId: account.accountId,
                 stockCode: stock.stockCode,
                 orderType: tab === "buy" ? "BUY" : "SELL",
                 quantity,
-                priceType: "LIMIT",
-                orderPrice: price,
+                priceType,
+                orderPrice: priceType === "MARKET" ? 0 : price,
             });
-            await onTradingDataChanged?.();
-            setRequestMessage(`${stockName} ${tab === "buy" ? "매수" : "매도"} 주문이 접수되었습니다.`);
+            setRequestMessage(`${stockName} ${tab === "buy" ? "매수" : "매도"} 주문이 ${result.status === "EXECUTED" ? "체결" : "접수"}되었습니다.`);
+            try { await onTradingDataChanged?.(); }
+            catch { setRequestError("주문은 처리되었지만 잔고·내역 갱신에 실패했습니다. 재주문하지 말고 주문 내역을 확인해 주세요."); }
         } catch (error) {
             setRequestError(getApiErrorMessage(error, "주문 처리에 실패했습니다."));
         } finally {
@@ -82,8 +94,9 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
 
         try {
             await cancelOrder(orderId);
-            await onTradingDataChanged?.();
             setRequestMessage("주문이 취소되었습니다.");
+            try { await onTradingDataChanged?.(); }
+            catch { setRequestError("취소는 완료되었지만 잔고·내역 갱신에 실패했습니다. 주문 내역을 다시 확인해 주세요."); }
         } catch (error) {
             setRequestError(getApiErrorMessage(error, "주문 취소에 실패했습니다."));
         } finally {
@@ -92,7 +105,7 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     }
 
     return (
-        <div className="relative self-start xl:sticky xl:top-4">
+        <div className="cq-wide-sticky relative top-4 self-start">
         <aside
             aria-hidden={loginRequired}
             className={`overflow-hidden rounded-lg border border-hairline bg-canvas transition-[filter,opacity] duration-200 ${loginRequired ? "pointer-events-none select-none blur-[3px] opacity-65" : ""}`}
@@ -137,9 +150,9 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
                     <div className="space-y-4 text-xs">
                         <div className="grid grid-cols-2 gap-2">
                             <SelectLike label="주문 유형" value="일반 주문" />
-                            <SelectLike label="주문 방식" value="지정가" />
+                            <label className="rounded-lg border border-hairline bg-surface-soft p-2.5"><span className="block text-[12px] text-muted">주문 방식</span><select aria-label="주문 방식" value={priceType} disabled={isSubmitting} onChange={event => { setPriceType(event.target.value as "LIMIT" | "MARKET"); setRequestError(""); setRequestMessage(""); }} className="mt-1 w-full rounded-md bg-canvas p-1 text-xs font-bold text-ink"><option value="LIMIT">지정가</option><option value="MARKET">시장가</option></select></label>
                         </div>
-                        <Counter label={tab === "buy" ? "매수가격" : "매도가격"} currentPrice={stock?.currentPrice ?? 0} value={price.toLocaleString("ko-KR")} unit="원" onMinus={() => setSelectedPrice(Math.max(0, price - 500))} onPlus={() => setSelectedPrice(price + 500)} />
+                        {priceType === "LIMIT" ? <Counter label={tab === "buy" ? "매수가격" : "매도가격"} currentPrice={stock?.currentPrice ?? 0} value={price.toLocaleString("ko-KR")} unit="원" onMinus={() => setSelectedPrice(Math.max(1, price - 500))} onPlus={() => setSelectedPrice(price + 500)} /> : <p className="rounded-lg bg-surface-soft p-3 text-muted">시장가는 서버가 조회한 최근 시세로 모의 체결됩니다. 아래 금액은 예상 금액이며 실제 체결 금액과 다를 수 있습니다.</p>}
                         <Counter label="수량" currentPrice={stock?.currentPrice ?? 0} value={String(quantity)} unit="주" onMinus={() => setQuantity((value) => Math.max(1, value - 1))} onPlus={() => setQuantity((value) => value + 1)} />
 
                         <div className="grid grid-cols-4 gap-1.5">
@@ -147,9 +160,9 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
                         </div>
 
                         <div className="rounded-lg border border-hairline bg-surface-soft p-3">
-                            <div className="flex justify-between text-muted"><span>주문 가격</span><span className="num">{price.toLocaleString("ko-KR")}원</span></div>
+                            <div className="flex justify-between text-muted"><span>{priceType === "MARKET" ? "예상 체결 가격" : "주문 가격"}</span><span className="num">{price.toLocaleString("ko-KR")}원</span></div>
                             <div className="mt-2 flex justify-between text-muted"><span>주문 수량</span><span className="num">{quantity}주</span></div>
-                            <div className="mt-3 flex items-end justify-between border-t border-hairline pt-3"><span className="font-semibold text-body">총 주문 금액</span><strong className={`num text-lg ${accent === "red" ? "text-up" : "text-down"}`}>₩{(price * quantity).toLocaleString("ko-KR")}</strong></div>
+                            <div className="mt-3 flex items-end justify-between border-t border-hairline pt-3"><span className="font-semibold text-body">{priceType === "MARKET" ? "예상 주문 금액" : "총 주문 금액"}</span><strong className={`num text-lg ${accent === "red" ? "text-up" : "text-down"}`}>₩{(price * quantity).toLocaleString("ko-KR")}</strong></div>
                         </div>
 
                         {requestError && <p className="rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}

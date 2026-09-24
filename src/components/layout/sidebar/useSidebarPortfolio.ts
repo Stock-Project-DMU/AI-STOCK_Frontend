@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getApiErrorMessage, isAuthenticated } from "@/lib/api/client";
+import { useEffect, useRef, useState } from "react";
+import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
+import { getApiErrorMessage } from "@/lib/api/client";
 import { getAccounts, getHoldings } from "@/lib/api/portfolio";
-import { getRecentViewed, getStockPrice, getWatchlist } from "@/lib/api/stock";
-import { HOLDINGS, KRW_BALANCES, RECENT_STOCKS, WATCHLIST } from "./sidebarData";
+import { addWatchlist, removeWatchlist, WATCHLIST_CHANGED, RECENT_VIEWED_CHANGED, getRecentViewed, getStockPrice, getWatchlist } from "@/lib/api/stock";
 import type { Holding, SidebarStockItem } from "./types";
 
 type SidebarPortfolioData = {
@@ -17,10 +17,10 @@ type SidebarPortfolioData = {
 };
 
 const initialData: SidebarPortfolioData = {
-    holdings: HOLDINGS,
-    balances: KRW_BALANCES,
-    watchlist: WATCHLIST,
-    recent: RECENT_STOCKS,
+    holdings: [],
+    balances: [],
+    watchlist: [],
+    recent: [],
     isLoading: false,
     error: "",
 };
@@ -29,9 +29,47 @@ const formatRate = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2
 
 export function useSidebarPortfolio() {
     const [data, setData] = useState(initialData);
+    const { authenticated, requireLogin } = useAuthGuard();
+    const [revision, setRevision] = useState(0);
+    const [favoriteCodes, setFavoriteCodes] = useState<Set<string>>(new Set());
+    const [pendingCodes, setPendingCodes] = useState<Set<string>>(new Set());
+    const inFlight = useRef(new Set<string>());
+    const [actionError, setActionError] = useState("");
 
     useEffect(() => {
-        if (!isAuthenticated()) return;
+        const changed = () => setRevision(value => value + 1);
+        window.addEventListener(WATCHLIST_CHANGED, changed);
+        window.addEventListener(RECENT_VIEWED_CHANGED, changed);
+        return () => {
+            window.removeEventListener(WATCHLIST_CHANGED, changed);
+            window.removeEventListener(RECENT_VIEWED_CHANGED, changed);
+        };
+    }, []);
+
+    async function onFavorite(stockCode: string, favorite: boolean) {
+        if (!requireLogin() || inFlight.current.has(stockCode)) return;
+        inFlight.current.add(stockCode);
+        setPendingCodes(new Set(inFlight.current));
+        setActionError("");
+        try {
+            if (favorite) await addWatchlist(stockCode);
+            else await removeWatchlist(stockCode);
+            setFavoriteCodes(current => {
+                const next = new Set(current);
+                if (favorite) next.add(stockCode); else next.delete(stockCode);
+                return next;
+            });
+            if (!favorite) setData(current => ({ ...current, watchlist: current.watchlist.filter(item => item.meta !== stockCode) }));
+        } catch (error) {
+            setActionError(getApiErrorMessage(error, "관심 종목 변경에 실패했습니다."));
+        } finally {
+            inFlight.current.delete(stockCode);
+            setPendingCodes(new Set(inFlight.current));
+        }
+    }
+
+    useEffect(() => {
+        if (!authenticated) return;
 
         let cancelled = false;
 
@@ -45,6 +83,19 @@ export function useSidebarPortfolio() {
                     getRecentViewed(),
                 ]);
                 const primaryAccount = accounts[0];
+                if (cancelled) return;
+                setFavoriteCodes(new Set(watchlistRows.map(item => item.stockCode)));
+                // Show saved lists immediately; slow quote requests should not hide navigation.
+                setData(current => {
+                    const known = new Map([...current.watchlist, ...current.recent].map(item => [item.meta, item]));
+                    const toSavedItem = (item: { stockCode: string; stockName: string }): SidebarStockItem => ({
+                        name: item.stockName || item.stockCode,
+                        meta: item.stockCode,
+                        priceValue: known.get(item.stockCode)?.priceValue ?? 0,
+                        rate: known.get(item.stockCode)?.rate ?? "시세 없음",
+                    });
+                    return { ...current, watchlist: watchlistRows.map(toSavedItem), recent: recentRows.map(toSavedItem), isLoading: false };
+                });
                 const holdingRows = primaryAccount ? await getHoldings(primaryAccount.accountId) : [];
 
                 const stockCodes = [...new Set([...watchlistRows, ...recentRows].map((item) => item.stockCode))];
@@ -66,6 +117,7 @@ export function useSidebarPortfolio() {
                     holdings: holdingRows.map((holding) => {
                         const cost = holding.avgPrice * holding.quantity;
                         return {
+                            stockCode: holding.stockCode,
                             name: holding.stockName || holding.stockCode,
                             quantity: holding.quantity,
                             amountValue: holding.currentPrice * holding.quantity,
@@ -94,7 +146,7 @@ export function useSidebarPortfolio() {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [authenticated, revision]);
 
-    return data;
+    return { ...(authenticated ? data : initialData), actionError: authenticated ? actionError : "", favoriteCodes: authenticated ? favoriteCodes : new Set<string>(), pendingCodes, onFavorite };
 }

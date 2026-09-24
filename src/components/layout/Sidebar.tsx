@@ -40,7 +40,7 @@ export default function Sidebar() {
     }
 
     return (
-        <aside className="flex min-h-full shrink-0 justify-end border-l border-hairline bg-canvas text-xs text-body md:sticky md:top-[72px] md:h-[calc(100vh-72px)] md:min-h-0 md:self-start">
+            <aside className="hidden shrink-0 justify-end self-start border-l border-hairline bg-canvas text-xs text-body md:sticky md:top-[72px] md:z-40 md:flex md:h-[calc(100vh-72px)]">
             <section
                 id="portfolio-sidebar-panel"
                 aria-hidden={!isOpen}
@@ -98,6 +98,6 @@ export default function Sidebar() {
                     ))}
                 </div>
             </nav>
-        </aside>
+            </aside>
     );
 }

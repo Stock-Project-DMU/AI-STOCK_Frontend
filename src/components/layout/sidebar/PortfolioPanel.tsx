@@ -1,8 +1,8 @@
 import HoldingRow from "./HoldingRow";
 import PortfolioSummary from "./PortfolioSummary";
-import type { Holding } from "./types";
+import type { Holding, FavoriteActions } from "./types";
 
-export default function PortfolioPanel({ holdings, balances }: { holdings: Holding[]; balances: number[] }) {
+export default function PortfolioPanel({ holdings, balances, favorites }: { holdings: Holding[]; balances: number[]; favorites: FavoriteActions }) {
     const cashTotal = balances.reduce((sum, amount) => sum + amount, 0);
     const evaluationTotal = holdings.reduce(
         (sum, holding) => sum + holding.amountValue,
@@ -21,7 +21,7 @@ export default function PortfolioPanel({ holdings, balances }: { holdings: Holdi
         <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto">
                 {holdings.map((holding) => (
-                    <HoldingRow key={holding.name} holding={holding} />
+                    <HoldingRow key={holding.stockCode ?? holding.name} holding={holding} favorites={favorites} />
                 ))}
             </div>
 

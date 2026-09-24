@@ -22,6 +22,7 @@ export type SignupResponse = {
 };
 
 export type UserInfoResponse = {
+    birthdate: string | null;
     userId: number;
     loginId: string;
     name: string;
@@ -33,7 +34,7 @@ export type UserInfoResponse = {
 export type InvestmentProfileResponse = {
     investmentTendency: number;
     fundTendency: number;
-    investmentLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+    investmentLevel: "BEGINNER" | "INTERMEDIATE" | "EXPERT";
 };
 
 export type AccountInfoResponse = {
@@ -51,6 +52,18 @@ export type ProfitResponse = {
     totalAsset: number;
     profitAmount: number;
     profitRate: number;
+};
+
+export type RealizedReturnResponse = {
+    orderId: number;
+    stockCode: string;
+    stockName: string;
+    quantity: number;
+    averageCost: number;
+    sellPrice: number;
+    profitAmount: number;
+    profitRate: number;
+    executedAt: string;
 };
 
 export type OrderHistoryResponse = {

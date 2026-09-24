@@ -1,56 +1,20 @@
-const summaryMetrics = [
-  { label: "판매 수익", value: "+123,000원" },
-  { label: "배당금", value: "+21원" },
-  { label: "계좌 이자", value: "+20원" },
-];
+import type { ProfitResponse, RealizedReturnResponse } from "@/lib/api/types";
+import { formatDateTime } from "@/lib/format/dateTime";
+const won = (amount: number) => amount.toLocaleString("ko-KR") + "원";
+const profitColor = (amount: number | null | undefined) =>
+    amount == null || amount === 0 ? "" : amount > 0 ? "text-red-500" : "text-blue-500";
 
-const balanceMetrics = [
-  { label: "계좌 잔액", value: "1,002,000원" },
-  { label: "총 평가 금액", value: "152,002,000원" },
-  { label: "주문 가능 금액", value: "1,000,000원" },
-];
+export default function ReturnsPanel({ profit, rows }: { profit: ProfitResponse | null; rows: RealizedReturnResponse[] }) {
+    const realizedProfit = rows.reduce((sum, row) => sum + row.profitAmount, 0);
+    const summary = [
+        { title: "매도 실현손익", value: won(realizedProfit), amount: realizedProfit },
+        { title: "누적 평가 손익", value: profit ? won(profit.profitAmount) : "—", amount: profit?.profitAmount },
+        { title: "총 평가 자산", value: profit ? won(profit.totalAsset) : "—" },
+    ];
 
-const returnRows = [
-  ["26.01.01", "삼성전자", "+100,000원", "+1.0%", "100원", "200,000원", "10주", "120원", "230원", "90,000원"],
-  ["26.01.01", "SK하이닉스", "+100,000원", "-1.0%", "100원", "200,000원", "10주", "120원", "230원", "90,000원"],
-];
-
-export default function ReturnsPanel({ profit, account }: { profit: ProfitResponse | null; account: AccountInfoResponse | null }) {
-  const totalProfit = profit?.profitAmount ?? 123_000;
-  const totalProfitText = `${totalProfit >= 0 ? "+" : ""}${totalProfit.toLocaleString("ko-KR")}원`;
-  const resolvedBalanceMetrics = account && profit ? [
-    { label: "계좌 잔액", value: `${account.balance.toLocaleString("ko-KR")}원` },
-    { label: "총 평가 금액", value: `${profit.totalAsset.toLocaleString("ko-KR")}원` },
-    { label: "주문 가능 금액", value: `${account.balance.toLocaleString("ko-KR")}원` },
-  ] : balanceMetrics;
-
-  return (
-    <div className="mx-auto max-w-[1180px]">
-      <div className="mb-4"><h1 className="text-xl font-bold">수익률</h1></div>
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
-          <p className="text-xs font-semibold text-muted">총 실현 수익</p>
-          <strong className={`num mt-1.5 block text-2xl font-bold sm:text-3xl ${totalProfit >= 0 ? "text-red-500" : "text-blue-500"}`}>{totalProfitText}</strong>
-          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">{summaryMetrics.map((metric) => <div key={metric.label} className="rounded-lg border border-hairline bg-white p-3"><p className="text-xs font-semibold text-muted">{metric.label}</p><p className="num mt-1.5 text-right text-sm font-bold text-red-500">{metric.value}</p></div>)}</div>
-        </section>
-        <section className="flex flex-col items-center justify-center rounded-lg border border-hairline p-4">
-          <div aria-label="종목별 수익 구성 원형 차트" className="h-32 w-32 rounded-full bg-[conic-gradient(#14b8a6_0_25%,#fb7185_25%_48%,#8b5cf6_48%_92%,#94a3b8_92%)] p-6 shadow-[0_10px_30px_rgba(0,0,0,.12)]"><div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-white"><strong className="text-base">3종목</strong><span className="mt-1 text-[12px] text-muted">수익 구성</span></div></div>
-          <div className="mt-4 grid w-full grid-cols-3 gap-2 text-center text-xs"><span><i className="mx-auto mb-1 block h-2 w-2 rounded-full bg-teal-500" />삼성전자</span><span><i className="mx-auto mb-1 block h-2 w-2 rounded-full bg-rose-400" />SK하이닉스</span><span><i className="mx-auto mb-1 block h-2 w-2 rounded-full bg-violet-500" />메리츠</span></div>
-        </section>
-      </div>
-
-      <dl className="mt-3 grid gap-2.5 sm:grid-cols-3">{resolvedBalanceMetrics.map((metric) => <div key={metric.label} className="rounded-lg border border-hairline bg-white p-3 sm:p-4"><dt className="text-xs font-semibold text-muted">{metric.label}</dt><dd className="num mt-1.5 text-right text-sm font-bold">{metric.value}</dd></div>)}</dl>
-
-      <section className="mt-3 overflow-hidden rounded-lg border border-hairline">
-        <div className="border-b border-hairline bg-surface-soft px-4 py-3"><h2 className="font-bold">종목별 실현 수익</h2><p className="mt-1 text-xs text-muted">최근 체결된 매도 주문 기준</p></div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-left text-xs">
-            <thead className="bg-surface-soft"><tr>{["판매일", "종목명", "총 판매수익", "수익률", "총 판매금액", "총 구매금액", "판매수량", "수수료", "1주당 수익", "1주당 판매가격"].map((head) => <th key={head} className="border-b border-hairline px-3 py-2 font-semibold text-muted">{head}</th>)}</tr></thead>
-            <tbody>{returnRows.map((row, index) => <tr key={row[1]} className="border-b border-hairline last:border-0 hover:bg-surface-soft">{row.map((cell, cellIndex) => <td key={`${row[1]}-${cellIndex}`} className={`whitespace-nowrap px-3 py-2 ${cellIndex !== 1 ? "num text-right" : ""} ${cellIndex === 1 ? "font-bold" : ""} ${cellIndex === 2 || cellIndex === 3 ? (index ? "text-blue-500" : "text-red-500") + " font-bold" : ""}`}>{cell}</td>)}</tr>)}</tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-  );
+    return <div><h1 className="mb-4 text-xl font-bold">수익률</h1>
+        <div className="grid gap-3 sm:grid-cols-3">{summary.map(({ title, value, amount }) => <div key={title} className="rounded-lg border border-hairline bg-surface-soft p-4"><p className="text-sm text-muted">{title}</p><strong className={`mt-3 block text-xl ${profitColor(amount)}`}>{value}</strong></div>)}</div>
+        <p className="my-4 text-xs text-muted">실현손익은 체결 순서와 이동평균 매입단가 기준입니다. 현재 모의투자에서 지급·차감하지 않는 배당금, 이자, 수수료는 포함하지 않습니다.</p>
+        <div className="overflow-auto rounded-lg border border-hairline"><table className="w-full text-right text-sm"><thead className="bg-surface-soft"><tr>{["판매일", "종목", "수량", "매입단가", "매도단가", "실현손익", "수익률"].map(label => <th key={label} className="whitespace-nowrap p-3">{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.orderId} className="border-t border-hairline [&_td]:whitespace-nowrap [&_td]:p-3"><td>{formatDateTime(row.executedAt)}</td><td>{row.stockName}</td><td>{row.quantity}주</td><td>{won(row.averageCost)}</td><td>{won(row.sellPrice)}</td><td className={`font-semibold ${profitColor(row.profitAmount)}`}>{won(row.profitAmount)}</td><td className={`font-semibold ${profitColor(row.profitRate)}`}>{row.profitRate.toFixed(2)}%</td></tr>)}</tbody></table>{!rows.length && <p className="p-8 text-center text-sm text-muted">매도 체결 내역이 없습니다.</p>}</div>
+    </div>;
 }
-import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";

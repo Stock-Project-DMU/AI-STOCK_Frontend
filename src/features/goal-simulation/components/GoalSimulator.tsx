@@ -8,6 +8,8 @@ import GrowthChart from "./GrowthChart";
 import SaveSimulationModal from "./SaveSimulationModal";
 import SimulationControls from "./SimulationControls";
 import SimulationResults from "./SimulationResults";
+import { createGoalPlan, type GoalPlan } from "@/lib/api/ai";
+import { getApiErrorMessage } from "@/lib/api/client";
 
 const initialSettings: SimulationSettings = {
     goal: null,
@@ -21,10 +23,19 @@ export default function GoalSimulator() {
     const [settings, setSettings] = useState(initialSettings);
     const [resultSettings, setResultSettings] = useState<SimulationSettings | null>(null);
     const [saveOpen, setSaveOpen] = useState(false);
+    const [result, setResult] = useState<GoalPlan | null>(null);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState("");
 
-    const runSimulation = () => {
-        if (!settings.goal) return;
-        setResultSettings({ ...settings });
+    const runSimulation = async () => {
+        if (!settings.goal || busy) return;
+        setBusy(true); setError("");
+        try {
+            const plan = await createGoalPlan(settings);
+            setResult(plan);
+            setResultSettings(plan.settings);
+        } catch (error) { setError(getApiErrorMessage(error, "시뮬레이션 실행에 실패했습니다.")); }
+        finally { setBusy(false); }
     };
 
     return (
@@ -49,7 +60,10 @@ export default function GoalSimulator() {
                         <Button variant="primary" size="md" onClick={() => setSaveOpen(true)}>저장</Button>
                     </div>
 
-                    <div className="mt-5 grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+                    {busy && <p role="status" className="mt-3 text-sm">시뮬레이션 계산 중...</p>}
+                    {error && <p role="alert" className="mt-3 text-sm text-red-500">{error}</p>}
+                    {result && <p className="mt-3 text-sm">예상 자산: {result.futureValue.toLocaleString("ko-KR")}원</p>}
+                    <div className="cq-goal-controls mt-5 grid gap-4">
                         <SimulationControls settings={settings} onChange={setSettings} onRun={runSimulation} />
                         <GrowthChart
                             monthlyPayment={resultSettings?.monthlyPayment ?? settings.monthlyPayment}
@@ -64,7 +78,7 @@ export default function GoalSimulator() {
                         <SimulationResults settings={resultSettings} />
                     ) : (
                         <div className="mt-4 grid gap-3 lg:grid-cols-3">
-                            {["예상 자산이 여기에 표시됩니다", "AI 인사이트가 여기에 표시됩니다", "전략 팁이 여기에 표시됩니다"].map((text) => (
+                            {["예상 자산이 여기에 표시됩니다", "계산 해설이 여기에 표시됩니다", "계산 가정이 여기에 표시됩니다"].map((text) => (
                                 <div key={text} className="flex min-h-32 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-center text-sm text-muted">▤<br />{text}</div>
                             ))}
                         </div>
@@ -72,7 +86,7 @@ export default function GoalSimulator() {
                 </section>
             </div>
 
-            {saveOpen && <SaveSimulationModal onClose={() => setSaveOpen(false)} />}
+            {saveOpen && <SaveSimulationModal onSelect={plan => { setResult(plan); setSettings(plan.settings); setResultSettings(plan.settings); setSaveOpen(false); }} onClose={() => setSaveOpen(false)} />}
         </div>
     );
 }
