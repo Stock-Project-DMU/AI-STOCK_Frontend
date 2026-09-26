@@ -37,7 +37,7 @@ export default function NewsChat() {
     }
     function submit(event: FormEvent) { event.preventDefault(); void send(input); }
 
-    return <section className="flex h-[calc(100dvh-9rem)] min-h-[420px] flex-col bg-surface-soft">
+    return <section className="flex h-[calc(100dvh-4rem)] min-h-[540px] flex-col bg-surface-soft">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline bg-canvas p-4">
             <div><h2 className="font-bold">AI 뉴스 검색 비서</h2><p className="mt-1 text-xs text-muted">종목·분야·기간을 말하면 관련 기사와 요약을 찾아드립니다.</p></div>
             <button type="button" disabled={busy} onClick={() => { setMessages([]); setError(""); setInput(""); }} className="shrink-0 rounded-lg border border-hairline px-3 py-2 text-sm disabled:opacity-50">새 대화</button>

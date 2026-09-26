@@ -1,11 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getBriefingHistory, getNewsOutlets, getNewsSetting, saveNewsSetting, getPlanningPreferences, savePlanningPreferences, type NewsBriefing, type NewsOutlet } from "@/lib/api/ai";
+import { getNewsOutlets, getNewsSetting, saveNewsSetting, getPlanningPreferences, savePlanningPreferences, type NewsBriefing, type NewsOutlet } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
-import MarketDashboard from "./MarketDashboard";
-export default function DailyBriefing() {
-    const [briefings, setBriefings] = useState<NewsBriefing[]>([]);
-    const [selected, setSelected] = useState<NewsBriefing | null>(null);
+export default function DailyBriefing({ briefings, selectedDate, onSelectedDate }: { briefings: NewsBriefing[]; selectedDate: string; onSelectedDate: (date: string) => void }) {
+    const selected = briefings.find(item => item.briefingDate === selectedDate) ?? briefings[0] ?? null;
     const [outlets, setOutlets] = useState<NewsOutlet[]>([]);
     const [outlet, setOutlet] = useState("");
     const [savedOutlet, setSavedOutlet] = useState<NewsOutlet | null>(null);
@@ -15,9 +13,6 @@ export default function DailyBriefing() {
     const [busy, setBusy] = useState(false);
     useEffect(() => {
         let active = true;
-        getBriefingHistory().then(items => {
-            if (active) { setBriefings(items); setSelected(items[0] ?? null); }
-        }).catch(error => { if (active) setMessage(getApiErrorMessage(error, "브리핑 조회에 실패했습니다.")); });
         getNewsOutlets().then(items => { if (active) setOutlets(items); })
             .catch(error => { if (active) setMessage(getApiErrorMessage(error, "언론사 목록을 불러오지 못했습니다.")); });
         getNewsSetting().then(setting => {
@@ -47,13 +42,14 @@ export default function DailyBriefing() {
         } catch (error) { setMessage(getApiErrorMessage(error, "저장에 실패했습니다.")); }
         finally { setBusy(false); }
     }
-    return <div className="market-theme market-grid flex min-h-[calc(100vh-72px)] min-w-0">
-        <aside className="cq-medium-show hidden w-[240px] shrink-0 border-r border-hairline bg-canvas p-4">
-            <h2 className="mb-4 font-bold">브리핑 기록</h2>
-            {briefings.map(item => <button key={item.briefingDate} onClick={() => setSelected(item)} className="mb-2 block w-full rounded p-3 text-left text-sm hover:bg-surface-soft">{item.briefingDate}<br />{item.outletName}</button>)}
-        </aside>
-        <section className="min-w-0 flex-1 p-5">
-            <h1 className="text-xl font-bold">AI 맞춤 시황 브리핑</h1>
+    return <div className="market-theme market-grid min-w-0">
+        <section className="min-w-0 flex-1 bg-surface-soft">
+            <header className="flex h-14 items-center border-b border-hairline bg-canvas px-6 font-bold text-ink">AI 시황 브리핑 비서</header>
+            <div className="p-5 lg:p-8">
+            <div className="mx-auto max-w-[680px]">
+            <p className="text-xs font-bold tracking-[0.12em] text-primary">오늘의 시황</p>
+            <h1 className="mt-1.5 text-xl font-bold">AI 맞춤 시황 브리핑</h1>
+            <div className="mt-5 flex gap-2 overflow-x-auto pb-2" aria-label="브리핑 기록">{briefings.map(item => <button key={item.briefingDate} onClick={() => onSelectedDate(item.briefingDate)} aria-pressed={selected?.briefingDate === item.briefingDate} className={`shrink-0 rounded-md px-3 py-2 text-left text-xs ${selected?.briefingDate === item.briefingDate ? "bg-primary text-white" : "border border-hairline bg-canvas hover:bg-surface-soft"}`}>{item.briefingDate} · {item.outletName}</button>)}</div>
             <div className="my-5 rounded-xl border border-hairline bg-canvas p-4">
                 <p className="text-xs text-muted">현재 저장된 브리핑 언론사</p>
                 <p role="status" className="mt-2"><strong className="inline-flex rounded-full bg-primary/10 px-4 py-2 text-sm text-primary">{settingLoading ? "확인 중..." : settingError ? "설정 확인 실패" : savedOutlet?.outletName ?? "선택한 언론사 없음"}</strong></p>
@@ -68,8 +64,8 @@ export default function DailyBriefing() {
                 <h3 className="mt-6 font-bold">근거 기사</h3>
                 {selected.sources.map((source, index) => /^https?:\/\//.test(source.link) && <a key={index} href={source.link} target="_blank" rel="noopener noreferrer" className="mt-3 block text-sm text-primary underline">{source.title} · {source.outlet}</a>)}
             </article> : <p className="rounded-lg border border-hairline bg-canvas p-6 text-sm text-muted">아직 생성된 브리핑이 없습니다. 언론사를 선택하면 정기 생성된 브리핑을 이곳에서 확인할 수 있습니다.</p>}
-            <div className="mt-4 flex flex-wrap gap-2 lg:hidden">{briefings.map(item => <button key={item.briefingDate} onClick={() => setSelected(item)} className="rounded border p-2 text-xs">{item.briefingDate}</button>)}</div>
+            </div>
+            </div>
         </section>
-        <MarketDashboard />
     </div>;
 }
