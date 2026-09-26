@@ -15,10 +15,18 @@ export default function AiMarketBriefing() {
 
     useEffect(() => {
         let active = true;
-        getBriefingHistory().then(items => { if (active) { setBriefings(items); setSelectedDate(items[0]?.briefingDate ?? ""); } })
-            .catch(error => { if (active) setHistoryError(getApiErrorMessage(error, "브리핑 기록을 불러오지 못했습니다.")); });
-        return () => { active = false; };
-    }, []);
+        const refresh = () => {
+            getBriefingHistory().then(items => {
+                if (!active) return;
+                setBriefings(items);
+                setSelectedDate(current => items.some(item => item.briefingDate === current) ? current : items[0]?.briefingDate ?? "");
+                setHistoryError("");
+            }).catch(error => { if (active) setHistoryError(getApiErrorMessage(error, "브리핑 기록을 불러오지 못했습니다.")); });
+        };
+        refresh();
+        const timer = tab === "daily" ? window.setInterval(refresh, 60_000) : null;
+        return () => { active = false; if (timer !== null) window.clearInterval(timer); };
+    }, [tab]);
 
     return <div className="cq-briefing-shell market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0 flex-col">
         <aside aria-label="AI 뉴스 시황 메뉴" className="cq-briefing-navigation flex shrink-0 gap-2 overflow-x-auto border-b border-hairline bg-canvas p-3">

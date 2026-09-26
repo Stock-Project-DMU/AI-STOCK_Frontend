@@ -13,10 +13,11 @@ export const createGoalPlan = (settings: SimulationSettings) => apiRequest<GoalP
 export const getGoalPlans = () => apiRequest<GoalPlan[]>("/api/goal-plans");
 export const saveGoalPlan = (id: number) => apiRequest<GoalPlan>(`/api/goal-plans/${id}/saved`, { method: "PATCH" });
 export type NewsOutlet = { outletDomain: string; outletName: string };
-export type NewsBriefing = NewsOutlet & { briefingDate: string; content: string; sources: { title: string; link: string; outlet: string }[] };
+export type NewsSetting = NewsOutlet & { deliveryTime: string; lastAttemptAt: string | null };
+export type NewsBriefing = NewsOutlet & { briefingDate: string; content: string; sources: { title: string; link: string; outlet: string }[]; createdAt: string };
 export const getNewsOutlets = () => apiRequest<NewsOutlet[]>("/api/ai/news/outlets");
-export const getNewsSetting = () => apiRequest<NewsOutlet | null>("/api/ai/news/settings");
-export const saveNewsSetting = (outletDomain: string) => apiRequest<NewsOutlet>("/api/ai/news/settings", { method: "PUT", body: JSON.stringify({ outletDomain }) });
+export const getNewsSetting = () => apiRequest<NewsSetting | null>("/api/ai/news/settings");
+export const saveNewsSetting = (outletDomain: string, deliveryTime: string) => apiRequest<NewsSetting>("/api/ai/news/settings", { method: "PUT", body: JSON.stringify({ outletDomain, deliveryTime }) });
 export const getBriefingHistory = () => apiRequest<NewsBriefing[]>("/api/ai/news/briefings");
 export type NewsChatTurn = { role: "USER" | "ASSISTANT"; content: string };
 export type NewsChatAnswer = { content: string; searchedAt: string; sources: { title: string; description: string; link: string; pubDate: string; outlet: string }[] };
