@@ -20,6 +20,7 @@ import {
     saveAuthenticatedUserName,
 } from "@/lib/api/client";
 import { getMyInfo } from "@/lib/api/user";
+import { needsSocialProfileCompletion } from "@/lib/api/auth-navigation";
 
 const PROTECTED_PATHS = [
     "/ai-financial-planner",
@@ -32,6 +33,8 @@ type AuthGuardContextValue = {
     authReady: boolean;
     authenticated: boolean;
     userName: string | null;
+    profileCheck: "checking" | "complete" | "incomplete" | "error";
+    retryProfileCheck: () => void;
     requireLogin: () => boolean;
 };
 
@@ -68,12 +71,19 @@ function isProtectedPath(pathname: string) {
     );
 }
 
+function isProfileGateExempt(pathname: string) {
+    return pathname === "/complete-profile"
+        || /^\/oauth\/(?:callback\/[^/]+|[^/]+\/callback)$/.test(pathname);
+}
+
 export default function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const [authReady, setAuthReady] = useState(false);
     const [authenticated, setAuthenticated] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
+    const [profileCheck, setProfileCheck] = useState<AuthGuardContextValue["profileCheck"]>("checking");
+    const [profileRetryVersion, setProfileRetryVersion] = useState(0);
     const [requestedModalOpen, setRequestedModalOpen] = useState(false);
     const authSyncControllerRef = useRef<AbortController | null>(null);
     const directRouteBlocked = authReady && !authenticated && isProtectedPath(pathname);
@@ -93,7 +103,11 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
             setUserName(cachedUserName);
             setAuthReady(true);
 
-            if (!nextAuthenticated || cachedUserName) return;
+            if (!nextAuthenticated) {
+                setProfileCheck("complete");
+                return;
+            }
+            setProfileCheck("checking");
 
             for (let attempt = 0; attempt <= USER_INFO_RETRY_DELAYS_MS.length; attempt += 1) {
                 try {
@@ -101,7 +115,8 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
                     if (controller.signal.aborted || !isAuthenticated()) return;
 
                     setUserName(user.name);
-                    saveAuthenticatedUserName(user.name);
+                    setProfileCheck(needsSocialProfileCompletion(user) ? "incomplete" : "complete");
+                    if (user.name !== cachedUserName) saveAuthenticatedUserName(user.name);
                     return;
                 } catch (error) {
                     if (controller.signal.aborted) return;
@@ -109,11 +124,13 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
                     if (!isAuthenticated()) {
                         setAuthenticated(false);
                         setUserName(null);
+                        setProfileCheck("complete");
                         return;
                     }
 
                     const retryDelay = USER_INFO_RETRY_DELAYS_MS[attempt];
                     if (retryDelay === undefined || !isRetryableUserInfoError(error)) {
+                        setProfileCheck("error");
                         return;
                     }
 
@@ -132,7 +149,9 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
             window.removeEventListener(AUTH_STATE_CHANGE_EVENT, handleAuthStateChange);
             window.removeEventListener("storage", handleAuthStateChange);
         };
-    }, []);
+    }, [profileRetryVersion]);
+
+    const retryProfileCheck = useCallback(() => setProfileRetryVersion((version) => version + 1), []);
 
     const requireLogin = useCallback(() => {
         if (!authReady) return false;
@@ -169,8 +188,8 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
     }, [closeModal, modalOpen]);
 
     const value = useMemo(
-        () => ({ authReady, authenticated, userName, requireLogin }),
-        [authReady, authenticated, userName, requireLogin],
+        () => ({ authReady, authenticated, userName, profileCheck, retryProfileCheck, requireLogin }),
+        [authReady, authenticated, userName, profileCheck, retryProfileCheck, requireLogin],
     );
 
     return (
@@ -185,13 +204,42 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
 
 export function ProtectedRouteGate({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { authReady, authenticated } = useAuthGuard();
+    const router = useRouter();
+    const { authReady, authenticated, profileCheck, retryProfileCheck } = useAuthGuard();
+    const profileGateExempt = isProfileGateExempt(pathname);
 
-    if (isProtectedPath(pathname) && (!authReady || !authenticated)) {
+    useEffect(() => {
+        if (authReady && authenticated && profileCheck === "incomplete" && !profileGateExempt) {
+            router.replace("/complete-profile");
+        }
+    }, [authReady, authenticated, profileCheck, profileGateExempt, router]);
+
+    if (!authReady) {
+        return <PageAccessPending />;
+    }
+
+    if (isProtectedPath(pathname) && !authenticated) {
         return <ProtectedPageSkeleton pathname={pathname} />;
     }
 
+    if (authenticated && !profileGateExempt) {
+        if (profileCheck === "error") {
+            return <ProfileCheckError onRetry={retryProfileCheck} />;
+        }
+        if (profileCheck !== "complete") {
+            return <PageAccessPending />;
+        }
+    }
+
     return children;
+}
+
+function PageAccessPending() {
+    return <main role="status" className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-6 text-sm text-muted">회원 정보를 확인하고 있습니다…</main>;
+}
+
+function ProfileCheckError({ onRetry }: { onRetry: () => void }) {
+    return <main className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 p-6 text-center"><p role="alert" className="text-sm text-ink">회원 정보를 확인하지 못했습니다.</p><button type="button" onClick={onRetry} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold text-ink">다시 시도</button></main>;
 }
 
 export function useAuthGuard() {

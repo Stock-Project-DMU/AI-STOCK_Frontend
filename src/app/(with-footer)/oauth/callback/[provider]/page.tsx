@@ -11,7 +11,9 @@ export default function OAuthCallbackPage() {
         if (started.current) return;
         started.current = true;
         const url = new URL(window.location.href);
-        const provider = url.pathname.split("/").pop()?.toUpperCase() as OAuthProvider;
+        const segments = url.pathname.split("/").filter(Boolean);
+        const providerSegment = segments.at(-1) === "callback" ? segments.at(-2) : segments.at(-1);
+        const provider = providerSegment?.toUpperCase() as OAuthProvider;
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
         // 브라우저 히스토리에 일회용 인증 코드를 남기지 않습니다.

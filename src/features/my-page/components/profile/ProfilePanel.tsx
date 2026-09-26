@@ -15,6 +15,7 @@ type ProfilePanelProps = {
   profile: Profile;
   draftProfile: Profile;
   isEditing: boolean;
+  isSocialAccount: boolean;
   errors: ProfileErrors;
   saveError?: string;
   isSaving?: boolean;
@@ -56,6 +57,7 @@ export default function ProfilePanel({
   profile,
   draftProfile,
   isEditing,
+  isSocialAccount,
   errors,
   saveError,
   isSaving = false,
@@ -67,7 +69,7 @@ export default function ProfilePanel({
   onRequestWithdrawal,
   onStartSurvey,
 }: ProfilePanelProps) {
-  const accountRows = rows.slice(0, 5);
+  const accountRows = isSocialAccount ? rows.slice(2, 5) : rows.slice(0, 5);
   const investmentRows = rows.slice(5);
 
   const renderRows = (items: typeof rows, editable = isEditing) => (
@@ -122,7 +124,7 @@ export default function ProfilePanel({
   return (
     <div className="mx-auto max-w-[1180px]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-xl font-bold">내 정보</h1>
+        <div className="flex items-center gap-3"><h1 className="text-xl font-bold">내 정보</h1>{isSocialAccount && <span className="rounded-full border border-hairline px-2.5 py-1 text-xs font-semibold text-muted">소셜 로그인 계정</span>}</div>
         <div className="flex gap-2">
           {isEditing && <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>}
           <button type="button" onClick={isEditing ? onSave : onEdit} disabled={isSaving} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60">{isSaving ? "저장 중..." : isEditing ? "완료" : "정보 수정"}</button>
