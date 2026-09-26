@@ -139,9 +139,45 @@ a {
   container-type: inline-size;
 }
 
+.cq-planner-summary {
+  width: 100%;
+  border-top: 1px solid var(--market-line);
+  border-left: 0;
+}
+
+.cq-market-dashboard {
+  width: 100%;
+  border-top: 1px solid var(--market-line);
+}
+
+.cq-simulation-shell > .cq-market-dashboard {
+  order: 2;
+}
+
 @container app-content (min-width: 48rem) {
+  .cq-home-hero {
+    grid-template-columns: minmax(0, 1fr) 500px;
+  }
+}
+
+/* Keep the two home cards beside the stock list while the portfolio rail expands. */
+@media (min-width: 1024px) {
   .cq-home-main {
-    grid-template-columns: minmax(0, 1fr) minmax(220px, min(350px, 28%));
+    grid-template-columns: minmax(0, 1fr) min(350px, 38%);
+  }
+}
+
+.home-stock-table {
+  container: home-stock / inline-size;
+}
+
+@container home-stock (max-width: 28rem) {
+  .home-stock-rank-column {
+    display: none;
+  }
+
+  .home-stock-rank-inline {
+    display: inline;
   }
 }
 
@@ -224,12 +260,36 @@ a {
 }
 
 @container app-content (min-width: 72rem) {
-  .cq-mypage-desktop {
-    display: flex;
+  .cq-planner-chat-row,
+  .cq-briefing-shell,
+  .cq-simulation-shell {
+    flex-direction: row;
   }
 
-  .cq-mypage-mobile {
-    display: none;
+  .cq-planner-summary {
+    width: 300px;
+    border-top: 0;
+    border-left: 1px solid var(--market-line);
+  }
+
+  .cq-market-dashboard {
+    width: 280px;
+    border-top: 0;
+  }
+
+  .cq-simulation-shell > .cq-market-dashboard {
+    order: 0;
+  }
+
+  .cq-briefing-navigation {
+    width: 240px;
+    flex-direction: column;
+    border-right: 1px solid var(--market-line);
+    border-bottom: 0;
+  }
+
+  .cq-briefing-history-label {
+    display: block;
   }
 }
 
@@ -250,14 +310,6 @@ a {
 
   .cq-wide-sticky {
     position: sticky;
-  }
-
-  .cq-home-hero {
-    grid-template-columns: minmax(0, 1fr) 500px;
-  }
-
-  .cq-home-main {
-    grid-template-columns: minmax(0, 1fr) 350px;
   }
 
   .cq-stock-layout {
