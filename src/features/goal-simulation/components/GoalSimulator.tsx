@@ -86,7 +86,12 @@ export default function GoalSimulator() {
                 </section>
             </div>
 
-            {saveOpen && <SaveSimulationModal onSelect={plan => { setResult(plan); setSettings(plan.settings); setResultSettings(plan.settings); setSaveOpen(false); }} onClose={() => setSaveOpen(false)} />}
+            {saveOpen && <SaveSimulationModal onSelect={plan => { setResult(plan); setSettings(plan.settings); setResultSettings(plan.settings); setSaveOpen(false); }} onUpdate={plan => {
+                if (result?.planId !== plan.planId) return;
+                setResult(plan);
+                setSettings(plan.settings);
+                setResultSettings(plan.settings);
+            }} onClose={() => setSaveOpen(false)} />}
         </div>
     );
 }

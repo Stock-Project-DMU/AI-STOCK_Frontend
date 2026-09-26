@@ -11,7 +11,9 @@ export const sendPlanningMessage = (id: number, content: string) => apiRequest<P
 export type GoalPlan = { planId: number; settings: SimulationSettings; futureValue: number; aggressiveFutureValue: number; saved: boolean; createdAt: string };
 export const createGoalPlan = (settings: SimulationSettings) => apiRequest<GoalPlan>("/api/goal-plans", { method: "POST", body: JSON.stringify(settings) });
 export const getGoalPlans = () => apiRequest<GoalPlan[]>("/api/goal-plans");
+export const updateGoalPlan = (id: number, settings: SimulationSettings) => apiRequest<GoalPlan>(`/api/goal-plans/${id}`, { method: "PUT", body: JSON.stringify(settings) });
 export const saveGoalPlan = (id: number) => apiRequest<GoalPlan>(`/api/goal-plans/${id}/saved`, { method: "PATCH" });
+export const deleteGoalPlan = (id: number) => apiRequest<null>(`/api/goal-plans/${id}`, { method: "DELETE" });
 export type NewsOutlet = { outletDomain: string; outletName: string };
 export type NewsSetting = NewsOutlet & { deliveryTime: string; lastAttemptAt: string | null };
 export type NewsBriefing = NewsOutlet & { briefingDate: string; content: string; sources: { title: string; link: string; outlet: string }[]; createdAt: string };
