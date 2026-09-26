@@ -4,6 +4,8 @@ export type PlanningSession = { sessionId: number; title: string | null; status:
 export type PlanningMessage = { messageId: number; role: "USER" | "ASSISTANT" | "MODEL"; content: string; createdAt: string };
 export const getPlanningSessions = () => apiRequest<PlanningSession[]>("/api/ai/planning/sessions");
 export const createPlanningSession = () => apiRequest<PlanningSession>("/api/ai/planning/sessions", { method: "POST" });
+export const renamePlanningSession = (id: number, title: string) => apiRequest<PlanningSession>(`/api/ai/planning/sessions/${id}`, { method: "PATCH", body: JSON.stringify({ title }) });
+export const deletePlanningSession = (id: number) => apiRequest<null>(`/api/ai/planning/sessions/${id}`, { method: "DELETE" });
 export const getPlanningMessages = (id: number) => apiRequest<PlanningMessage[]>(`/api/ai/planning/sessions/${id}/messages`);
 export const sendPlanningMessage = (id: number, content: string) => apiRequest<PlanningMessage>(`/api/ai/planning/sessions/${id}/messages`, { method: "POST", body: JSON.stringify({ content }) });
 export type GoalPlan = { planId: number; settings: SimulationSettings; futureValue: number; aggressiveFutureValue: number; saved: boolean; createdAt: string };
