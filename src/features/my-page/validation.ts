@@ -10,7 +10,7 @@ export function hasProfileChanges(profile: Profile, savedProfile: Profile) {
   });
 }
 
-export function validateProfile(profile: Profile, savedProfile: Profile) {
+export function validateProfileBasics(profile: Pick<Profile, "name" | "birthday" | "email">) {
   const errors: ProfileErrors = {};
   const today = new Date();
   const [birthYear, birthMonth, birthDay] = profile.birthday.split("-").map(Number);
@@ -21,21 +21,25 @@ export function validateProfile(profile: Profile, savedProfile: Profile) {
     birthday.getMonth() === birthMonth - 1 &&
     birthday.getDate() === birthDay;
 
-  if (profile.password && profile.password !== savedProfile.password && !/^(?=.*[A-Za-z])(?=.*\d).{8,20}$/.test(profile.password)) {
-    errors.password = "비밀번호는 영문과 숫자를 포함해 8~20자로 입력해 주세요.";
-  }
-
   if (!profile.name.trim() || profile.name.trim().length > 50) {
     errors.name = "이름은 1~50자로 입력해 주세요.";
   }
 
-  if (!isValidBirthday || birthday > today) {
+  if (!isValidBirthday || birthday >= new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
     errors.birthday = "올바른 과거 생년월일을 선택해 주세요.";
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim())) {
+  if (profile.email.trim().length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim())) {
     errors.email = "올바른 이메일 주소를 입력해 주세요.";
   }
 
+  return errors;
+}
+
+export function validateProfile(profile: Profile, savedProfile: Profile) {
+  const errors = validateProfileBasics(profile);
+  if (profile.password && profile.password !== savedProfile.password && !/^(?=.*[A-Za-z])(?=.*\d).{8,20}$/.test(profile.password)) {
+    errors.password = "비밀번호는 영문과 숫자를 포함해 8~20자로 입력해 주세요.";
+  }
   return errors;
 }

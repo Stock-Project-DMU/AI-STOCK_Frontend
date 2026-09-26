@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { initialProfile, investmentProfileChoices, fundProfileChoices, investmentLevelChoices } from "../data";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import type { AccountView, MyPageTab, ProfileErrors, ProfileField, RechargeRecord } from "../model";
@@ -9,24 +10,27 @@ import { verifyProfilePassword } from "../services/profileAuth";
 import { hasProfileChanges, validateProfile } from "../validation";
 import AccountPanel from "./account/AccountPanel";
 import Modal from "./Modal";
-import { DesktopMyPageNavigation, MobileMyPageNavigation } from "./MyPageNavigation";
+import MyPageNavigation from "./MyPageNavigation";
 import OrdersPanel from "./orders/OrdersPanel";
 import ProfilePanel from "./profile/ProfilePanel";
 import { PasswordCheckModal, ProfileSavedModal, UnsavedChangesModal, WithdrawalModal } from "./profile/ProfileModals";
 import ReturnsPanel from "./returns/ReturnsPanel";
 import InvestmentSurvey from "@/features/ai-financial-planner/components/InvestmentSurvey";
 import { getApiErrorMessage, isAuthenticated } from "@/lib/api/client";
+import { needsSocialProfileCompletion } from "@/lib/api/auth-navigation";
 import { getAccountProfit, getAccounts, getOrders, getChargeRequests, getRealizedReturns, requestCharge } from "@/lib/api/portfolio";
 import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse, RealizedReturnResponse } from "@/lib/api/types";
-import { getMyInfo, updateProfile, getInvestmentProfile } from "@/lib/api/user";
+import { getMyInfo, updateMyInfo, updateProfile, getInvestmentProfile } from "@/lib/api/user";
 
 export default function MyPageDashboard() {
+  const router = useRouter();
   const [showSurvey, setShowSurvey] = useState(false);
   const [activeTab, setActiveTab] = useState<MyPageTab>("profile");
   const [accountView, setAccountView] = useState<AccountView>("summary");
   const [profile, setProfile] = useState(initialProfile);
   const [draftProfile, setDraftProfile] = useState(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSocialAccount, setIsSocialAccount] = useState(false);
   const [profileErrors, setProfileErrors] = useState<ProfileErrors>({});
   const [showPasswordCheck, setShowPasswordCheck] = useState(false);
   const [passwordCheckValue, setPasswordCheckValue] = useState("");
@@ -64,12 +68,17 @@ export default function MyPageDashboard() {
       try {
         const [user, accountList, investment] = await Promise.all([getMyInfo(), getAccounts(), getInvestmentProfile()]);
         if (cancelled) return;
+        if (needsSocialProfileCompletion(user)) {
+          router.replace("/complete-profile");
+          return;
+        }
+        setIsSocialAccount(user.loginId === null);
 
         setProfile((current) => ({
           ...current,
-          userId: user.loginId,
+          userId: user.loginId ?? "",
           name: user.name,
-          email: user.email,
+          email: user.email ?? "",
           birthday: user.birthdate ?? "",
           investmentProfile: investment ? investmentProfileChoices[investment.investmentTendency - 1]?.value ?? "" : "",
           fundProfile: investment ? fundProfileChoices[investment.fundTendency - 1]?.value ?? "" : "",
@@ -77,11 +86,12 @@ export default function MyPageDashboard() {
         }));
         setDraftProfile((current) => ({
           ...current,
-          userId: user.loginId,
+          userId: user.loginId ?? "",
           name: user.name,
-          email: user.email,
+          email: user.email ?? "",
           birthday: user.birthdate ?? "",
         }));
+        if (!investment && new URLSearchParams(window.location.search).get("survey") === "1") setShowSurvey(true);
         setAccounts(accountList);
 
         const primaryAccount = accountList[0];
@@ -116,7 +126,7 @@ export default function MyPageDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   const requestedAmount = useMemo(
     () => selectedAmount ?? (Number(customAmount.replaceAll(",", "")) || 0),
@@ -157,6 +167,7 @@ export default function MyPageDashboard() {
 
   const saveProfile = async () => {
     const nextErrors = validateProfile(draftProfile, profile);
+    if (isSocialAccount && draftProfile.name.trim() === "회원") nextErrors.name = "사용할 이름을 입력해 주세요.";
 
     if (Object.keys(nextErrors).length > 0) {
       setProfileErrors(nextErrors);
@@ -173,15 +184,15 @@ export default function MyPageDashboard() {
       let savedEmail = draftProfile.email;
 
       if (!isAuthenticated()) throw new Error("로그인이 필요합니다.");
-      {
-        const updated = await updateProfile({
-          currentPassword: verifiedPassword,
-          user: { name: draftProfile.name.trim(), email: draftProfile.email.trim(), birthdate: draftProfile.birthday },
-          ...(draftProfile.password ? { passwordChange: { currentPassword: verifiedPassword, newPassword: draftProfile.password } } : {}),
-        });
-        savedName = updated.name;
-        savedEmail = updated.email;
-      }
+      const updated = isSocialAccount
+        ? await updateMyInfo(draftProfile.name.trim(), draftProfile.email.trim(), draftProfile.birthday)
+        : await updateProfile({
+            currentPassword: verifiedPassword,
+            user: { name: draftProfile.name.trim(), email: draftProfile.email.trim(), birthdate: draftProfile.birthday },
+            ...(draftProfile.password ? { passwordChange: { currentPassword: verifiedPassword, newPassword: draftProfile.password } } : {}),
+          });
+      savedName = updated.name;
+      savedEmail = updated.email ?? draftProfile.email;
 
       setProfile({
         ...draftProfile,
@@ -271,16 +282,14 @@ export default function MyPageDashboard() {
   };
 
   return (
-    <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] break-keep text-ink">
-      <DesktopMyPageNavigation activeTab={activeTab} onChange={changeTab} />
-
-      <section className="min-w-0 flex-1 px-3 py-4 sm:px-5 lg:px-8">
-        <MobileMyPageNavigation activeTab={activeTab} onChange={changeTab} />
+    <div className="market-theme market-grid min-h-[calc(100vh-4rem)] break-keep text-ink">
+      <section className="min-w-0 px-3 py-4 sm:px-5 lg:px-8">
+        <MyPageNavigation activeTab={activeTab} onChange={changeTab} />
 
         <div className="mx-auto w-full max-w-[1540px] rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
           {activeTab === "profile" && showSurvey && <>
-            <button type="button" onClick={() => setShowSurvey(false)} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold">내 정보로 돌아가기</button>
-            <InvestmentSurvey onComplete={() => setShowSurvey(false)} onSaved={(result) => {
+            <button type="button" onClick={() => { setShowSurvey(false); router.replace("/my-page"); }} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold">내 정보로 돌아가기</button>
+            <InvestmentSurvey onComplete={() => { setShowSurvey(false); router.replace("/my-page"); }} onSaved={(result) => {
               const investment = {
                 investmentProfile: investmentProfileChoices[result.investmentTendency - 1]?.value ?? "",
                 fundProfile: fundProfileChoices[result.fundTendency - 1]?.value ?? "",
@@ -295,11 +304,20 @@ export default function MyPageDashboard() {
               profile={profile}
               draftProfile={draftProfile}
               isEditing={isEditing}
+              isSocialAccount={isSocialAccount}
               errors={profileErrors}
               saveError={profileSaveError}
               isSaving={isSavingProfile}
               onDraftChange={setDraftProfile}
-              onEdit={() => setShowPasswordCheck(true)}
+              onEdit={() => {
+                if (isSocialAccount) {
+                  setDraftProfile({ ...profile, password: "" });
+                  setProfileErrors({});
+                  setIsEditing(true);
+                } else {
+                  setShowPasswordCheck(true);
+                }
+              }}
               onClearError={clearProfileError}
               onCancel={() => {
                 setProfileErrors({});
