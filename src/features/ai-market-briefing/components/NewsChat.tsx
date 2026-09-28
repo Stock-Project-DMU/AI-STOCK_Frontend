@@ -37,13 +37,13 @@ export default function NewsChat() {
     }
     function submit(event: FormEvent) { event.preventDefault(); void send(input); }
 
-    return <section className="flex h-[calc(100dvh-9rem)] min-h-[420px] flex-col bg-surface-soft">
+    return <section className="flex h-[calc(100dvh-4rem)] min-h-[540px] flex-col bg-surface-soft">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline bg-canvas p-4">
-            <div><h2 className="font-bold">AI 뉴스 검색 비서</h2><p className="mt-1 text-xs text-muted">종목·분야·기간을 말하면 관련 기사와 요약을 찾아드립니다.</p></div>
+            <div><h2 className="font-bold">AI 뉴스 검색 비서</h2><p className="mt-1 text-xs text-muted">질문할 때 최신 기사를 검색합니다. 저장한 언론사가 있으면 해당 언론사의 기사에서 찾습니다.</p></div>
             <button type="button" disabled={busy} onClick={() => { setMessages([]); setError(""); setInput(""); }} className="shrink-0 rounded-lg border border-hairline px-3 py-2 text-sm disabled:opacity-50">새 대화</button>
         </header>
         <div ref={list} className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 sm:p-6">
-            {!messages.length && <div className="mx-auto max-w-3xl rounded-xl border border-hairline bg-canvas p-5"><p className="font-semibold">어떤 뉴스가 궁금하신가요?</p><p className="mt-2 text-sm text-muted">“그중 실적 관련 기사만 보여줘”처럼 이어서 질문할 수 있습니다.</p><div className="mt-4 flex flex-wrap gap-2">{suggestions.map(text => <button type="button" key={text} disabled={busy} onClick={() => void send(text)} className="rounded-full border border-hairline px-4 py-2 text-left text-sm hover:bg-surface-soft">{text}</button>)}</div></div>}
+            {!messages.length && <div className="mx-auto max-w-3xl rounded-xl border border-hairline bg-canvas p-5"><p className="font-semibold">어떤 뉴스가 궁금하신가요?</p><p className="mt-2 text-sm text-muted">“선택한 언론사의 오늘 새 소식 알려줘” 또는 “그중 실적 관련 기사만 보여줘”처럼 질문할 수 있습니다.</p><div className="mt-4 flex flex-wrap gap-2">{suggestions.map(text => <button type="button" key={text} disabled={busy} onClick={() => void send(text)} className="rounded-full border border-hairline px-4 py-2 text-left text-sm hover:bg-surface-soft">{text}</button>)}</div></div>}
             {messages.map((message, index) => <div key={index} className={`mx-auto flex max-w-4xl ${message.role === "USER" ? "justify-end" : "justify-start"}`}><article className={`max-w-full rounded-xl border border-hairline p-4 sm:max-w-[90%] ${message.role === "USER" ? "chat-user-bubble" : "bg-canvas"}`}>
                 <p className="whitespace-pre-wrap break-words text-sm leading-7">{message.content}</p>
                 {!!message.sources?.length && <div className="mt-4 space-y-2 border-t border-hairline pt-3"><h3 className="text-sm font-semibold">관련 기사 · 원문 보기</h3>{message.sources.map(source => /^https?:\/\//.test(source.link) && <a key={source.link} href={source.link} target="_blank" rel="noopener noreferrer" className="block rounded-lg border border-hairline p-3 hover:bg-surface-soft"><strong className="text-sm text-primary">{source.title}</strong><p className="mt-1 text-xs text-muted">{source.outlet} · {source.pubDate}</p><p className="mt-2 text-xs leading-5 text-body">{source.description}</p></a>)}</div>}

@@ -1,6 +1,6 @@
 export type FindIdFormData = {
     name: string;
-    birthDate: Date | null;
+    birthDate: string;
     emailLocal: string;
     emailDomain: string;
 };

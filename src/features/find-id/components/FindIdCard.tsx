@@ -5,15 +5,17 @@ import { useState } from "react";
 import RecoveryCard from "@/features/account-recovery/components/RecoveryCard";
 import RecoveryField from "@/features/account-recovery/components/RecoveryField";
 import RecoveryModal from "@/features/account-recovery/components/RecoveryModal";
+import RecoveryEmailField from "@/features/account-recovery/components/RecoveryEmailField";
 import { Button } from "@/components/common/Button";
 import type { FindIdFormData } from "../types";
-import { findLoginId } from "@/lib/api/auth";
+import { findLoginId, sendRecoveryEmailCode, verifyEmailCode } from "@/lib/api/auth";
 import { getApiErrorMessage } from "@/lib/api/client";
 import RecoveryVerification from "@/features/account-recovery/components/RecoveryVerification";
+import { validateBirthDate, validateEmailDomain, validateEmailLocal } from "@/features/signup/validation";
 
 const INITIAL_FORM_DATA: FindIdFormData = {
     name: "",
-    birthDate: null,
+    birthDate: "",
     emailLocal: "",
     emailDomain: "",
 };
@@ -21,63 +23,39 @@ const INITIAL_FORM_DATA: FindIdFormData = {
 type FindIdFormErrors = Partial<Record<keyof FindIdFormData, string>>;
 type FindIdTextField = Exclude<keyof FindIdFormData, "birthDate">;
 
-
-function parseBirthDate(value: string) {
-    const match = /^(\d{4})(\d{2})(\d{2})$/.exec(value.trim());
-
-    if (!match) {
-        return null;
-    }
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    const date = new Date(0);
-    date.setFullYear(year, month - 1, day);
-    date.setHours(0, 0, 0, 0);
-
-    if (
-        date.getFullYear() !== year ||
-        date.getMonth() !== month - 1 ||
-        date.getDate() !== day
-    ) {
-        return null;
-    }
-
-    return date;
+function formatBirthDate(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 4) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+    return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
 }
 
 export default function FindIdCard() {
     const [formData, setFormData] =
         useState<FindIdFormData>(INITIAL_FORM_DATA);
-    const [birthDateInput, setBirthDateInput] = useState("");
     const [errors, setErrors] = useState<FindIdFormErrors>({});
     const [foundUserId, setFoundUserId] = useState<string | null>(null);
     const [code, setCode] = useState("");
     const [busy, setBusy] = useState(false);
     const [requestError, setRequestError] = useState("");
 
-    const handleChange =
-        (field: FindIdTextField) =>
-        (event: ChangeEvent<HTMLInputElement>) => {
-            setFormData((prev) => ({
-                ...prev,
-                [field]: event.target.value,
-            }));
-            setErrors((prev) => ({
-                ...prev,
-                [field]: undefined,
-            }));
-        };
+    const changeField = (field: FindIdTextField, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        setCode("");
+        setRequestError("");
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
+    };
+
+    const handleChange = (field: FindIdTextField) =>
+        (event: ChangeEvent<HTMLInputElement>) => changeField(field, event.target.value);
 
     const handleBirthDateChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-
-        setBirthDateInput(value);
         setFormData((prev) => ({
             ...prev,
-            birthDate: parseBirthDate(value),
+            birthDate: formatBirthDate(event.target.value),
         }));
+        setCode("");
+        setRequestError("");
         setErrors((prev) => ({
             ...prev,
             birthDate: undefined,
@@ -86,31 +64,30 @@ export default function FindIdCard() {
 
     const validateForm = () => {
         const nextErrors: FindIdFormErrors = {};
-        const birthDatePattern = /^\d{8}$/;
-        const trimmedBirthDate = birthDateInput.trim();
+        const birthDateDigits = formData.birthDate.replace(/\D/g, "");
 
         if (!formData.name.trim()) {
             nextErrors.name = "이름을 입력해 주세요.";
         }
 
-        if (!trimmedBirthDate) {
-            nextErrors.birthDate = "생년월일을 입력해 주세요.";
-        } else if (
-            !birthDatePattern.test(trimmedBirthDate) ||
-            !formData.birthDate
-        ) {
-            nextErrors.birthDate = "생년월일은 숫자 8자리로 입력해 주세요.";
-        }
-
-        if (!formData.emailLocal.trim()) {
-            nextErrors.emailLocal = "이메일 아이디를 입력해 주세요.";
-        }
-
-        if (!formData.emailDomain.trim()) {
-            nextErrors.emailDomain = "이메일 도메인을 입력해 주세요.";
-        }
+        nextErrors.birthDate = validateBirthDate(birthDateDigits);
+        nextErrors.emailLocal = validateEmailLocal(formData.emailLocal);
+        nextErrors.emailDomain = validateEmailDomain(formData.emailDomain);
 
         return nextErrors;
+    };
+
+    const email = `${formData.emailLocal.trim()}@${formData.emailDomain.trim()}`;
+    const birthdate = formData.birthDate;
+    const identityKey = `${formData.name}|${birthdate}|${email}`;
+
+    const handleSendCode = async () => {
+        const nextErrors = validateForm();
+        setErrors(nextErrors);
+        if (Object.values(nextErrors).some(Boolean)) return false;
+        setRequestError("");
+        await sendRecoveryEmailCode({ purpose: "FIND_ID", name: formData.name.trim(), email, birthdate });
+        return true;
     };
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -119,17 +96,19 @@ export default function FindIdCard() {
 
         const nextErrors = validateForm();
 
-        if (Object.keys(nextErrors).length > 0) {
+        if (Object.values(nextErrors).some(Boolean)) {
             setErrors(nextErrors);
             return;
         }
+        if (code.length !== 6) return;
 
         setErrors({});
 
         setBusy(true);
         setRequestError("");
         try {
-            setFoundUserId(await findLoginId({ name: formData.name.trim(), email: `${formData.emailLocal.trim()}@${formData.emailDomain.trim()}`, birthdate: `${birthDateInput.slice(0, 4)}-${birthDateInput.slice(4, 6)}-${birthDateInput.slice(6, 8)}`, code }));
+            await verifyEmailCode(email, code);
+            setFoundUserId(await findLoginId({ name: formData.name.trim(), email, birthdate }));
         } catch (error) { setRequestError(getApiErrorMessage(error, "아이디 찾기에 실패했습니다.")); }
         finally { setBusy(false); }
     };
@@ -153,89 +132,32 @@ export default function FindIdCard() {
                         id="find-id-birth-date"
                         name="birthDate"
                         label="생년월일"
-                        value={birthDateInput}
+                        value={formData.birthDate}
                         onChange={handleBirthDateChange}
-                        placeholder="생년월일 8자리 입력"
+                        placeholder="YYYY-MM-DD"
                         inputMode="numeric"
-                        maxLength={8}
-                        helperText="예: 19990101"
+                        maxLength={10}
+                        helperText="숫자 8자리를 입력하면 하이픈이 자동으로 들어갑니다."
                         errorMessage={errors.birthDate}
                     />
 
-                    <div className="mt-2">
-                        <label
-                            htmlFor="find-id-email-local"
-                            className="mb-1 block text-xs font-semibold"
-                        >
-                            이메일
-                        </label>
-                        <div className="flex items-start gap-2">
-                            <div className="min-w-0 flex-1">
-                                <input
-                                    id="find-id-email-local"
-                                    name="emailLocal"
-                                    type="text"
-                                    value={formData.emailLocal}
-                                    onChange={handleChange("emailLocal")}
-                                    placeholder="이메일 입력"
-                                    required
-                                    aria-invalid={Boolean(errors.emailLocal)}
-                                    aria-describedby={
-                                        errors.emailLocal
-                                            ? "find-id-email-local-helper"
-                                            : undefined
-                                    }
-                                    className={`w-full rounded-md border bg-canvas px-3 py-2 text-sm outline-none ${
-                                        errors.emailLocal
-                                            ? "border-red-400 focus:border-red-500"
-                                            : "border-hairline focus:border-primary"
-                                    }`}
-                                />
-                                {errors.emailLocal ? (
-                                    <p
-                                        id="find-id-email-local-helper"
-                                        className="mt-1 px-1 text-xs text-red-500"
-                                    >
-                                        {errors.emailLocal}
-                                    </p>
-                                ) : null}
-                            </div>
-                            <span className="pt-2 text-xs text-muted">@</span>
-                            <div className="min-w-0 flex-1">
-                                <input
-                                    name="emailDomain"
-                                    type="text"
-                                    value={formData.emailDomain}
-                                    onChange={handleChange("emailDomain")}
-                                    aria-label="이메일 도메인"
-                                    placeholder="도메인 입력"
-                                    required
-                                    aria-invalid={Boolean(errors.emailDomain)}
-                                    aria-describedby={
-                                        errors.emailDomain
-                                            ? "find-id-email-domain-helper"
-                                            : undefined
-                                    }
-                                    className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none ${
-                                        errors.emailDomain
-                                            ? "border-red-400 focus:border-red-500"
-                                            : "border-gray-300 focus:border-black"
-                                    }`}
-                                />
-                                {errors.emailDomain ? (
-                                    <p
-                                        id="find-id-email-domain-helper"
-                                        className="mt-1 px-1 text-xs text-red-500"
-                                    >
-                                        {errors.emailDomain}
-                                    </p>
-                                ) : null}
-                            </div>
-                        </div>
-                    </div>
+                    <RecoveryEmailField
+                        idPrefix="find-id"
+                        emailLocal={formData.emailLocal}
+                        emailDomain={formData.emailDomain}
+                        localError={errors.emailLocal}
+                        domainError={errors.emailDomain}
+                        onLocalChange={(value) => changeField("emailLocal", value)}
+                        onDomainChange={(value) => changeField("emailDomain", value)}
+                    />
                 </div>
 
-                <RecoveryVerification email={`${formData.emailLocal.trim()}@${formData.emailDomain.trim()}`} code={code} onCodeChange={setCode} />
+                <RecoveryVerification
+                    key={identityKey}
+                    code={code}
+                    onCodeChange={(value) => { setCode(value); setRequestError(""); }}
+                    onSend={handleSendCode}
+                />
                 {requestError && <p role="alert" className="mt-2 text-sm text-red-500">{requestError}</p>}
                 <Button type="submit" disabled={busy || code.length !== 6} fullWidth size="md" className="mt-10">
                     확인

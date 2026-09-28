@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPlanningSessions, type PlanningSession } from "@/lib/api/ai";
+import { deletePlanningSession, getPlanningSessions, renamePlanningSession, type PlanningSession } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { GearIcon } from "@/components/icons/Icon";
 import type { PlannerView } from "../types";
@@ -41,15 +41,28 @@ export default function AiFinancialPlanner() {
         setView("chat");
         setError("");
     };
+    const renameSession = async (id: number, title: string) => {
+        const updated = await renamePlanningSession(id, title);
+        setSessions(items => items.map(item => item.sessionId === id ? updated : item));
+    };
+    const deleteSession = async (id: number) => {
+        await deletePlanningSession(id);
+        const remaining = sessions.filter(item => item.sessionId !== id);
+        setSessions(remaining);
+        if (sessionId === id) {
+            setSessionId(remaining[0]?.sessionId ?? null);
+            setDraftKey(value => value + 1);
+        }
+    };
 
     return (
-        <div className={`cq-medium-flex-row market-theme market-grid flex min-w-0 flex-col ${view === "chat" ? "h-[calc(100dvh-4rem)] min-h-[480px]" : "min-h-[calc(100vh-4rem)]"}`}>
-            {view === "chat" && <PlannerHistory loading={loading} sessions={sessions} selectedId={sessionId} onSelect={setSessionId} onNewChat={startChat} onNewDiagnosis={() => setView("survey")} />}
+        <div className="cq-medium-flex-row market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0 flex-col">
+            {view === "chat" && <PlannerHistory loading={loading} sessions={sessions} selectedId={sessionId} onSelect={setSessionId} onNewChat={startChat} onNewDiagnosis={() => setView("survey")} onRename={renameSession} onDelete={deleteSession} />}
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 {error && <p role="alert" className="p-3 text-sm text-red-500">{error}</p>}
                 {view === "chat" ? (
-                    <div className="flex min-h-0 min-w-0 flex-1">
+                    <div className="cq-planner-chat-row flex min-h-0 min-w-0 flex-1 flex-col">
                         {loading ? <p role="status" className="flex-1 p-6 text-sm text-muted">최근 상담을 불러오는 중입니다...</p> : <PlannerChat key={`${sessionId ?? "new"}-${draftKey}`} sessionId={sessionId} onSessionChange={refreshSessions} />}
                         <FinancialSummary />
                     </div>

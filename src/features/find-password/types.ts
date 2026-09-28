@@ -3,4 +3,6 @@ export type FindPasswordFormData = {
     userId: string;
     password: string;
     passwordConfirm: string;
+    emailLocal: string;
+    emailDomain: string;
 };

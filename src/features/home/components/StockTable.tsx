@@ -89,7 +89,7 @@ export default function StockTable() {
     const rows = useMemo(() => {
         const items = marketRows.map(item => ({ code: item.stockCode, name: item.stockName,
             changeRate: item.changeRate == null ? "—" : (item.changeRate >= 0 ? "+" : "") + item.changeRate.toFixed(2) + "%",
-            currentPrice: item.price?.toLocaleString("ko-KR") ?? "—", tradingValue: item.extraInfo ?? "—" }));
+            currentPrice: item.price?.toLocaleString("ko-KR") ?? "—" }));
         if (sortKey === "상승순") return items.sort((a, b) => Number.parseFloat(b.changeRate) - Number.parseFloat(a.changeRate));
         if (sortKey === "하락순") return items.sort((a, b) => Number.parseFloat(a.changeRate) - Number.parseFloat(b.changeRate));
         return items;
@@ -104,9 +104,9 @@ export default function StockTable() {
     }
 
     return (
-        <section ref={tableRef} className="scroll-mt-20 min-w-0 overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
+        <section ref={tableRef} className="home-stock-table scroll-mt-20 min-w-0 overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3">
-                <h2 className="text-base font-bold text-ink">주요 종목 <small className="font-normal text-muted">제공 상위 10종목 내 정렬</small></h2>
+                <h2 className="text-base font-bold text-ink">주요 종목</h2>
                 <div className="flex flex-wrap gap-1.5">
                     {(["현재가", "상승순", "하락순", "거래량", "거래대금"] as SortKey[]).map((label) => (
                         <Button
@@ -130,16 +130,15 @@ export default function StockTable() {
             {marketError && <p role="alert" className="p-4 text-sm text-red-500">{marketError}</p>}
             {!loadingMarket && !marketError && !rows.length && <p className="p-4 text-sm">표시할 시세가 없습니다.</p>}
 
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px] border-collapse text-[13px]">
+            <div className="min-w-0">
+                <table className="w-full table-fixed border-collapse text-[13px]">
                     <thead>
                         <tr className="border-b border-hairline bg-surface-soft text-[12px] font-bold tracking-wider text-muted">
-                            <th className="w-14 px-2 py-2 text-center">번호</th>
-                            <th className="w-12 px-2 py-2 text-center">관심</th>
-                            <th className="px-2 py-2 text-left">종목</th>
-                            <th className="px-2 py-2 text-right">등락률</th>
-                            <th className="px-2 py-2 text-right">현재가</th>
-                            <th className="px-2 py-2 text-right">시장 정보</th>
+                            <th className="home-stock-rank-column w-9 px-1 py-2 text-center">번호</th>
+                            <th className="w-10 px-1 py-2 text-center">관심</th>
+                            <th className="min-w-0 px-1.5 py-2 text-left">종목</th>
+                            <th className="w-20 px-1 py-2 text-right">등락률</th>
+                            <th className="w-36 py-2 pl-1 pr-5 text-right">현재가</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -162,17 +161,16 @@ export default function StockTable() {
                                     }}
                                     className="cursor-pointer border-b border-hairline-soft transition-colors last:border-0 hover:bg-surface-soft focus-visible:bg-surface-soft focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
                                 >
-                                    <td className="num px-2 py-2 text-center text-muted">{pageStart + rowIndex + 1}</td>
-                                    <td className="px-2 py-2 text-center" onClick={(event) => event.stopPropagation()}><FavoriteButton size="sm" favorite={authenticated && favoriteCodes.has(stock.code)} disabled={!!pendingCode} onToggle={(nextFavorite) => void handleFavorite(stock.code, nextFavorite)} /></td>
-                                    <td className="px-2 py-2">
-                                        <div className="group inline-flex flex-col">
-                                            <strong className="font-bold text-ink group-hover:text-primary">{stock.name}</strong>
-                                            <span className="mt-0.5 text-[12px] text-muted">{stock.code} · KRX</span>
+                                    <td className="home-stock-rank-column num px-1 py-2 text-center text-muted">{pageStart + rowIndex + 1}</td>
+                                    <td className="px-1 py-2 text-center" onClick={(event) => event.stopPropagation()}><FavoriteButton size="sm" favorite={authenticated && favoriteCodes.has(stock.code)} disabled={!!pendingCode} onToggle={(nextFavorite) => void handleFavorite(stock.code, nextFavorite)} /></td>
+                                    <td className="min-w-0 px-1.5 py-2">
+                                        <div className="group block min-w-0">
+                                            <strong title={stock.name} className="block truncate font-bold text-ink group-hover:text-primary"><span className="home-stock-rank-inline hidden">{pageStart + rowIndex + 1}. </span>{stock.name}</strong>
+                                            <span className="mt-0.5 block truncate text-[12px] text-muted">{stock.code} · KRX</span>
                                         </div>
                                     </td>
-                                    <td className={`num px-2 py-2 text-right font-bold ${rising ? "text-up" : "text-down"}`}>{stock.changeRate}</td>
-                                    <td className="num px-2 py-2 text-right font-semibold text-ink">{stock.currentPrice}<span className="ml-1 text-[12px] font-normal text-muted">KRW</span></td>
-                                    <td className="num px-2 py-2 text-right text-body">{stock.tradingValue}</td>
+                                    <td className={`num truncate px-1 py-2 text-right font-bold ${rising ? "text-up" : "text-down"}`}>{stock.changeRate}</td>
+                                    <td className="num whitespace-nowrap py-2 pl-1 pr-5 text-right font-semibold text-ink">{stock.currentPrice}<span className="ml-1 text-[12px] font-normal text-muted">KRW</span></td>
                                 </tr>
                             );
                         })}
