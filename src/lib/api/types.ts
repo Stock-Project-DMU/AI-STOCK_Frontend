@@ -12,7 +12,7 @@ export type AuthTokens = {
 export type LoginResponse = AuthTokens & {
     userId: number;
     name: string;
-    email: string;
+    email: string | null;
 };
 
 export type SignupResponse = {
@@ -24,9 +24,9 @@ export type SignupResponse = {
 export type UserInfoResponse = {
     birthdate: string | null;
     userId: number;
-    loginId: string;
+    loginId: string | null;
     name: string;
-    email: string;
+    email: string | null;
     role: "USER" | "ADMIN";
     status: "ACTIVE" | "SUSPENDED" | "WITHDRAWN";
 };
