@@ -39,7 +39,7 @@ export default function GoalSimulator() {
     };
 
     return (
-        <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0">
+        <div className="cq-simulation-shell market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0 flex-col">
             <MarketDashboard side="left" />
 
             <div className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">

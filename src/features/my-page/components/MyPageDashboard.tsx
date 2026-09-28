@@ -9,7 +9,7 @@ import { verifyProfilePassword } from "../services/profileAuth";
 import { hasProfileChanges, validateProfile } from "../validation";
 import AccountPanel from "./account/AccountPanel";
 import Modal from "./Modal";
-import { DesktopMyPageNavigation, MobileMyPageNavigation } from "./MyPageNavigation";
+import MyPageNavigation from "./MyPageNavigation";
 import OrdersPanel from "./orders/OrdersPanel";
 import ProfilePanel from "./profile/ProfilePanel";
 import { PasswordCheckModal, ProfileSavedModal, UnsavedChangesModal, WithdrawalModal } from "./profile/ProfileModals";
@@ -271,11 +271,9 @@ export default function MyPageDashboard() {
   };
 
   return (
-    <div className="market-theme market-grid flex min-h-[calc(100vh-4rem)] break-keep text-ink">
-      <DesktopMyPageNavigation activeTab={activeTab} onChange={changeTab} />
-
-      <section className="min-w-0 flex-1 px-3 py-4 sm:px-5 lg:px-8">
-        <MobileMyPageNavigation activeTab={activeTab} onChange={changeTab} />
+    <div className="market-theme market-grid min-h-[calc(100vh-4rem)] break-keep text-ink">
+      <section className="min-w-0 px-3 py-4 sm:px-5 lg:px-8">
+        <MyPageNavigation activeTab={activeTab} onChange={changeTab} />
 
         <div className="mx-auto w-full max-w-[1540px] rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
           {activeTab === "profile" && showSurvey && <>
