@@ -5,7 +5,21 @@ export function checkLoginId(loginId: string) {
     return apiRequest<{ loginId: string; available: boolean }>(`/api/auth/login-id/availability?loginId=${encodeURIComponent(loginId)}`, { auth: false });
 }
 
-export type AccountRecoveryRequest = { loginId?: string; name: string; email: string; birthdate?: string; code: string; newPassword?: string };
+export type AccountRecoveryRequest = { loginId?: string; name: string; email: string; birthdate?: string; newPassword?: string };
+export type RecoveryEmailCodeRequest = {
+    purpose: "FIND_ID" | "RESET_PASSWORD";
+    loginId?: string;
+    name: string;
+    email: string;
+    birthdate?: string;
+};
+export function sendRecoveryEmailCode(request: RecoveryEmailCodeRequest) {
+    return apiRequest<null>("/api/auth/recovery/send-code", {
+        method: "POST",
+        auth: false,
+        body: JSON.stringify(request),
+    });
+}
 export function findLoginId(request: AccountRecoveryRequest) {
     return apiRequest<string>("/api/auth/find-id", { method: "POST", auth: false, body: JSON.stringify(request) });
 }
