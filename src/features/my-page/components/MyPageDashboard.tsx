@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { initialProfile, investmentProfileChoices, fundProfileChoices, investmentLevelChoices } from "../data";
+import { initialProfile, investmentProfileChoices, getFundProfileName, investmentLevelChoices } from "../data";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import type { AccountView, MyPageTab, ProfileErrors, ProfileField, RechargeRecord } from "../model";
 import { verifyProfilePassword } from "../services/profileAuth";
@@ -81,7 +81,7 @@ export default function MyPageDashboard() {
           email: user.email ?? "",
           birthday: user.birthdate ?? "",
           investmentProfile: investment ? investmentProfileChoices[investment.investmentTendency - 1]?.value ?? "" : "",
-          fundProfile: investment ? fundProfileChoices[investment.fundTendency - 1]?.value ?? "" : "",
+          fundProfile: investment ? getFundProfileName(investment.fundTendency) : "",
           investmentLevel: investment ? investmentLevelChoices[["BEGINNER", "INTERMEDIATE", "EXPERT"].indexOf(investment.investmentLevel)]?.value ?? "" : "",
         }));
         setDraftProfile((current) => ({
@@ -292,7 +292,7 @@ export default function MyPageDashboard() {
             <InvestmentSurvey onComplete={() => { setShowSurvey(false); router.replace("/my-page"); }} onSaved={(result) => {
               const investment = {
                 investmentProfile: investmentProfileChoices[result.investmentTendency - 1]?.value ?? "",
-                fundProfile: fundProfileChoices[result.fundTendency - 1]?.value ?? "",
+                fundProfile: getFundProfileName(result.fundTendency),
                 investmentLevel: investmentLevelChoices[["BEGINNER", "INTERMEDIATE", "EXPERT"].indexOf(result.investmentLevel)]?.value ?? "",
               };
               setProfile(current => ({ ...current, ...investment }));
