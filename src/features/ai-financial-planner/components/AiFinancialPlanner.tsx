@@ -56,7 +56,7 @@ export default function AiFinancialPlanner() {
     };
 
     return (
-        <div className="cq-medium-flex-row market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0 flex-col">
+        <div className="cq-medium-flex-row ai-chat-page market-theme market-grid flex min-h-[calc(100dvh-72px)] min-w-0 flex-col">
             {view === "chat" && <PlannerHistory loading={loading} sessions={sessions} selectedId={sessionId} onSelect={setSessionId} onNewChat={startChat} onNewDiagnosis={() => setView("survey")} onRename={renameSession} onDelete={deleteSession} />}
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
