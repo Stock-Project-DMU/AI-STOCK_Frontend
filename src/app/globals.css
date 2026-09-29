@@ -232,6 +232,11 @@ a {
 
   .cq-planner-history {
     width: 240px;
+    height: calc(100dvh - 72px);
+    min-height: 0;
+    position: sticky;
+    top: 72px;
+    align-self: flex-start;
     border-right: 1px solid var(--market-line);
     border-bottom-width: 0;
   }
@@ -239,6 +244,7 @@ a {
   .cq-planner-session-list {
     max-height: none;
     flex: 1;
+    min-height: 0;
   }
 
   .cq-stock-information-nav {
