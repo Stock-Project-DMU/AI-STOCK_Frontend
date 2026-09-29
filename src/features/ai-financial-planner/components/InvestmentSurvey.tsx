@@ -3,7 +3,7 @@
 import { saveInvestmentSurvey } from "@/lib/api/user";
 import { getApiErrorMessage } from "@/lib/api/client";
 import type { InvestmentProfileResponse } from "@/lib/api/types";
-import { investmentProfileChoices, fundProfileChoices, investmentLevelChoices } from "@/features/my-page/data";
+import { investmentProfileChoices, getFundProfileName, investmentLevelChoices } from "@/features/my-page/data";
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
 import { CheckIcon } from "@/components/icons/Icon";
@@ -22,7 +22,7 @@ export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = 
         setSaving(true); setError("");
         try {
             const indices = answers.map((answer, index) => SURVEY_QUESTIONS[index].options.indexOf(answer) + 1);
-            const saved = await saveInvestmentSurvey({ answers: indices, investmentTendency: indices[5], fundTendency: indices[0] === 1 ? 2 : indices[0] === 2 ? 4 : 3 });
+            const saved = await saveInvestmentSurvey({ answers: indices });
             setResult(saved); setStep(SURVEY_QUESTIONS.length); onSaved?.(saved);
         } catch (cause) { setError(getApiErrorMessage(cause, "설문을 저장하지 못했습니다.")); }
         finally { setSaving(false); }
@@ -92,7 +92,7 @@ function SurveyResult({ onComplete, result, completeLabel = "확인" }: Investme
                 <h1 className="text-2xl font-bold text-ink">투자성향이 저장되었습니다</h1>
                 <div className="mt-10 space-y-4 text-lg font-bold leading-7 text-ink">
                     <p>투자성향: <span className="text-primary">{investmentProfileChoices[result.investmentTendency - 1]?.value}</span></p>
-                    <p>자금성향: <span className="text-primary">{fundProfileChoices[result.fundTendency - 1]?.value}</span></p>
+                    <p>자금성향: <span className="text-primary">{getFundProfileName(result.fundTendency)}</span></p>
                     <p>투자레벨: <span className="text-primary">{investmentLevelChoices[["BEGINNER", "INTERMEDIATE", "EXPERT"].indexOf(result.investmentLevel)]?.value}</span></p>
                     <p className="text-sm font-normal text-muted">투자 레벨은 금융 지식과 파생상품 투자 경험 기간 응답을 바탕으로 결정됩니다.</p>
                     <p className="text-sm font-normal text-muted">손실 허용 범위와 투자 목적 응답을 바탕으로 분류한 참고 결과이며, 전문 투자적합성 평가가 아닙니다. AI 진단에서 저장된 응답을 활용합니다.</p>

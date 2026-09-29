@@ -28,11 +28,14 @@ export const investmentProfileChoices: ProfileChoice[] = [
 ];
 
 export const fundProfileChoices: ProfileChoice[] = [
-  { value: "안정저축형", description: "목돈 모으기 목적\n적금·CMA 위주", tone: "emerald" },
-  { value: "수익추구형", description: "투자 수익 목적\n주식·펀드 중심", tone: "blue" },
-  { value: "목표달성형", description: "내 집 마련·은퇴\n구체적 목표 설정", tone: "amber" },
-  { value: "자유소비형", description: "여유 자금 운용\n유동성 중시", tone: "orange" },
+  // 서버 fundTendency 1~3 및 설문 첫 문항의 선택지 순서와 동일하게 유지한다.
+  { value: "수익추구형", description: "자산 증식 목적\n주식·펀드 중심", tone: "blue" },
+  { value: "자유소비형", description: "생활비 마련 목적\n유동성 중시", tone: "orange" },
+  { value: "목표달성형", description: "채무 상환 등\n구체적 목표 설정", tone: "amber" },
 ];
+
+export const getFundProfileName = (fundTendency: number) =>
+  fundProfileChoices[fundTendency - 1]?.value ?? "";
 
 export const investmentLevelChoices: ProfileChoice[] = [
   { value: "입문자", description: "주식 계좌가 없거나\n투자 경험 1년 미만\n용어가 낯선 단계", tone: "emerald" },
