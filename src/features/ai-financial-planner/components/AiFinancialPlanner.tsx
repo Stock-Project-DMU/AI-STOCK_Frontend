@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { deletePlanningSession, getPlanningSessions, renamePlanningSession, type PlanningSession } from "@/lib/api/ai";
+import { deletePlanningSession, getPlanningPreferences, getPlanningSessions, renamePlanningSession, type PlanningPreferences, type PlanningSession } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { GearIcon } from "@/components/icons/Icon";
 import type { PlannerView } from "../types";
@@ -19,6 +19,8 @@ export default function AiFinancialPlanner() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [draftKey, setDraftKey] = useState(0);
+    const [preferences, setPreferences] = useState<PlanningPreferences | null>(null);
+    const [connectionMessage, setConnectionMessage] = useState("");
     useEffect(() => {
         let active = true;
         getPlanningSessions().then(items => {
@@ -29,6 +31,11 @@ export default function AiFinancialPlanner() {
         })
             .catch(error => { if (active) setError(getApiErrorMessage(error, "상담 목록을 불러오지 못했습니다.")); })
             .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    }, []);
+    useEffect(() => {
+        let active = true;
+        getPlanningPreferences().then(items => { if (active) setPreferences(current => current ?? items); }).catch(() => {});
         return () => { active = false; };
     }, []);
     const refreshSessions = (id: number) => {
@@ -70,10 +77,11 @@ export default function AiFinancialPlanner() {
                     <div className="flex flex-1 flex-col"><button type="button" onClick={() => setView("chat")} className="self-start rounded-lg border border-hairline px-4 py-2 text-sm">상담으로 돌아가기</button><InvestmentSurvey onComplete={startChat} completeLabel="AI 상담 시작" /></div>
                 )}
 
-                <button onClick={() => setConnectionOpen(true)} className="flex h-12 shrink-0 items-center gap-2 border-t border-hairline bg-canvas px-5 text-xs font-bold text-muted hover:text-ink"><GearIcon className="h-3.5 w-3.5" /> 데이터 연동 설정</button>
+                {connectionMessage && <p role="status" className="border-t border-hairline bg-canvas px-5 py-2 text-xs text-primary">{connectionMessage}</p>}
+                <button onClick={() => setConnectionOpen(true)} className="flex h-12 shrink-0 items-center gap-2 border-t border-hairline bg-canvas px-5 text-xs font-bold text-muted hover:text-ink"><GearIcon className="h-3.5 w-3.5" /> 데이터 연동 설정{preferences && ` · 목표 ${preferences.linkedGoalPlanIds.length}건 · 브리핑 ${preferences.linkedBriefingDates.length}건`}</button>
             </div>
 
-            {connectionOpen && <ConnectionModal onClose={() => setConnectionOpen(false)} />}
+            {connectionOpen && <ConnectionModal onClose={() => setConnectionOpen(false)} onSaved={items => { setPreferences(items); setConnectionMessage("연동 설정이 저장됐습니다. 다음 질문부터 선택한 자료가 반영됩니다."); }} />}
         </div>
     );
 }
