@@ -7,6 +7,7 @@ import { getApiErrorMessage } from "@/lib/api/client";
 import DailyBriefing from "./DailyBriefing";
 import MarketDashboard from "./MarketDashboard";
 import NewsChat from "./NewsChat";
+import SavedBriefingsModal from "./SavedBriefingsModal";
 
 export default function AiMarketBriefing() {
     const [view, setView] = useState<"chat" | "settings">("chat");
@@ -17,6 +18,7 @@ export default function AiMarketBriefing() {
     const [preferences, setPreferences] = useState<PlanningPreferences | null>(null);
     const [savedLoading, setSavedLoading] = useState(true);
     const [savedError, setSavedError] = useState("");
+    const [savedListOpen, setSavedListOpen] = useState(false);
     const [savingDate, setSavingDate] = useState<string | null>(null);
     const saving = useRef(false);
     const extraBriefings = useRef<NewsBriefing[]>([]);
@@ -86,7 +88,9 @@ export default function AiMarketBriefing() {
                 return;
             }
         }
+        setSavedError("");
         jumpToBriefing(date);
+        setSavedListOpen(false);
     };
 
     return <div className="cq-medium-flex-row ai-chat-page market-theme market-grid flex min-h-[calc(100dvh-72px)] min-w-0 flex-col">
@@ -94,21 +98,12 @@ export default function AiMarketBriefing() {
             <div className="p-3">
                 <button type="button" onClick={() => jumpToBriefing(briefings[0]?.briefingDate ?? "")} disabled={!briefings.length} aria-label="최신 브리핑 위치로 이동" className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white disabled:opacity-50"><NewsIcon className="h-4 w-4" />최신 브리핑</button>
             </div>
-            <section aria-label="저장한 브리핑" className="shrink-0 border-b border-hairline">
-                <h2 className="px-5 pb-2 pt-3 text-xs font-bold text-muted">저장한 브리핑{!savedLoading && ` ${savedDates.length}건`}</h2>
-                {savedLoading && <p role="status" className="px-5 pb-3 text-xs text-muted">저장 목록을 불러오는 중입니다...</p>}
-                {savedError && <p role="alert" className="px-5 pb-3 text-xs text-red-600">{savedError}</p>}
-                {!savedLoading && !savedError && !savedDates.length && <p className="px-5 pb-3 text-xs text-muted">저장한 브리핑이 없습니다.</p>}
-                {!!savedDates.length && <div className="cq-medium-flex-col flex max-h-40 gap-2 overflow-auto px-3 pb-3">
-                    {savedDates.map(date => {
-                        const briefing = briefings.find(item => item.briefingDate === date);
-                        return <div key={date} className="flex w-full shrink-0 items-center rounded-md border border-hairline bg-surface-soft">
-                            <button type="button" onClick={() => void openSavedBriefing(date)} aria-label={`${date} 저장한 브리핑으로 이동`} className="min-w-0 flex-1 px-2 py-2 text-left text-xs hover:text-primary"><span className="block font-semibold">{date}</span><span className="mt-1 block truncate text-muted">{briefing?.outletName ?? "브리핑 보기"}</span></button>
-                            <button type="button" onClick={() => void updateSavedBriefing(date, false).catch(error => setSavedError(getApiErrorMessage(error, "저장 목록에서 삭제하지 못했습니다.")))} disabled={savingDate !== null} aria-label={`${date} 저장한 브리핑 삭제 및 재무설계사 연동 해제`} className="shrink-0 px-2 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">삭제</button>
-                        </div>;
-                    })}
-                </div>}
-            </section>
+            <div className="shrink-0 border-b border-hairline px-3 pb-3">
+                <button type="button" onClick={() => setSavedListOpen(true)} aria-haspopup="dialog" aria-expanded={savedListOpen} className="flex w-full items-center justify-between rounded-lg border border-hairline px-4 py-2.5 text-left text-sm font-semibold text-body hover:border-primary hover:text-primary">
+                    <span>저장한 브리핑</span>
+                    {!savedLoading && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{savedDates.length}건</span>}
+                </button>
+            </div>
             <p className="cq-medium-show hidden px-6 pb-2 text-xs font-medium text-muted">지난 브리핑</p>
             {historyError && <p role="alert" className="px-3 pb-2 text-xs text-red-600">{historyError}</p>}
             <div className="cq-planner-session-list flex max-h-48 overflow-auto">
@@ -125,5 +120,6 @@ export default function AiMarketBriefing() {
             </div>
             {view === "settings" && <div className="min-h-0 min-w-0 flex-1 overflow-y-auto"><DailyBriefing briefings={briefings} selectedDate={selectedDate} onSelectedDate={setSelectedDate} savedBriefingDates={savedDates} savedLoading={savedLoading} savingDate={savingDate} onSave={date => updateSavedBriefing(date, true)} onRemove={date => updateSavedBriefing(date, false)} /></div>}
         </div>
+        {savedListOpen && <SavedBriefingsModal dates={savedDates} briefings={briefings} loading={savedLoading} error={savedError} savingDate={savingDate} onSelect={date => { void openSavedBriefing(date); }} onDelete={date => { void updateSavedBriefing(date, false).catch(error => setSavedError(getApiErrorMessage(error, "저장 목록에서 삭제하지 못했습니다."))); }} onClose={() => setSavedListOpen(false)} />}
     </div>;
 }
