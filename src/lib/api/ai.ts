@@ -21,6 +21,7 @@ export const getNewsOutlets = () => apiRequest<NewsOutlet[]>("/api/ai/news/outle
 export const getNewsSetting = () => apiRequest<NewsSetting | null>("/api/ai/news/settings");
 export const saveNewsSetting = (outletDomain: string, deliveryTime: string) => apiRequest<NewsSetting>("/api/ai/news/settings", { method: "PUT", body: JSON.stringify({ outletDomain, deliveryTime }) });
 export const getBriefingHistory = () => apiRequest<NewsBriefing[]>("/api/ai/news/briefings");
+export const getBriefingByDate = (date: string) => apiRequest<NewsBriefing>(`/api/ai/news/briefings/${encodeURIComponent(date)}`);
 export type NewsChatTurn = { role: "USER" | "ASSISTANT"; content: string };
 export type NewsChatAnswer = { content: string; searchedAt: string; sources: { title: string; description: string; link: string; pubDate: string; outlet: string }[] };
 export const sendNewsChat = (content: string, history: NewsChatTurn[]) => apiRequest<NewsChatAnswer>("/api/ai/news/chat", { method: "POST", body: JSON.stringify({ content, history }) });
