@@ -129,29 +129,30 @@ export default function NotificationCenter() {
                 </svg>
                 {unreadCount > 0 && <span className="absolute -right-1.5 -top-1.5 flex min-w-5 items-center justify-center rounded-full bg-up px-1 text-[10px] font-bold leading-5 text-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}
             </button>
-            {open && <section id="notification-center" aria-label="내 알림" className="fixed right-3 top-[76px] z-[60] flex max-h-[min(70vh,580px)] w-[min(92vw,400px)] flex-col overflow-hidden rounded-xl border border-hairline bg-canvas shadow-xl sm:right-6">
-                <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
-                    <div><h2 className="text-sm font-bold text-ink">알림</h2><p className="text-xs text-muted">읽지 않은 알림 {unreadCount}개</p></div>
+            {open && <section id="notification-center" aria-label="내 알림" className="fixed right-3 top-[76px] z-[60] flex max-h-[min(56vh,420px)] w-[min(88vw,320px)] flex-col overflow-hidden rounded-xl border border-hairline bg-canvas shadow-xl sm:right-6">
+                <div className="flex items-center justify-between border-b border-hairline px-3 py-2.5">
+                    <div><h2 className="text-sm font-bold text-ink">알림</h2><p className="text-[11px] text-muted">읽지 않은 알림 {unreadCount}개</p></div>
                     <button type="button" onClick={() => void refreshItems()} disabled={loading} className="text-xs font-semibold text-primary disabled:opacity-50">새로고침</button>
                 </div>
-                {error && <p role="alert" className="px-4 py-2 text-xs text-up">{error}</p>}
+                {error && <p role="alert" className="px-3 py-2 text-xs text-up">{error}</p>}
                 <div className="min-h-0 overflow-y-auto">
-                    {loading && <p role="status" className="p-4 text-sm text-muted">알림을 불러오는 중입니다.</p>}
-                    {!loading && !error && items.length === 0 && <p className="p-6 text-center text-sm text-muted">아직 알림이 없습니다.</p>}
-                    {!loading && items.map(item => <article key={item.notiId} className={`border-b border-hairline px-4 py-3 last:border-b-0 ${item.isRead ? "bg-canvas" : "bg-primary/5"}`}>
-                        <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0"><span className="text-[11px] font-semibold text-primary">{category[item.type] ?? "알림"}</span><h3 className="text-sm font-bold text-ink">{item.title}</h3></div>
-                            {!item.isRead && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="읽지 않음" />}
-                        </div>
-                        <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-body">{item.content}</p>
-                        <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted">
-                            <time>{formatDateTime(item.createdAt)}</time>
-                            <div className="flex items-center gap-3">
-                                {!item.isRead && <button type="button" onClick={() => void markAsRead(item)} disabled={readingId !== null} className="font-semibold text-primary disabled:opacity-50">읽음 처리</button>}
-                                {destination[item.type] && <Link href={destination[item.type]!} onClick={() => { void markAsRead(item); setOpen(false); }} className="font-semibold text-primary">이동</Link>}
+                    {loading && <p role="status" className="p-3 text-xs text-muted">알림을 불러오는 중입니다.</p>}
+                    {!loading && !error && items.length === 0 && <p className="p-5 text-center text-xs text-muted">아직 알림이 없습니다.</p>}
+                    {!loading && items.map(item => {
+                        const href = destination[item.type];
+                        const details = <>
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0"><span className="text-[10px] font-semibold text-primary">{category[item.type] ?? "알림"}</span><h3 className="text-xs font-bold text-ink">{item.title}</h3></div>
+                                {!item.isRead && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="읽지 않음" />}
                             </div>
-                        </div>
-                    </article>)}
+                            <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-[18px] text-body">{item.content}</p>
+                            <time className="mt-1.5 block text-[10px] text-muted">{formatDateTime(item.createdAt)}</time>
+                        </>;
+                        return <article key={item.notiId} className={`border-b border-hairline last:border-b-0 ${item.isRead ? "bg-canvas" : "bg-primary/5"}`}>
+                            {href ? <Link href={href} onClick={() => { void markAsRead(item); setOpen(false); }} className="block px-3 py-2.5 text-left transition-colors hover:bg-surface-soft focus-visible:outline-2 focus-visible:outline-primary">{details}</Link>
+                                : <button type="button" onClick={() => void markAsRead(item)} disabled={item.isRead || readingId !== null} className="block w-full px-3 py-2.5 text-left transition-colors enabled:hover:bg-surface-soft focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-default">{details}</button>}
+                        </article>;
+                    })}
                 </div>
             </section>}
         </div>
