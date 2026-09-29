@@ -3,7 +3,7 @@
 .admin-workspace button:disabled { cursor:wait; opacity:.55; }
 .admin-workspace :is(button,a,input,select,textarea):focus-visible { outline:3px solid #90b0ff; outline-offset:3px; }
 .ao-sidebar { width:230px; background:#121e34; color:#97a5bc; position:fixed; inset:0 auto 0 0; z-index:30; display:flex; flex-direction:column; padding:34px 18px 20px; }
-.ao-brand { display:flex; align-items:center; gap:12px; color:#fff; font-weight:800; font-size:19px; letter-spacing:.5px; padding:0 10px; }
+.ao-brand { display:flex; align-items:center; gap:12px; text-align:left; color:#fff; font-weight:800; font-size:19px; letter-spacing:.5px; padding:0 10px; }
 .ao-brand small { display:block; color:#7d90af; font-size:8px; letter-spacing:1.6px; margin-top:4px; }
 .ao-brand-mark { height:38px; width:38px; display:flex; align-items:center; justify-content:center; position:relative; background:#386cf6; border-radius:11px; font-size:25px; }
 .ao-brand-mark span { font-size:17px; position:absolute; right:2px; top:0; }
@@ -52,7 +52,7 @@
 @media(max-width:850px){.ao-sidebar{position:relative;width:100%;padding:18px 20px;gap:18px}.ao-brand{padding:0}.ao-nav-label,.ao-sidebar-footer{display:none}.ao-sidebar nav{display:flex;overflow:auto;gap:6px}.ao-sidebar nav button{width:auto;white-space:nowrap;font-size:11px;padding:10px}.ao-sidebar nav i{display:none}.ao-workspace-main{margin:0}.ao-topbar{height:60px}.ao-middle{grid-template-columns:1fr}.ao-tasks>button{padding:13px 0}.ao-kpi strong{font-size:23px}.ao-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ao-heading h2{font-size:24px}.ao-main{padding:22px}.ao-update{flex-direction:column;align-items:flex-end;gap:7px}.ao-tasks{padding:22px}.ao-card-heading{padding:20px}.ao-overview td,.ao-overview th{padding-inline:18px}}
 @media(max-width:480px){.ao-main{padding:18px 12px}.ao-topbar{padding:0 16px}.ao-access{display:none}.ao-topbar>div{gap:10px;font-size:10px}.ao-heading{align-items:flex-start;gap:10px}.ao-heading p{max-width:190px;line-height:1.7;font-size:11px}.ao-eyebrow{font-size:8px}.ao-update span{display:none}.ao-kpi{padding:14px}.ao-kpi strong{font-size:20px}.ao-kpi p{font-size:9px}.ao-number-icon{display:none}.ao-footer{padding-inline:15px}.ao-chart-tools{margin-inline:20px}.ao-chart-tools strong{font-size:16px}.ao-main>div>form input{min-width:0;width:100%}.ao-segment button{padding-inline:9px}}
 .ao-members>button>span:nth-child(2){min-width:0;flex:1}.ao-members :is(b,small){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ao-members time{white-space:nowrap;flex-shrink:0}
-@media(max-width:480px){.ao-sidebar nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;overflow:visible}.ao-sidebar nav button{justify-content:center;padding:11px 3px;font-size:10px}.ao-sidebar nav button>span{display:none}}
+@media(max-width:480px){.ao-sidebar nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;overflow:visible}.ao-sidebar nav button{justify-content:center;padding:11px 3px;font-size:10px}.ao-sidebar nav button>span{display:none}}
 /* 관리자 조작 요소와 상태를 둥근 박스로 구분한다. */
 .admin-workspace .ao-link,
 .admin-workspace .ao-review,
@@ -88,3 +88,20 @@
 @media(max-width:480px){.ao-chart-tools{flex-wrap:wrap}.ao-tabs button{padding:7px 8px}.ao-card-heading{gap:8px}.admin-workspace .ao-link{padding:6px 9px;font-size:10px}.ao-topbar .ao-access{display:none}}
 .ao-status-action{margin-top:24px}.ao-status-action button{padding:10px 16px;border:1px solid #dce3ef;border-radius:9px;font-size:12px;font-weight:650}.ao-status-action .ao-status-danger{background:#fff0f1;border-color:#efc4ca;color:#b03c50}.ao-status-action .ao-status-restore{background:#edf5ff;border-color:#c5d7f6;color:#3264b6}.ao-suspension-info{padding:16px;background:#fff7ec;border:1px solid #efddbc;border-radius:10px;margin-bottom:16px;color:#795a28;font-size:12px}.ao-suspension-info p{margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere}
 .ao-status-dialog{margin:auto;width:min(520px,calc(100vw - 32px));max-height:90vh;overflow:auto;border:1px solid #dfe6f1;border-radius:18px;padding:28px;color:#26354d;background:white;box-shadow:0 24px 90px #14274438}.ao-status-dialog::backdrop{background:#0d193c80;backdrop-filter:blur(3px)}.ao-status-dialog h2{font-size:20px;font-weight:750;margin:8px 0 20px}.ao-status-target{padding:14px 16px;background:#f3f6fb;border-radius:10px;margin-bottom:20px}.ao-status-target span{display:block;font-size:11px;color:#7a889e;margin-top:5px}.ao-status-dialog label{display:block;font-size:12px;font-weight:650;margin-top:16px}.ao-status-dialog :is(select,textarea){display:block;width:100%;padding:11px 12px;border:1px solid #dce4f0;border-radius:9px;margin-top:8px;background:#fff;font-size:13px;color:#34435c}.ao-status-dialog textarea{resize:vertical}.ao-status-dialog small{display:block;text-align:right;color:#8895a9;font-size:10px;margin-top:6px}.ao-status-help{font-size:12px;line-height:1.8;color:#7b879b;background:#f7f9fc;padding:12px;border-radius:8px;margin-top:18px}.ao-status-buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.ao-status-summary p{display:flex;gap:16px;margin-top:13px;font-size:13px}.ao-status-summary b{min-width:35px;color:#7d8da4}.ao-status-summary blockquote{padding:14px;background:#f7f9fc;border-radius:9px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;margin-top:15px}.ao-status-dialog .ao-error{margin-top:12px}
+/* 최근 활동: 카드 배경보다 아주 살짝 어두운 칸에 로그를 하나씩 담는다. */
+.ao-activity { list-style:none; margin:0; padding:0 24px 20px; display:grid; gap:8px; max-height:430px; overflow-y:auto; }
+.ao-activity>li>:is(button,div) { width:100%; display:flex; align-items:flex-start; gap:11px; padding:12px 14px; text-align:left; background:#f7f9fc; border:1px solid transparent; border-radius:10px; }
+.ao-activity>li>button:hover { background:#f0f4fc; border-color:#dde6f5; }
+.ao-activity>li>*>span { min-width:0; flex:1; }
+.ao-activity i { flex-shrink:0; width:8px; height:8px; margin-top:5px; border-radius:50%; }
+.ao-activity .dot-blue { background:#4c7cf5; }.ao-activity .dot-green { background:#2fb58c; }.ao-activity .dot-amber { background:#e8a23a; }.ao-activity .dot-red { background:#e5484d; }.ao-activity .dot-violet { background:#8b5cf6; }.ao-activity .dot-gray { background:#a3adbd; }
+.ao-activity b { display:block; color:#2f3d55; font-size:12px; font-weight:650; }
+.ao-activity small { display:block; margin-top:4px; color:#95a1b3; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ao-activity.full { max-height:none; overflow:visible; }
+.ao-activity-tools { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:0 24px 14px; }
+.ao-activity-tools>span { color:#8f9bb0; font-size:11px; }
+.ao-activity-tools .ao-tabs button { font-size:11px; }
+.ao-activity-error { margin:0 24px 14px; }
+.ao-main>section.ao-activity-page { padding:0; border-radius:13px; }
+.ao-main .flex.justify-center>button[aria-current=page] { background:#386cf6; border-color:#386cf6; color:#fff; }
+.ao-activity-pager { padding:0 24px 22px; }

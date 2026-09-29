@@ -2,18 +2,20 @@
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import AdminOverview from "./AdminOverview";
+import AdminActivity from "./AdminActivity";
+import AdminPager from "./AdminPager";
 import UserStatusAction from "./UserStatusAction";
 import type { ReactElement } from "react";
 import { useRouter } from "next/navigation";
-import { DashboardIcon, SwapIcon, WalletIcon, UsersGroupIcon } from "@/components/icons/Icon";
+import { DashboardIcon, NewsIcon, SwapIcon, WalletIcon, UsersGroupIcon } from "@/components/icons/Icon";
 import { apiRequest, getApiErrorMessage, isAuthenticated, clearAuthTokens } from "@/lib/api/client";
 import { logout } from "@/lib/api/auth";
 import { getMyInfo } from "@/lib/api/user";
 import type { AccountInfoResponse, HoldingResponse, OrderHistoryResponse } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format/dateTime";
-type Section = "dashboard" | "transactions" | "accounts" | "users";
+type Section = "dashboard" | "transactions" | "accounts" | "users" | "activity";
 type Detail = { kind: "transaction" | "account" | "user"; id: number } | null;
-const sectionMeta: Record<Section, [string, string]> = { dashboard: ["메인 대시보드", "Dashboard"], transactions: ["거래 관리", "Transactions"], accounts: ["가상계좌 관리", "Virtual Account"], users: ["회원 관리", "Users"] };
+const sectionMeta: Record<Section, [string, string]> = { dashboard: ["메인 대시보드", "Dashboard"], transactions: ["거래 관리", "Transactions"], accounts: ["가상계좌 관리", "Virtual Account"], users: ["회원 관리", "Users"], activity: ["최근 활동", "Activity"] };
 type Page<T> = { content: T[]; totalPages: number; totalElements: number };
 type AdminUser = { userId: number; loginId: string; name: string; email: string | null; status: "ACTIVE" | "SUSPENDED"; createdAt: string };
 type AdminTrade = { userName: string; loginId: string; order: OrderHistoryResponse };
@@ -31,10 +33,10 @@ function StatusBadge({ value }: { value: string }) {
 }
 function Shell({ section, setSection, logout, children }: { section: Section; setSection: (v: Section) => void; logout: () => void; children: ReactNode }) {
   const [title, subtitle] = sectionMeta[section];
-  const nav: [Section, ReactElement, string][] = [["dashboard", <DashboardIcon key="d" className="h-4 w-4" />, "대시보드"], ["transactions", <SwapIcon key="t" className="h-4 w-4" />, "거래 내역"], ["accounts", <WalletIcon key="a" className="h-4 w-4" />, "가상계좌 관리"], ["users", <UsersGroupIcon key="u" className="h-4 w-4" />, "회원 관리"]];
+  const nav: [Section, ReactElement, string][] = [["dashboard", <DashboardIcon key="d" className="h-4 w-4" />, "대시보드"], ["transactions", <SwapIcon key="t" className="h-4 w-4" />, "거래 내역"], ["accounts", <WalletIcon key="a" className="h-4 w-4" />, "가상계좌 관리"], ["users", <UsersGroupIcon key="u" className="h-4 w-4" />, "회원 관리"], ["activity", <NewsIcon key="l" className="h-4 w-4" />, "최근 활동"]];
   return <div className="market-theme admin-workspace">
     <aside className="ao-sidebar">
-      <Link href="/home" className="ao-brand"><span className="ao-brand-mark">A<span>↗</span></span><span>AI STOCK<small>ADMIN WORKSPACE</small></span></Link>
+      <button type="button" onClick={() => setSection("dashboard")} className="ao-brand" aria-label="관리자 대시보드로 이동"><span className="ao-brand-mark">A<span>↗</span></span><span>AI STOCK<small>ADMIN WORKSPACE</small></span></button>
       <p className="ao-nav-label">WORKSPACE</p>
       <nav aria-label="관리자 메뉴">{nav.map(([key, icon, label]) => <button key={key} onClick={() => setSection(key)} aria-current={section === key ? "page" : undefined}><span>{icon}</span>{label}{section === key && <i />}</button>)}</nav>
       <div className="ao-sidebar-footer"><div className="ao-admin-identity"><span className="ao-avatar">A</span><span><b>관리자 계정</b><small>Administrator</small></span></div><Link href="/home">사용자 서비스로 이동 ↗</Link></div>
@@ -111,12 +113,12 @@ export default function AdminApp() {
         return () => { active = false; };
     }, [router]);
     useEffect(() => {
-        if (!authenticated || detail || section === "dashboard") return;
+        if (!authenticated || detail || section === "dashboard" || section === "activity") return;
         let active = true;
         async function load() {
             setLoading(true); setError("");
             try {
-                const params = new URLSearchParams({ page: String(page), size: "20" });
+                const params = new URLSearchParams({ page: String(page), size: "10" });
                 if (search) params.set("query", search);
                 if (status) params.set("status", status);
                 if (section === "users") {
@@ -138,14 +140,14 @@ export default function AdminApp() {
     const changeSection = (next: Section) => { setSection(next); setDetail(null); setQuery(""); setSearch(""); setStatus(""); setPage(0); };
     const statuses = section === "users" ? ["ACTIVE", "SUSPENDED"] : section === "transactions" ? ["PENDING", "EXECUTED", "CANCELLED"] : ["PENDING", "APPROVED", "REJECTED"];
     return <Shell section={section} setSection={changeSection} logout={() => { void logout().catch(() => {}).finally(() => { setAuthenticated(false); setDetail(null); router.replace("/login"); }); }}>
-        {detail ? <DetailPanel key={detail.kind + detail.id} detail={detail} back={() => { setDetail(null); setRevision(value => value + 1); }} /> : section === "dashboard" ? <AdminOverview navigate={(next, filter) => { changeSection(next); setStatus(filter ?? ""); }} open={(kind, id) => setDetail({ kind, id })} /> : <div className="space-y-4">
+        {detail ? <DetailPanel key={detail.kind + detail.id} detail={detail} back={() => { setDetail(null); setRevision(value => value + 1); }} /> : section === "activity" ? <AdminActivity open={(kind, id) => setDetail({ kind, id })} /> : section === "dashboard" ? <AdminOverview navigate={(next, filter) => { changeSection(next); setStatus(filter ?? ""); }} open={(kind, id) => setDetail({ kind, id })} /> : <div className="space-y-4">
             <form onSubmit={event => { event.preventDefault(); setSearch(query.trim()); setPage(0); }} className="flex flex-wrap gap-2"><input aria-label="검색" placeholder="아이디 또는 이름 검색" value={query} onChange={event => setQuery(event.target.value)} className="rounded border border-hairline p-2" /><select aria-label="상태 필터" value={status} onChange={event => { setStatus(event.target.value); setPage(0); }} className="rounded border border-hairline p-2"><option value="">전체 상태</option>{statuses.map(value => <option key={value} value={value}>{statusText[value]}</option>)}</select><button className="admin-button-primary rounded px-4 py-2">검색</button></form>
             {error && <p role="alert" className="text-red-500">{error}</p>}
             {loading ? <p role="status">불러오는 중...</p> : <>
                 {section === "accounts" && <><h2 className="font-bold">캐시 충전 요청</h2><DataTable headings={["요청번호", "사용자", "계좌", "요청 금액", "상태", "관리"]}>{charges.map(item => <tr key={item.requestId}><td>{item.requestId}</td><td>{item.userName}</td><td>{item.accountNumber}</td><td>{won(item.amount)}</td><td><StatusBadge value={item.status} /></td><td><button onClick={() => setDetail({ kind: "account", id: item.requestId })} className="text-primary">상세 / 심사</button></td></tr>)}</DataTable>{!charges.length && <p className="text-sm text-muted">충전 요청이 없습니다.</p>}</>}
                 {section === "transactions" && <><h2 className="font-bold">거래 내역</h2><DataTable headings={["주문번호", "사용자", "종목", "구분", "수량", "금액", "상태", "관리"]}>{trades.map(item => <tr key={item.order.orderId}><td>{item.order.orderId}</td><td>{item.userName}</td><td>{item.order.stockName}</td><td><StatusBadge value={item.order.orderType} /></td><td>{item.order.quantity}</td><td>{won((item.order.execPrice ?? item.order.orderPrice) * item.order.quantity)}</td><td><StatusBadge value={item.order.status} /></td><td><button onClick={() => setDetail({ kind: "transaction", id: item.order.orderId })} className="text-primary">상세</button></td></tr>)}</DataTable>{!trades.length && <p className="text-sm text-muted">거래 내역이 없습니다.</p>}</>}
                 {section === "users" && <><DataTable headings={["회원번호", "아이디", "이름", "이메일", "가입일", "상태", "관리"]}>{users.map(user => <tr key={user.userId}><td>{user.userId}</td><td>{user.loginId}</td><td>{user.name}</td><td>{user.email ?? "—"}</td><td>{user.createdAt?.slice(0, 10)}</td><td><StatusBadge value={user.status} /></td><td><button onClick={() => setDetail({ kind: "user", id: user.userId })} className="text-primary">상세</button></td></tr>)}</DataTable>{!users.length && <p>검색 결과가 없습니다.</p>}</>}
-                <div className="flex justify-center gap-4"><button disabled={page === 0} onClick={() => setPage(value => value - 1)}>이전</button><span>{page + 1} / {Math.max(1, totalPages)}</span><button disabled={page + 1 >= totalPages} onClick={() => setPage(value => value + 1)}>다음</button></div>
+                <AdminPager page={page} totalPages={totalPages} onChange={setPage} />
             </>}
         </div>}
     </Shell>;
