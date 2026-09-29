@@ -35,6 +35,7 @@ export type InvestmentProfileResponse = {
     investmentTendency: number;
     fundTendency: number;
     investmentLevel: "BEGINNER" | "INTERMEDIATE" | "EXPERT";
+    surveyCompleted: boolean;
 };
 
 export type AccountInfoResponse = {
