@@ -260,6 +260,10 @@ a {
 }
 
 @container app-content (min-width: 72rem) {
+  .ai-chat-page {
+    height: calc(100dvh - 72px);
+  }
+
   .cq-planner-chat-row,
   .cq-briefing-shell,
   .cq-simulation-shell {
