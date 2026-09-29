@@ -1,9 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getNewsOutlets, getNewsSetting, saveNewsSetting, getPlanningPreferences, savePlanningPreferences, type NewsBriefing, type NewsOutlet, type NewsSetting } from "@/lib/api/ai";
+import { getNewsOutlets, getNewsSetting, saveNewsSetting, type NewsBriefing, type NewsOutlet, type NewsSetting } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
-export default function DailyBriefing({ briefings, selectedDate, onSelectedDate }: { briefings: NewsBriefing[]; selectedDate: string; onSelectedDate: (date: string) => void }) {
+type DailyBriefingProps = {
+    briefings: NewsBriefing[];
+    selectedDate: string;
+    onSelectedDate: (date: string) => void;
+    savedBriefingDates: string[];
+    savedLoading: boolean;
+    savingDate: string | null;
+    onSave: (date: string) => Promise<void>;
+    onRemove: (date: string) => Promise<void>;
+};
+export default function DailyBriefing({ briefings, selectedDate, onSelectedDate, savedBriefingDates, savedLoading, savingDate, onSave, onRemove }: DailyBriefingProps) {
     const selected = briefings.find(item => item.briefingDate === selectedDate) ?? briefings[0] ?? null;
+    const isSaved = selected ? savedBriefingDates.includes(selected.briefingDate) : false;
     const [outlets, setOutlets] = useState<NewsOutlet[]>([]);
     const [outlet, setOutlet] = useState("");
     const [deliveryTime, setDeliveryTime] = useState("07:00");
@@ -37,12 +48,16 @@ export default function DailyBriefing({ briefings, selectedDate, onSelectedDate 
         finally { setBusy(false); }
     }
     async function bookmark() {
-        if (!selected || busy) return;
+        if (!selected || busy || savedLoading || savingDate !== null) return;
         setBusy(true);
         try {
-            const preferences = await getPlanningPreferences();
-            await savePlanningPreferences({ ...preferences, savedBriefingDates: [...new Set([...preferences.savedBriefingDates, selected.briefingDate])] });
-            setMessage("브리핑을 저장했습니다. AI 재무설계사의 데이터 연동 설정에서 선택할 수 있습니다.");
+            if (isSaved) {
+                await onRemove(selected.briefingDate);
+                setMessage("저장 목록에서 삭제했습니다. 재무설계사 연동도 해제되며 브리핑 원본은 유지됩니다.");
+            } else {
+                await onSave(selected.briefingDate);
+                setMessage("브리핑을 저장했습니다. 왼쪽 저장한 브리핑 목록에서 바로 확인할 수 있습니다.");
+            }
         } catch (error) { setMessage(getApiErrorMessage(error, "저장에 실패했습니다.")); }
         finally { setBusy(false); }
     }
@@ -65,7 +80,7 @@ export default function DailyBriefing({ briefings, selectedDate, onSelectedDate 
             </div>
             {message && <p role="status" className="my-4 text-sm">{message}</p>}
             {selected ? <article className="rounded-lg border border-hairline bg-canvas p-5">
-                <div className="flex justify-between gap-3"><h2 className="font-bold">{selected.briefingDate} · {selected.outletName}</h2><button disabled={busy} onClick={() => void bookmark()} className="text-primary">저장</button></div>
+                <div className="flex justify-between gap-3"><h2 className="font-bold">{selected.briefingDate} · {selected.outletName}</h2><button disabled={busy || savedLoading || savingDate !== null} onClick={() => void bookmark()} className="shrink-0 text-primary disabled:opacity-50">{savedLoading ? "확인 중..." : savingDate === selected.briefingDate ? "처리 중..." : isSaved ? "저장 해제" : "저장"}</button></div>
                 {selected.createdAt && <p className="mt-2 text-xs text-muted">브리핑 생성 시각: {selected.createdAt.replace("T", " ").slice(0, 16)} (한국시간)</p>}
                 <p className="mt-5 whitespace-pre-wrap text-sm leading-7">{selected.content}</p>
                 <h3 className="mt-6 font-bold">근거 기사</h3>
