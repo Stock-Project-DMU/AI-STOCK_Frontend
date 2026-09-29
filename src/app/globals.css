@@ -313,6 +313,52 @@ a {
   }
 }
 
+@container app-content (min-width: 40rem) {
+  .my-page-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .my-page-navigation {
+    position: sticky;
+    top: 88px;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+
+  .my-page-navigation-items {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .my-page-navigation-subtitle {
+    display: block;
+    margin-left: 0;
+  }
+
+  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-layout {
+    display: block;
+  }
+
+  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-navigation {
+    position: static;
+    margin-bottom: 0.75rem;
+    overflow-x: auto;
+  }
+
+  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-navigation-items {
+    min-width: 650px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-navigation-subtitle {
+    display: inline;
+    margin-left: 0.75rem;
+  }
+}
+
 @container app-content (min-width: 80rem) {
   .cq-wide-show {
     display: block;
