@@ -8,6 +8,7 @@ import { SearchIcon, UserIcon } from "@/components/icons/Icon";
 import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { apiRequest, getApiErrorMessage } from "@/lib/api/client";
 import { logout } from "@/lib/api/auth";
+import NotificationCenter from "./NotificationCenter";
 
 export default function Header() {
     const pathname = usePathname();
@@ -84,6 +85,7 @@ export default function Header() {
                         <span aria-hidden="true" className="h-9 w-20 animate-pulse rounded-full bg-surface-strong" />
                     ) : authenticated ? (
                         <div className="flex items-center gap-1.5">
+                            <NotificationCenter />
                             <span
                                 className="inline-flex h-9 max-w-28 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-primary/20 bg-primary/5 px-3 text-xs font-semibold text-primary sm:max-w-44 sm:px-4 sm:text-sm"
                                 aria-label={`로그인 사용자: ${userName ?? "사용자"}`}

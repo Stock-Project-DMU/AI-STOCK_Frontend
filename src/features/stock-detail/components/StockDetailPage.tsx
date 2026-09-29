@@ -16,7 +16,6 @@ import type { StockMainTab } from "../types";
 import StockChart from "./StockChart";
 import StockHeader from "./StockHeader";
 import StockInformation from "./StockInformation";
-import NotificationPanel from "./NotificationPanel";
 import TradePanel from "./TradePanel";
 import { subscribeStock } from "@/lib/api/realtime";
 
@@ -136,7 +135,6 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
                     <div className="hidden items-center gap-3 text-[12px] text-muted md:flex">
                         <span>원화</span>
                         <span>실시간</span>
-                        {authenticated && <NotificationPanel />}
                     </div>
                 </div>
             </nav>
