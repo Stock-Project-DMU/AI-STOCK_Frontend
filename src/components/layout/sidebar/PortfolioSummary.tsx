@@ -14,7 +14,7 @@ export default function PortfolioSummary({
     profitTotal,
 }: PortfolioSummaryProps) {
     return (
-        <div className="border-t border-hairline bg-surface-soft px-4 py-3.5 text-sm font-semibold text-ink">
+        <div className="shrink-0 border-t border-hairline bg-surface-soft px-4 py-3.5 text-sm font-semibold text-ink">
             <div className="flex items-center justify-between">
                 <span>원화</span>
                 <span className="num whitespace-nowrap">{formatWon(cashTotal)}</span>
