@@ -333,11 +333,6 @@ a {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .my-page-navigation-subtitle {
-    display: block;
-    margin-left: 0;
-  }
-
   main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-layout {
     display: block;
   }
@@ -353,10 +348,6 @@ a {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-navigation-subtitle {
-    display: inline;
-    margin-left: 0.75rem;
-  }
 }
 
 @container app-content (min-width: 80rem) {
