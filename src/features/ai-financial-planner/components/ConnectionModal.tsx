@@ -8,8 +8,22 @@ import { getApiErrorMessage } from "@/lib/api/client";
 
 type ConnectionModalProps = {
     onClose: () => void;
-    onSaved: (preferences: PlanningPreferences) => void;
+    onSaved: () => void;
 };
+
+const PAGE_SIZE = 5;
+const MAX_CONNECTIONS = 5;
+const MAX_GOALS = 2;
+
+function PaginationControls({ page, total, onPage, label }: { page: number; total: number; onPage: (page: number) => void; label: string }) {
+    const pageCount = Math.ceil(total / PAGE_SIZE);
+    if (pageCount <= 1) return null;
+    return <nav aria-label={`${label} 페이지`} className="mt-3 flex items-center justify-end gap-3 text-xs text-muted">
+        <button type="button" onClick={() => onPage(page - 1)} disabled={page === 0} className="rounded-md border border-hairline px-3 py-1.5 disabled:opacity-40">이전</button>
+        <span>{page + 1} / {pageCount}</span>
+        <button type="button" onClick={() => onPage(page + 1)} disabled={page + 1 >= pageCount} className="rounded-md border border-hairline px-3 py-1.5 disabled:opacity-40">다음</button>
+    </nav>;
+}
 
 export default function ConnectionModal({ onClose, onSaved }: ConnectionModalProps) {
     const [options, setOptions] = useState<PlanningConnectionOptions | null>(null);
@@ -18,6 +32,8 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [loadKey, setLoadKey] = useState(0);
+    const [goalPage, setGoalPage] = useState(0);
+    const [briefingPage, setBriefingPage] = useState(0);
     const closeButton = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
@@ -39,6 +55,8 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
                 const goalIds = new Set(available.goals.map(goal => goal.planId));
                 const briefingDates = new Set(available.briefings.map(briefing => briefing.briefingDate));
                 setOptions(available);
+                setGoalPage(0);
+                setBriefingPage(0);
                 setPreferences({
                     savedBriefingDates: current.savedBriefingDates.filter(date => briefingDates.has(date)),
                     linkedBriefingDates: current.linkedBriefingDates.filter(date => briefingDates.has(date)),
@@ -53,8 +71,12 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
     const toggleGoal = (id: number) => {
         if (!preferences) return;
         const selected = preferences.linkedGoalPlanIds.includes(id);
-        if (!selected && preferences.linkedGoalPlanIds.length >= 10) {
-            setError("목표 시뮬레이션은 최대 10개까지 연동할 수 있습니다.");
+        if (!selected && preferences.linkedGoalPlanIds.length >= MAX_GOALS) {
+            setError("목표 시뮬레이션은 최대 2개까지 연동할 수 있습니다.");
+            return;
+        }
+        if (!selected && preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length >= MAX_CONNECTIONS) {
+            setError("목표와 브리핑을 합쳐 최대 5개까지 연동할 수 있습니다.");
             return;
         }
         setError("");
@@ -64,8 +86,8 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
     const toggleBriefing = (date: string) => {
         if (!preferences) return;
         const selected = preferences.linkedBriefingDates.includes(date);
-        if (!selected && preferences.linkedBriefingDates.length >= 10) {
-            setError("뉴스 브리핑은 최대 10개까지 연동할 수 있습니다.");
+        if (!selected && preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length >= MAX_CONNECTIONS) {
+            setError("목표와 브리핑을 합쳐 최대 5개까지 연동할 수 있습니다.");
             return;
         }
         setError("");
@@ -74,19 +96,24 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
 
     const save = async () => {
         if (!preferences || busy) return;
+        if (preferences.linkedGoalPlanIds.length > MAX_GOALS
+            || preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length > MAX_CONNECTIONS) {
+            setError("연동은 전체 최대 5개이며, 목표는 최대 2개까지 선택할 수 있습니다.");
+            return;
+        }
         setBusy(true);
         setError("");
         try {
             const [latest, available] = await Promise.all([getPlanningPreferences(), getPlanningConnectionOptions()]);
             const validGoalIds = new Set(available.goals.map(goal => goal.planId));
             const validBriefingDates = new Set(available.briefings.map(briefing => briefing.briefingDate));
-            const updated = await savePlanningPreferences({
+            await savePlanningPreferences({
                 ...latest,
                 savedBriefingDates: latest.savedBriefingDates.filter(date => validBriefingDates.has(date)),
                 linkedBriefingDates: preferences.linkedBriefingDates.filter(date => validBriefingDates.has(date)),
                 linkedGoalPlanIds: preferences.linkedGoalPlanIds.filter(id => validGoalIds.has(id)),
             });
-            onSaved(updated);
+            onSaved();
             onClose();
         } catch (cause) {
             setError(getApiErrorMessage(cause, "연동 설정을 저장하지 못했습니다."));
@@ -100,31 +127,34 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
             <div className="flex shrink-0 items-start justify-between gap-4 border-b border-hairline px-5 py-4 sm:px-6">
                 <div>
                     <h2 id="connection-title" className="text-lg font-bold text-ink">데이터 연동 설정</h2>
-                    <p className="mt-1 text-sm text-muted">선택한 자료는 다음 AI 상담부터 참고합니다. 종류별로 최대 10개까지 선택할 수 있습니다.</p>
+                    <p className="mt-1 text-sm text-muted">선택한 자료는 다음 AI 상담부터 참고합니다. 전체 최대 5개, 목표는 최대 2개까지 연동할 수 있습니다.</p>
                 </div>
                 <button ref={closeButton} type="button" onClick={onClose} disabled={busy} aria-label="데이터 연동 설정 닫기" className="shrink-0 rounded-md p-2 text-muted hover:bg-surface-soft hover:text-ink disabled:opacity-50"><CloseIcon className="h-5 w-5" /></button>
             </div>
             <div className="min-h-0 overflow-y-auto px-5 py-4 sm:px-6">
                 <p className="text-xs text-muted">투자 성향과 대표 보유 종목은 상담에 자동 반영됩니다. 아래에서 저장한 목표와 브리핑을 추가로 연결할 수 있습니다.</p>
+                {preferences && <p className="mt-2 text-sm font-semibold text-primary">현재 연동 {preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length}/{MAX_CONNECTIONS}건</p>}
                 {error && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
                 {loading && <p role="status" className="mt-5 text-sm text-muted">연동 자료를 불러오는 중입니다...</p>}
                 {!loading && !options && <button type="button" onClick={() => { setLoading(true); setError(""); setLoadKey(key => key + 1); }} className="mt-4 rounded-lg border border-hairline px-4 py-2 text-sm font-semibold">다시 시도</button>}
                 {options && preferences && <>
                     <section className="mt-6">
-                        <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 목표 시뮬레이션</h3><span className="text-xs text-muted">{preferences.linkedGoalPlanIds.length}/10 연동</span></div>
+                        <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 목표 시뮬레이션 · {options.goals.length}건</h3><span className="text-xs text-muted">{preferences.linkedGoalPlanIds.length}/{MAX_GOALS} 연동</span></div>
                         {!options.goals.length && <p className="mt-3 text-sm text-muted">저장한 목표가 없습니다. <Link href="/goal-simulation" className="font-semibold text-primary underline">목표 시뮬레이션으로 이동</Link></p>}
-                        <div className="mt-3 space-y-2">{options.goals.map(goal => <label key={goal.planId} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
+                        <div className="mt-3 space-y-2">{options.goals.slice(goalPage * PAGE_SIZE, (goalPage + 1) * PAGE_SIZE).map(goal => <label key={goal.planId} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
                             <input type="checkbox" checked={preferences.linkedGoalPlanIds.includes(goal.planId)} onChange={() => toggleGoal(goal.planId)} disabled={busy} className="accent-primary" />
                             <span className="min-w-0">{goal.goal === "house" ? "내 집 마련" : "노후 준비"} · 월 {goal.monthlyPayment.toLocaleString()}원 · {goal.years}년</span>
                         </label>)}</div>
+                        <PaginationControls page={goalPage} total={options.goals.length} onPage={setGoalPage} label="목표 시뮬레이션" />
                     </section>
                     <section className="mt-7">
-                        <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 뉴스 브리핑</h3><span className="text-xs text-muted">{preferences.linkedBriefingDates.length}/10 연동</span></div>
+                        <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 뉴스 브리핑 · {options.briefings.length}건</h3><span className="text-xs text-muted">{preferences.linkedBriefingDates.length}/{MAX_CONNECTIONS} 연동</span></div>
                         {!options.briefings.length && <p className="mt-3 text-sm text-muted">저장한 브리핑이 없습니다. <Link href="/ai-market-briefing" className="font-semibold text-primary underline">시황 브리핑으로 이동</Link></p>}
-                        <div className="mt-3 space-y-2">{options.briefings.map(briefing => <label key={briefing.briefingDate} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
+                        <div className="mt-3 space-y-2">{options.briefings.slice(briefingPage * PAGE_SIZE, (briefingPage + 1) * PAGE_SIZE).map(briefing => <label key={briefing.briefingDate} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
                             <input type="checkbox" checked={preferences.linkedBriefingDates.includes(briefing.briefingDate)} onChange={() => toggleBriefing(briefing.briefingDate)} disabled={busy} className="accent-primary" />
                             <span className="min-w-0">{briefing.briefingDate} · {briefing.outletName}</span>
                         </label>)}</div>
+                        <PaginationControls page={briefingPage} total={options.briefings.length} onPage={setBriefingPage} label="뉴스 브리핑" />
                     </section>
                 </>}
             </div>

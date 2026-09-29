@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { deletePlanningSession, getPlanningPreferences, getPlanningSessions, renamePlanningSession, type PlanningPreferences, type PlanningSession } from "@/lib/api/ai";
+import { deletePlanningSession, getPlanningConnectionOptions, getPlanningSessions, renamePlanningSession, type PlanningSession } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { GearIcon } from "@/components/icons/Icon";
 import type { PlannerView } from "../types";
@@ -19,8 +19,10 @@ export default function AiFinancialPlanner() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [draftKey, setDraftKey] = useState(0);
-    const [preferences, setPreferences] = useState<PlanningPreferences | null>(null);
+    const [savedCounts, setSavedCounts] = useState<{ goals: number; briefings: number } | null>(null);
+    const [connectionRefreshKey, setConnectionRefreshKey] = useState(0);
     const [connectionMessage, setConnectionMessage] = useState("");
+    const [connectionError, setConnectionError] = useState("");
     useEffect(() => {
         let active = true;
         getPlanningSessions().then(items => {
@@ -35,8 +37,23 @@ export default function AiFinancialPlanner() {
     }, []);
     useEffect(() => {
         let active = true;
-        getPlanningPreferences().then(items => { if (active) setPreferences(current => current ?? items); }).catch(() => {});
+        getPlanningConnectionOptions()
+            .then(options => {
+                if (!active) return;
+                setSavedCounts({ goals: options.goals.length, briefings: options.briefings.length });
+                setConnectionError("");
+            })
+            .catch(cause => { if (active) setConnectionError(getApiErrorMessage(cause, "연동 정보를 불러오지 못했습니다.")); });
         return () => { active = false; };
+    }, [connectionRefreshKey]);
+    useEffect(() => {
+        const refresh = () => { if (document.visibilityState === "visible") setConnectionRefreshKey(key => key + 1); };
+        window.addEventListener("focus", refresh);
+        document.addEventListener("visibilitychange", refresh);
+        return () => {
+            window.removeEventListener("focus", refresh);
+            document.removeEventListener("visibilitychange", refresh);
+        };
     }, []);
     const refreshSessions = (id: number) => {
         setSessionId(id);
@@ -78,10 +95,11 @@ export default function AiFinancialPlanner() {
                 )}
 
                 {connectionMessage && <p role="status" className="border-t border-hairline bg-canvas px-5 py-2 text-xs text-primary">{connectionMessage}</p>}
-                <button onClick={() => setConnectionOpen(true)} className="flex h-12 shrink-0 items-center gap-2 border-t border-hairline bg-canvas px-5 text-xs font-bold text-muted hover:text-ink"><GearIcon className="h-3.5 w-3.5" /> 데이터 연동 설정{preferences && ` · 목표 ${preferences.linkedGoalPlanIds.length}건 · 브리핑 ${preferences.linkedBriefingDates.length}건`}</button>
+                {connectionError && <p role="alert" className="border-t border-hairline bg-canvas px-5 py-2 text-xs text-red-600">{connectionError}</p>}
+                <button onClick={() => setConnectionOpen(true)} className="flex min-h-12 shrink-0 items-center gap-2 border-t border-hairline bg-canvas px-5 text-xs font-bold text-muted hover:text-ink"><GearIcon className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 truncate">데이터 연동 설정{savedCounts && ` · 저장 목표 ${savedCounts.goals}건 · 저장 브리핑 ${savedCounts.briefings}건`}</span></button>
             </div>
 
-            {connectionOpen && <ConnectionModal onClose={() => setConnectionOpen(false)} onSaved={items => { setPreferences(items); setConnectionMessage("연동 설정이 저장됐습니다. 다음 질문부터 선택한 자료가 반영됩니다."); }} />}
+            {connectionOpen && <ConnectionModal onClose={() => { setConnectionOpen(false); setConnectionRefreshKey(key => key + 1); }} onSaved={() => setConnectionMessage("연동 설정이 저장됐습니다. 다음 질문부터 선택한 자료가 반영됩니다.")} />}
         </div>
     );
 }
