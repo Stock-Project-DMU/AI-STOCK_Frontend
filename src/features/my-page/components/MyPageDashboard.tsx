@@ -284,9 +284,10 @@ export default function MyPageDashboard() {
   return (
     <div className="market-theme market-grid min-h-[calc(100vh-4rem)] break-keep text-ink">
       <section className="min-w-0 px-3 py-4 sm:px-5 lg:px-8">
-        <MyPageNavigation activeTab={activeTab} onChange={changeTab} />
+        <div className="my-page-layout mx-auto w-full max-w-[1540px]">
+          <MyPageNavigation activeTab={activeTab} onChange={changeTab} />
 
-        <div className="mx-auto w-full max-w-[1540px] rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
+        <div className="min-w-0 rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
           {activeTab === "profile" && showSurvey && <>
             <button type="button" onClick={() => { setShowSurvey(false); router.replace("/my-page"); }} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold">내 정보로 돌아가기</button>
             <InvestmentSurvey onComplete={() => { setShowSurvey(false); router.replace("/my-page"); }} onSaved={(result) => {
@@ -409,6 +410,7 @@ export default function MyPageDashboard() {
 
           {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} apiOrders={apiOrders} isLoading={isDashboardLoading} error={dashboardError} />}
           {activeTab === "returns" && <ReturnsPanel profit={accountProfit} rows={realizedReturns} />}
+        </div>
         </div>
       </section>
 
