@@ -11,17 +11,29 @@ type Notification = {
     type: NotificationType;
     title: string;
     content: string;
+    relatedOrderId: number | null;
     isRead: boolean;
     createdAt: string;
 };
 
 const destination: Partial<Record<NotificationType, string>> = {
-    ACCOUNT: "/my-page",
-    ORDER: "/my-page",
     NEWS: "/ai-market-briefing",
     SIMULATION: "/goal-simulation",
     AI: "/ai-financial-planner",
 };
+
+function notificationDestination(item: Notification) {
+    if (item.type === "ORDER") {
+        const orderId = item.relatedOrderId;
+        return orderId && Number.isSafeInteger(orderId) && orderId > 0
+            ? `/my-page?tab=orders&orderId=${orderId}`
+            : "/my-page?tab=orders";
+    }
+    if (item.type === "ACCOUNT") {
+        return item.title.startsWith("충전 요청") ? "/my-page?tab=recharge" : "/my-page?tab=account";
+    }
+    return destination[item.type];
+}
 
 const category: Record<NotificationType, string> = {
     SYSTEM: "공지",
@@ -139,7 +151,7 @@ export default function NotificationCenter() {
                     {loading && <p role="status" className="p-3 text-xs text-muted">알림을 불러오는 중입니다.</p>}
                     {!loading && !error && items.length === 0 && <p className="p-5 text-center text-xs text-muted">아직 알림이 없습니다.</p>}
                     {!loading && items.map(item => {
-                        const href = destination[item.type];
+                        const href = notificationDestination(item);
                         const details = <>
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0"><span className="text-[10px] font-semibold text-primary">{category[item.type] ?? "알림"}</span><h3 className="text-xs font-bold text-ink">{item.title}</h3></div>
