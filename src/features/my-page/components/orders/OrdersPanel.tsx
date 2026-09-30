@@ -28,6 +28,7 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
     .filter((order) => filter === "ALL" || order.orderType === filter)
     .map((order) => ({
         id: order.orderId,
+        status: order.status,
         orderType: order.orderType,
         name: order.stockName || order.stockCode,
         side: `${order.orderType === "SELL" ? "매도" : "매수"} ${order.status === "EXECUTED" ? "체결" : order.status === "PENDING" ? "대기" : "취소"}`,
@@ -62,10 +63,11 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
 
   const isSell = selected.side.startsWith("매도") || selected.side === "판매완료";
   const feeAmount = Math.floor(selected.transactionAmount * transactionFeeRate / 100);
+  const isExecuted = selected.status === "EXECUTED";
   const detailRows = [
-    ["1주 평균 체결가", selected.averagePrice],
-    ["체결 수량", selected.quantity],
-    ["총 체결 금액", selected.price],
+    [isExecuted ? "1주 평균 체결가" : "1주 주문가", selected.averagePrice],
+    [isExecuted ? "체결 수량" : "주문 수량", selected.quantity],
+    [isExecuted ? "총 체결 금액" : "주문 금액", selected.price],
     ["주문 시간", selected.orderedAt],
     ["체결 시간", selected.executedAt],
     ["주문 유형", selected.priceType],
@@ -79,7 +81,7 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
         <section className="overflow-hidden rounded-lg border border-hairline bg-white">
           <OrderListHeader filter={filter} filterItems={filterItems} visibleCount={displayOrders.length} />
           <OrderFilterTabs filter={filter} filterItems={filterItems} onFilterChange={setFilter} />
-          <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px] border-b border-hairline px-4 py-2 text-xs font-semibold text-muted sm:grid"><span>종목 / 주문 구분</span><span>수량</span><span className="text-right">체결 금액</span></div>
+          <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px] border-b border-hairline px-4 py-2 text-xs font-semibold text-muted sm:grid"><span>종목 / 주문 구분</span><span>수량</span><span className="text-right">금액</span></div>
           <div className="divide-y divide-gray-200">
             {displayOrders.map((order) => (
               <button key={order.id} type="button" onClick={() => onSelect(order.id)} className={`relative grid w-full grid-cols-[minmax(0,1fr)_70px_110px] items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors sm:grid-cols-[minmax(0,1fr)_90px_130px] ${selected.id === order.id ? "theme-accent-soft" : "bg-white hover:bg-surface-soft"}`}>

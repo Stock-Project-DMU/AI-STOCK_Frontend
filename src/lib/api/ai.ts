@@ -21,10 +21,16 @@ export const getNewsOutlets = () => apiRequest<NewsOutlet[]>("/api/ai/news/outle
 export const getNewsSetting = () => apiRequest<NewsSetting | null>("/api/ai/news/settings");
 export const saveNewsSetting = (outletDomain: string, deliveryTime: string) => apiRequest<NewsSetting>("/api/ai/news/settings", { method: "PUT", body: JSON.stringify({ outletDomain, deliveryTime }) });
 export const getBriefingHistory = () => apiRequest<NewsBriefing[]>("/api/ai/news/briefings");
+export const getBriefingByDate = (date: string) => apiRequest<NewsBriefing>(`/api/ai/news/briefings/${encodeURIComponent(date)}`);
 export type NewsChatTurn = { role: "USER" | "ASSISTANT"; content: string };
 export type NewsChatAnswer = { content: string; searchedAt: string; sources: { title: string; description: string; link: string; pubDate: string; outlet: string }[] };
 export const sendNewsChat = (content: string, history: NewsChatTurn[]) => apiRequest<NewsChatAnswer>("/api/ai/news/chat", { method: "POST", body: JSON.stringify({ content, history }) });
 
 export type PlanningPreferences = { savedBriefingDates: string[]; linkedBriefingDates: string[]; linkedGoalPlanIds: number[] };
+export type PlanningConnectionOptions = {
+    goals: { planId: number; goal: string; monthlyPayment: number; years: number }[];
+    briefings: { briefingDate: string; outletName: string }[];
+};
 export const getPlanningPreferences = () => apiRequest<PlanningPreferences>("/api/ai/planning/preferences");
+export const getPlanningConnectionOptions = () => apiRequest<PlanningConnectionOptions>("/api/ai/planning/preferences/options");
 export const savePlanningPreferences = (request: PlanningPreferences) => apiRequest<PlanningPreferences>("/api/ai/planning/preferences", { method: "PUT", body: JSON.stringify(request) });

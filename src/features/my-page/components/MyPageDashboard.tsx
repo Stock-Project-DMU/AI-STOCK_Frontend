@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { initialProfile, investmentProfileChoices, getFundProfileName, investmentLevelChoices } from "../data";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import type { AccountView, MyPageTab, ProfileErrors, ProfileField, RechargeRecord } from "../model";
@@ -24,6 +24,9 @@ import { getMyInfo, updateMyInfo, updateProfile, getInvestmentProfile } from "@/
 
 export default function MyPageDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const requestedOrderId = searchParams.get("orderId");
   const [showSurvey, setShowSurvey] = useState(false);
   const [activeTab, setActiveTab] = useState<MyPageTab>("profile");
   const [accountView, setAccountView] = useState<AccountView>("summary");
@@ -55,6 +58,20 @@ export default function MyPageDashboard() {
   const [dashboardError, setDashboardError] = useState("");
   const [profileSaveError, setProfileSaveError] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      if (requestedTab === "profile" || requestedTab === "account" || requestedTab === "recharge" || requestedTab === "orders" || requestedTab === "returns") {
+        setActiveTab(requestedTab);
+        if (requestedTab === "recharge") setAccountView("history");
+      }
+      const orderId = Number(requestedOrderId);
+      if (requestedTab === "orders" && requestedOrderId && Number.isSafeInteger(orderId) && orderId > 0 && apiOrders?.some(order => order.orderId === orderId)) {
+        setSelectedOrderId(orderId);
+      }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [requestedTab, requestedOrderId, apiOrders]);
 
   useEffect(() => {
     if (!isAuthenticated()) return;
@@ -102,19 +119,22 @@ export default function MyPageDashboard() {
           return;
         }
 
-        const [orderList, profit, charges, returns] = await Promise.all([
-          getOrders(primaryAccount.accountId),
+        const [orderLists, profit, charges, returns] = await Promise.all([
+          Promise.all(accountList.map(item => getOrders(item.accountId))),
           getAccountProfit(primaryAccount.accountId),
           getChargeRequests(primaryAccount.accountId),
           getRealizedReturns(primaryAccount.accountId),
         ]);
         if (cancelled) return;
 
+        const orderList = orderLists.flat().sort((left, right) => new Date(right.orderedAt).getTime() - new Date(left.orderedAt).getTime());
+
         setApiOrders(orderList);
         setAccountProfit(profit);
         setRealizedReturns(returns);
         setChargeHistory(charges.content.map(item => ({ id: item.requestId, date: item.requestedAt, type: "추가 충전", amount: item.amount, balance: null, status: item.status === "APPROVED" ? "승인" : item.status === "REJECTED" ? "거절" : "대기", requester: user.name, note: item.decisionReason ?? item.reason })));
-        if (orderList[0]) setSelectedOrderId(orderList[0].orderId);
+        const targetOrderId = Number(requestedOrderId);
+        if (orderList[0]) setSelectedOrderId(orderList.find(item => item.orderId === targetOrderId)?.orderId ?? orderList[0].orderId);
       } catch (error) {
         if (!cancelled) setDashboardError(getApiErrorMessage(error, "마이페이지 정보를 불러오지 못했습니다."));
       } finally {
@@ -126,7 +146,7 @@ export default function MyPageDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, requestedTab, requestedOrderId]);
 
   const requestedAmount = useMemo(
     () => selectedAmount ?? (Number(customAmount.replaceAll(",", "")) || 0),
@@ -156,6 +176,7 @@ export default function MyPageDashboard() {
       }
 
       setActiveTab(tab);
+      if (requestedTab || requestedOrderId) router.replace("/my-page", { scroll: false });
       if (tab === "account") setAccountView("summary");
       if (tab === "recharge") setAccountView("recharge");
     });
@@ -284,9 +305,10 @@ export default function MyPageDashboard() {
   return (
     <div className="market-theme market-grid min-h-[calc(100vh-4rem)] break-keep text-ink">
       <section className="min-w-0 px-3 py-4 sm:px-5 lg:px-8">
-        <MyPageNavigation activeTab={activeTab} onChange={changeTab} />
+        <div className="my-page-layout mx-auto w-full max-w-[1540px]">
+          <MyPageNavigation activeTab={activeTab} onChange={changeTab} />
 
-        <div className="mx-auto w-full max-w-[1540px] rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
+        <div className="min-w-0 rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
           {activeTab === "profile" && showSurvey && <>
             <button type="button" onClick={() => { setShowSurvey(false); router.replace("/my-page"); }} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold">내 정보로 돌아가기</button>
             <InvestmentSurvey onComplete={() => { setShowSurvey(false); router.replace("/my-page"); }} onSaved={(result) => {
@@ -409,6 +431,7 @@ export default function MyPageDashboard() {
 
           {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} apiOrders={apiOrders} isLoading={isDashboardLoading} error={dashboardError} />}
           {activeTab === "returns" && <ReturnsPanel profit={accountProfit} rows={realizedReturns} />}
+        </div>
         </div>
       </section>
 

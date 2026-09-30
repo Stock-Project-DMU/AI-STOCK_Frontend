@@ -232,6 +232,11 @@ a {
 
   .cq-planner-history {
     width: 240px;
+    height: calc(100dvh - 72px);
+    min-height: 0;
+    position: sticky;
+    top: 72px;
+    align-self: flex-start;
     border-right: 1px solid var(--market-line);
     border-bottom-width: 0;
   }
@@ -239,6 +244,7 @@ a {
   .cq-planner-session-list {
     max-height: none;
     flex: 1;
+    min-height: 0;
   }
 
   .cq-stock-information-nav {
@@ -260,6 +266,10 @@ a {
 }
 
 @container app-content (min-width: 72rem) {
+  .ai-chat-page {
+    height: calc(100dvh - 72px);
+  }
+
   .cq-planner-chat-row,
   .cq-briefing-shell,
   .cq-simulation-shell {
@@ -301,6 +311,43 @@ a {
   .cq-profile-layout {
     grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
   }
+}
+
+@container app-content (min-width: 40rem) {
+  .my-page-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .my-page-navigation {
+    position: sticky;
+    top: 88px;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+
+  .my-page-navigation-items {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-layout {
+    display: block;
+  }
+
+  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-navigation {
+    position: static;
+    margin-bottom: 0.75rem;
+    overflow-x: auto;
+  }
+
+  main:has(#portfolio-sidebar-panel[aria-hidden="false"]) .my-page-navigation-items {
+    min-width: 650px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
 }
 
 @container app-content (min-width: 80rem) {

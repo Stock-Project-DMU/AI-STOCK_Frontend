@@ -11,6 +11,15 @@ import { getMarketRankings, type MarketRanking } from "@/lib/api/market";
 
 type SortKey = "현재가" | "상승순" | "하락순" | "거래량" | "거래대금";
 
+// 상승순/하락순은 현재 목록 재정렬이 아니라 코스피·코스닥 전체 시장 기준 순위를 백엔드에서 받아온다.
+const RANKING_SORT: Record<SortKey, string> = {
+    현재가: "market-cap",
+    상승순: "rise",
+    하락순: "fall",
+    거래량: "volume",
+    거래대금: "value",
+};
+
 export default function StockTable() {
     const router = useRouter();
     const tableRef = useRef<HTMLElement>(null);
@@ -40,7 +49,7 @@ export default function StockTable() {
         async function load() {
             setLoadingMarket(true); setMarketError("");
             try {
-                const items = await getMarketRankings(sortKey === "거래대금" ? "value" : sortKey === "거래량" ? "volume" : "market-cap");
+                const items = await getMarketRankings(RANKING_SORT[sortKey]);
                 if (active) setMarketRows(items);
             } catch (error) { if (active) { setMarketRows([]); setMarketError(getApiErrorMessage(error, "시세를 불러오지 못했습니다.")); } }
             finally { if (active) setLoadingMarket(false); }
@@ -87,13 +96,10 @@ export default function StockTable() {
         }
     }
     const rows = useMemo(() => {
-        const items = marketRows.map(item => ({ code: item.stockCode, name: item.stockName,
+        return marketRows.map(item => ({ code: item.stockCode, name: item.stockName,
             changeRate: item.changeRate == null ? "—" : (item.changeRate >= 0 ? "+" : "") + item.changeRate.toFixed(2) + "%",
             currentPrice: item.price?.toLocaleString("ko-KR") ?? "—" }));
-        if (sortKey === "상승순") return items.sort((a, b) => Number.parseFloat(b.changeRate) - Number.parseFloat(a.changeRate));
-        if (sortKey === "하락순") return items.sort((a, b) => Number.parseFloat(a.changeRate) - Number.parseFloat(b.changeRate));
-        return items;
-    }, [sortKey, marketRows]);
+    }, [marketRows]);
     const totalPages = Math.max(1, Math.ceil(rows.length / HOME_STOCK_PAGE_SIZE));
     const pageStart = (currentPage - 1) * HOME_STOCK_PAGE_SIZE;
     const visibleRows = rows.slice(pageStart, pageStart + HOME_STOCK_PAGE_SIZE);

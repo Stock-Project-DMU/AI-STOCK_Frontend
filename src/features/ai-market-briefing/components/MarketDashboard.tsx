@@ -19,7 +19,7 @@ export default function MarketDashboard({ side = "right" }: { side?: "left" | "r
         });
         return () => { active = false; };
     }, []);
-    return <aside className={`cq-market-dashboard shrink-0 bg-canvas p-4 ${side === "left" ? "border-r border-hairline" : "border-l border-hairline"}`}>
+    return <aside className={`cq-market-dashboard shrink-0 overflow-y-auto bg-canvas p-4 ${side === "left" ? "border-r border-hairline" : "border-l border-hairline"}`}>
         <h2 className="flex items-center gap-1.5 text-sm font-bold text-ink"><TrendUpIcon className="h-3.5 w-3.5" />시장 현황</h2>
         {error && <p role="alert" className="mt-4 text-xs text-red-500">{error}</p>}
         <div className="mt-4 overflow-hidden rounded-md border border-hairline border-t-2 border-t-primary">{indexes.map(index => <div key={index.industryCode} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border-b border-hairline-soft px-3 py-2.5 text-[12px] last:border-0"><strong className="text-ink">{index.industryName}</strong><span className="num text-right font-semibold text-ink">{index.indexValue?.toLocaleString() ?? "—"} · <span className={index.changeRate != null && index.changeRate < 0 ? "text-down" : "text-up"}>{index.changeRate == null ? "—" : `${index.changeRate > 0 ? "+" : ""}${index.changeRate}%`}</span></span></div>)}</div>
