@@ -70,7 +70,6 @@ export function signup(request: {
     name: string;
     email: string;
     birthdate: string;
-    investmentLevel?: "BEGINNER" | "INTERMEDIATE" | "EXPERT";
 }) {
     return apiRequest<SignupResponse>("/api/auth/signup", {
         method: "POST",

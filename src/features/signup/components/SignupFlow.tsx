@@ -3,18 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { checkLoginId, sendEmailVerificationCode, signup, verifyEmailCode } from "@/lib/api/auth";
+import { checkLoginId, login, sendEmailVerificationCode, signup, verifyEmailCode } from "@/lib/api/auth";
+import InvestmentSurvey from "@/features/ai-financial-planner/components/InvestmentSurvey";
 import {
     TERMS_AND_CONDITIONS,
     type TermDetail,
 } from "@/features/signup/constants/terms";
 import TermDetailModal from "./TermDetailModal";
-import InvestmentExperienceStep from "./InvestmentExperienceStep";
 import SignupCard from "./SignupCard";
 import SignupFormStep from "./SignupFormStep";
 import TermsAgreementStep from "./TermsAgreementStep";
 import type {
-    InvestmentExperienceLevel,
     SignupFormErrors,
     SignupFormData,
     SignupStep,
@@ -43,7 +42,7 @@ type SignupTextField = Exclude<keyof SignupFormData, "birthDate">;
 const STEP_TITLE: Record<SignupStep, string> = {
     terms: "약관 동의",
     account: "회원가입",
-    experience: "투자 경험 선택",
+    survey: "투자 성향 설문",
 };
 
 function createCheckedTerms(checked: boolean) {
@@ -64,8 +63,7 @@ export default function SignupFlow() {
         useState<SignupFormData>(INITIAL_FORM_DATA);
     const [birthDateInput, setBirthDateInput] = useState("");
     const [formErrors, setFormErrors] = useState<SignupFormErrors>({});
-    const [selectedExperience, setSelectedExperience] =
-        useState<InvestmentExperienceLevel | null>(null);
+    const [createdCredentials, setCreatedCredentials] = useState<{ loginId: string; password: string } | null>(null);
     const [emailCode, setEmailCode] = useState("");
     const [emailVerificationStatus, setEmailVerificationStatus] = useState<"idle" | "sent" | "verified">("idle");
     const [isSendingEmailCode, setIsSendingEmailCode] = useState(false);
@@ -110,7 +108,7 @@ export default function SignupFlow() {
             return;
         }
 
-        setCurrentStep((prev) => (prev === "experience" ? "account" : "terms"));
+        setCurrentStep("terms");
     };
 
     const handleToggleAllTerms = (checked: boolean) => {
@@ -283,45 +281,47 @@ export default function SignupFlow() {
         return nextErrors;
     };
 
-    const handleNextAccountStep = () => {
-        const nextErrors = validateAccountStep();
+    const handleNextAccountStep = async () => {
+        const nextErrors = createdCredentials ? {} : validateAccountStep();
 
         if (Object.keys(nextErrors).length > 0) {
             setFormErrors(nextErrors);
             return;
         }
 
-        setFormErrors({});
-        setCurrentStep("experience");
-    };
-
-    const handleCompleteSignup = async () => {
-        if (!selectedExperience) {
-            return;
-        }
-
         setIsSubmittingSignup(true);
-        setFormErrors((current) => ({ ...current, submit: undefined }));
+        setFormErrors({});
+        const credentials = createdCredentials ?? { loginId: formData.userId.trim(), password: formData.password };
+        let signupSucceeded = Boolean(createdCredentials);
 
         try {
-            await signup({
-                loginId: formData.userId.trim(),
-                password: formData.password,
-                name: formData.name.trim(),
-                email,
-                investmentLevel: selectedExperience === "beginner" ? "BEGINNER" : selectedExperience === "intermediate" ? "INTERMEDIATE" : "EXPERT",
-                birthdate: `${birthDateInput.slice(0, 4)}-${birthDateInput.slice(4, 6)}-${birthDateInput.slice(6, 8)}`,
-            });
-            router.push("/welcome");
+            if (!createdCredentials) {
+                await signup({
+                    loginId: credentials.loginId,
+                    password: credentials.password,
+                    name: formData.name.trim(),
+                    email,
+                    birthdate: `${birthDateInput.slice(0, 4)}-${birthDateInput.slice(4, 6)}-${birthDateInput.slice(6, 8)}`,
+                });
+                signupSucceeded = true;
+                setCreatedCredentials(credentials);
+            }
+            await login(credentials.loginId, credentials.password);
+            setCurrentStep("survey");
         } catch (error) {
-            setFormErrors((current) => ({ ...current, submit: getApiErrorMessage(error, "회원가입 처리에 실패했습니다.") }));
+            const message = getApiErrorMessage(error, signupSucceeded ? "다시 시도해 주세요." : "회원가입 처리에 실패했습니다.");
+            setFormErrors((current) => ({ ...current, submit: signupSucceeded ? `계정은 생성됐지만 자동 로그인에 실패했습니다. ${message}` : message }));
         } finally {
             setIsSubmittingSignup(false);
         }
     };
 
+    if (currentStep === "survey") {
+        return <div className="market-theme"><InvestmentSurvey onComplete={() => router.replace("/home")} completeLabel="AI STOCK 시작하기" /></div>;
+    }
+
     return (
-        <SignupCard title={STEP_TITLE[currentStep]} onBack={handleBack} wide={currentStep === "experience"}>
+        <SignupCard title={STEP_TITLE[currentStep]} onBack={handleBack}>
             {currentStep === "terms" ? (
                 <TermsAgreementStep
                     checkedTerms={checkedTerms}
@@ -351,19 +351,11 @@ export default function SignupFlow() {
                     onSendEmailCode={handleSendEmailCode}
                     onVerifyEmailCode={handleVerifyEmailCode}
                     onNext={handleNextAccountStep}
+                    isSubmitting={isSubmittingSignup}
+                    accountCreated={Boolean(createdCredentials)}
                     onCheckLoginId={handleCheckLoginId}
                     checkingLoginId={checkingLoginId}
                     loginIdAvailable={checkedLoginId === formData.userId.trim() && checkedLoginId !== ""}
-                />
-            ) : null}
-
-            {currentStep === "experience" ? (
-                <InvestmentExperienceStep
-                    selectedExperience={selectedExperience}
-                    onSelect={setSelectedExperience}
-                    onNext={handleCompleteSignup}
-                    isSubmitting={isSubmittingSignup}
-                    error={formErrors.submit}
                 />
             ) : null}
 

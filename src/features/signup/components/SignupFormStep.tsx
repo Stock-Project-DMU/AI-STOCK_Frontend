@@ -1,6 +1,7 @@
 import type { ChangeEvent } from "react";
 import { Button } from "@/components/common/Button";
 import type { SignupFormData, SignupFormErrors } from "../types";
+import { formatBirthDateInput } from "../validation";
 
 const EMAIL_DOMAIN_OPTIONS = ["naver.com", "gmail.com", "daum.net", "hanmail.net", "kakao.com"] as const;
 
@@ -23,6 +24,8 @@ type SignupFormStepProps = {
     onSendEmailCode: () => void;
     onVerifyEmailCode: () => void;
     onNext: () => void;
+    isSubmitting: boolean;
+    accountCreated: boolean;
 };
 
 export default function SignupFormStep({
@@ -42,6 +45,8 @@ export default function SignupFormStep({
     onSendEmailCode,
     onVerifyEmailCode,
     onNext,
+    isSubmitting,
+    accountCreated,
 }: SignupFormStepProps) {
     const handleChange =
         (field: SignupTextField) =>
@@ -230,26 +235,35 @@ export default function SignupFormStep({
                                 type="text"
                                 id="signup-birth-date"
                                 inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={8}
+                                pattern="[0-9-]*"
+                                maxLength={10}
                                 className={getInputClassName(
                                     Boolean(errors.birthDate),
                                     "w-full",
                                 )}
-                                placeholder="생년월일 8자리 입력"
-                                value={birthDateInput}
+                                placeholder="YYYY-MM-DD"
+                                value={formatBirthDateInput(birthDateInput)}
                                 onChange={(event) =>
                                     onBirthDateChange(
-                                        event.target.value.replace(/[^0-9]/g, ""),
+                                        event.target.value.replace(/[^0-9]/g, "").slice(0, 8),
                                     )
                                 }
+                                onKeyDown={(event) => {
+                                    const input = event.currentTarget;
+                                    const caret = input.selectionStart;
+                                    if (event.key !== "Backspace" || caret === null || caret !== input.selectionEnd || ![5, 8].includes(caret) || input.value[caret - 1] !== "-") return;
+                                    event.preventDefault();
+                                    const index = caret === 5 ? 3 : 5;
+                                    onBirthDateChange(birthDateInput.slice(0, index) + birthDateInput.slice(index + 1));
+                                    requestAnimationFrame(() => input.setSelectionRange(caret - 2, caret - 2));
+                                }}
                                 aria-invalid={Boolean(errors.birthDate)}
                                 aria-describedby="signup-birth-date-helper"
                             />
                             {renderHelperText(
                                 "signup-birth-date-helper",
                                 errors.birthDate,
-                                "예: 19990101",
+                                "예: 1999-01-01",
                             )}
                         </div>
 
@@ -355,9 +369,11 @@ export default function SignupFormStep({
                 fullWidth
                 className="mt-8"
                 onClick={onNext}
+                disabled={isSubmitting}
             >
-                다음
+                {isSubmitting ? "처리 중..." : accountCreated ? "자동 로그인 다시 시도" : "계정 만들고 투자 성향 설문 시작"}
             </Button>
+            {errors.submit && <p role="alert" className="mt-3 text-center text-sm font-semibold text-red-500">{errors.submit}</p>}
         </>
     );
 }
