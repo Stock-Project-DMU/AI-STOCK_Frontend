@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import MarketDashboard from "@/features/ai-market-briefing/components/MarketDashboard";
+import FinancialSummary from "@/features/ai-financial-planner/components/FinancialSummary";
 import { Button } from "@/components/common/Button";
 import type { SimulationSettings } from "../types";
 import GrowthChart from "./GrowthChart";
@@ -40,8 +40,6 @@ export default function GoalSimulator() {
 
     return (
         <div className="cq-simulation-shell market-theme market-grid flex min-h-[calc(100vh-4rem)] min-w-0 flex-col">
-            <MarketDashboard side="left" />
-
             <div className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
                 <section className="mx-auto max-w-[1220px] rounded-lg border border-hairline bg-canvas p-5 shadow-[0_4px_12px_rgba(0,0,0,.04)] sm:p-6">
                     <div className="flex items-start justify-between gap-4">
@@ -85,6 +83,8 @@ export default function GoalSimulator() {
                     )}
                 </section>
             </div>
+
+            <FinancialSummary />
 
             {saveOpen && <SaveSimulationModal onSelect={plan => { setResult(plan); setSettings(plan.settings); setResultSettings(plan.settings); setSaveOpen(false); }} onUpdate={plan => {
                 if (result?.planId !== plan.planId) return;

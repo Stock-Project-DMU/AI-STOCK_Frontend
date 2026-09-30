@@ -145,15 +145,6 @@ a {
   border-left: 0;
 }
 
-.cq-market-dashboard {
-  width: 100%;
-  border-top: 1px solid var(--market-line);
-}
-
-.cq-simulation-shell > .cq-market-dashboard {
-  order: 2;
-}
-
 @container app-content (min-width: 48rem) {
   .cq-home-hero {
     grid-template-columns: minmax(0, 1fr) 500px;
@@ -280,15 +271,6 @@ a {
     width: 300px;
     border-top: 0;
     border-left: 1px solid var(--market-line);
-  }
-
-  .cq-market-dashboard {
-    width: 280px;
-    border-top: 0;
-  }
-
-  .cq-simulation-shell > .cq-market-dashboard {
-    order: 0;
   }
 
   .cq-briefing-navigation {

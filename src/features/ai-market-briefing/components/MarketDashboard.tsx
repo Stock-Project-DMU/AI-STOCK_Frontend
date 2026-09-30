@@ -4,12 +4,6 @@ import Link from "next/link";
 import { TrendUpIcon } from "@/components/icons/Icon";
 import { getMarketIndexes, getMarketRankings, type MarketIndex, type MarketRanking } from "@/lib/api/market";
 import { getApiErrorMessage } from "@/lib/api/client";
-export default function MarketDashboard({ side = "right" }: { side?: "left" | "right" }) {
-    return <aside className={`cq-market-dashboard shrink-0 overflow-y-auto bg-canvas p-4 ${side === "left" ? "border-r border-hairline" : "border-l border-hairline"}`}>
-        <MarketDashboardContent />
-    </aside>;
-}
-
 export function MarketDashboardContent() {
     const [indexes, setIndexes] = useState<MarketIndex[]>([]);
     const [rankings, setRankings] = useState<MarketRanking[]>([]);
