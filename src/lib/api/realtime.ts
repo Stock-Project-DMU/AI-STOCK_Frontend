@@ -2,17 +2,22 @@ import { getAccessToken } from "./client";
 import type { HogaResponse, StockPriceResponse } from "./types";
 
 // Spring STOMP 텍스트 프레임을 처리한다. 화면 종료 시 구독과 재접속 타이머를 함께 정리한다.
+// 비회원은 Authorization 헤더 없이 연결한다 — 서버는 익명 세션에 종목 현재가·호가 토픽 구독만 허용한다.
 export function subscribeStock(code: string, onPrice: (price: StockPriceResponse) => void, onHoga: (hoga: HogaResponse) => void, onStatus: (status: string) => void) {
     let stopped = false;
     let socket: WebSocket | null = null;
     let retry: ReturnType<typeof setTimeout> | undefined;
     let attempts = 0;
     function connect() {
-        if (stopped || !getAccessToken()) return;
+        if (stopped) return;
         const base = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
         socket = new WebSocket(base.replace(/^http/, "ws") + "/ws-stomp", ["v12.stomp"]);
         let buffer = "";
-        socket.onopen = () => socket?.send("CONNECT\naccept-version:1.2\nhost:localhost\nheart-beat:0,0\nAuthorization:Bearer " + getAccessToken() + "\n\n\0");
+        socket.onopen = () => {
+            const token = getAccessToken();
+            const authorization = token ? `Authorization:Bearer ${token}\n` : "";
+            socket?.send(`CONNECT\naccept-version:1.2\nhost:localhost\nheart-beat:0,0\n${authorization}\n\0`);
+        };
         socket.onmessage = event => {
             buffer += String(event.data);
             let end: number;
