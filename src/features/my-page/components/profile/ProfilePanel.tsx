@@ -10,12 +10,14 @@ import type {
   ProfileErrors,
   ProfileField,
 } from "../../model";
+import type { LoginProvider } from "@/lib/api/client";
 
 type ProfilePanelProps = {
   profile: Profile;
   draftProfile: Profile;
   isEditing: boolean;
   isSocialAccount: boolean;
+  loginProvider: LoginProvider | null;
   errors: ProfileErrors;
   saveError?: string;
   isSaving?: boolean;
@@ -58,6 +60,7 @@ export default function ProfilePanel({
   draftProfile,
   isEditing,
   isSocialAccount,
+  loginProvider,
   errors,
   saveError,
   isSaving = false,
@@ -71,6 +74,11 @@ export default function ProfilePanel({
 }: ProfilePanelProps) {
   const accountRows = isSocialAccount ? rows.slice(2, 5) : rows.slice(0, 5);
   const investmentRows = rows.slice(5);
+  const providerInfo = loginProvider ? {
+    KAKAO: { label: "카카오", symbol: "K", className: "bg-[#fee500] text-[#191919]" },
+    NAVER: { label: "네이버", symbol: "N", className: "bg-[#03c75a] text-white" },
+    GOOGLE: { label: "구글", symbol: "G", className: "border border-hairline bg-white text-[#4285f4]" },
+  }[loginProvider] : null;
 
   const renderRows = (items: typeof rows, editable = isEditing) => (
     <dl className="divide-y divide-gray-200">
@@ -124,7 +132,7 @@ export default function ProfilePanel({
   return (
     <div className="mx-auto max-w-[1180px]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-3"><h1 className="text-xl font-bold">내 정보</h1>{isSocialAccount && <span className="rounded-full border border-hairline px-2.5 py-1 text-xs font-semibold text-muted">소셜 로그인 계정</span>}</div>
+        <h1 className="text-xl font-bold">내 정보</h1>
         <div className="flex gap-2">
           {isEditing && <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>}
           <button type="button" onClick={isEditing ? onSave : onEdit} disabled={isSaving} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60">{isSaving ? "저장 중..." : isEditing ? "완료" : "정보 수정"}</button>
@@ -136,6 +144,17 @@ export default function ProfilePanel({
         <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
           <div className="mb-2"><h2 className="font-bold">기본 정보</h2></div>
           {renderRows(accountRows)}
+          {providerInfo && (
+            <dl className="border-t border-gray-200">
+              <div className="grid min-h-12 grid-cols-[100px_minmax(0,1fr)] items-center gap-3 py-2 sm:grid-cols-[110px_minmax(0,1fr)]">
+                <dt className="text-xs font-semibold text-muted sm:text-sm">소셜 로그인</dt>
+                <dd className="flex items-center gap-2 text-sm font-bold text-ink">
+                  <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-md text-xs font-black ${providerInfo.className}`}>{providerInfo.symbol}</span>
+                  <span>{providerInfo.label}</span>
+                </dd>
+              </div>
+            </dl>
+          )}
         </section>
 
         <section className="rounded-lg border border-hairline p-4 sm:p-5">

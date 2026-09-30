@@ -15,5 +15,5 @@ export async function finishOAuth(provider: OAuthProvider, code: string, state: 
         throw new Error("로그인 요청이 만료되었거나 일치하지 않습니다. 다시 로그인해 주세요.");
     }
     const result = await apiRequest<LoginResponse>("/api/auth/oauth/login", { method: "POST", auth: false, credentials: "include", body: JSON.stringify({ provider, code, state }) });
-    saveAuthTokens(result, result.name);
+    saveAuthTokens(result, result.name, provider);
 }

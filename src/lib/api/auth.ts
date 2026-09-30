@@ -33,7 +33,7 @@ export async function login(loginId: string, password: string) {
         auth: false,
         body: JSON.stringify({ loginId, password }),
     });
-    saveAuthTokens(response, response.name);
+    saveAuthTokens(response, response.name, null);
     return response;
 }
 

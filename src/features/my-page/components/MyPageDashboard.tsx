@@ -16,7 +16,7 @@ import ProfilePanel from "./profile/ProfilePanel";
 import { PasswordCheckModal, ProfileSavedModal, UnsavedChangesModal, WithdrawalModal } from "./profile/ProfileModals";
 import ReturnsPanel from "./returns/ReturnsPanel";
 import InvestmentSurvey from "@/features/ai-financial-planner/components/InvestmentSurvey";
-import { getApiErrorMessage, isAuthenticated } from "@/lib/api/client";
+import { getApiErrorMessage, getAuthenticatedLoginProvider, isAuthenticated, type LoginProvider } from "@/lib/api/client";
 import { needsSocialProfileCompletion } from "@/lib/api/auth-navigation";
 import { getAccountProfit, getAccounts, getOrders, getChargeRequests, getRealizedReturns, requestCharge } from "@/lib/api/portfolio";
 import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse, RealizedReturnResponse } from "@/lib/api/types";
@@ -34,6 +34,7 @@ export default function MyPageDashboard() {
   const [draftProfile, setDraftProfile] = useState(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isSocialAccount, setIsSocialAccount] = useState(false);
+  const [loginProvider, setLoginProvider] = useState<LoginProvider | null>(null);
   const [profileErrors, setProfileErrors] = useState<ProfileErrors>({});
   const [showPasswordCheck, setShowPasswordCheck] = useState(false);
   const [passwordCheckValue, setPasswordCheckValue] = useState("");
@@ -90,6 +91,7 @@ export default function MyPageDashboard() {
           return;
         }
         setIsSocialAccount(user.loginId === null);
+        setLoginProvider(getAuthenticatedLoginProvider());
 
         setProfile((current) => ({
           ...current,
@@ -327,6 +329,7 @@ export default function MyPageDashboard() {
               draftProfile={draftProfile}
               isEditing={isEditing}
               isSocialAccount={isSocialAccount}
+              loginProvider={loginProvider}
               errors={profileErrors}
               saveError={profileSaveError}
               isSaving={isSavingProfile}

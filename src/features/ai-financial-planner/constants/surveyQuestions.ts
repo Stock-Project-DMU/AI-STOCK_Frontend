@@ -22,6 +22,7 @@ export const SURVEY_QUESTIONS: SurveyQuestion[] = [
     {
         title: "지금까지의 투자 경험",
         options: ["선물·옵션", "주식 신용거래", "레버리지·인버스 ETF", "원금 비보장 ELS", "주식형 펀드"],
+        multiple: true,
     },
     {
         title: "주식, 채권, 펀드에 대해",

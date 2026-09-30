@@ -13,7 +13,7 @@ type InvestmentSurveyProps = { completeLabel?: string; onComplete: (result: Inve
 
 export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = "확인" }: InvestmentSurveyProps) {
     const [step, setStep] = useState(-1);
-    const [answers, setAnswers] = useState<string[]>([]);
+    const [answers, setAnswers] = useState<string[][]>([]);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [result, setResult] = useState<InvestmentProfileResponse | null>(null);
@@ -21,8 +21,10 @@ export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = 
         if (step < SURVEY_QUESTIONS.length - 1) { setStep(step + 1); return; }
         setSaving(true); setError("");
         try {
-            const indices = answers.map((answer, index) => SURVEY_QUESTIONS[index].options.indexOf(answer) + 1);
-            const saved = await saveInvestmentSurvey({ answers: indices });
+            const indices = SURVEY_QUESTIONS.map((question, index) =>
+                Math.min(...answers[index].map(answer => question.options.indexOf(answer) + 1)));
+            const experienceAnswers = answers[3].map(answer => SURVEY_QUESTIONS[3].options.indexOf(answer) + 1).sort((a, b) => a - b);
+            const saved = await saveInvestmentSurvey({ answers: indices, experienceAnswers });
             setResult(saved); setStep(SURVEY_QUESTIONS.length); onSaved?.(saved);
         } catch (cause) { setError(getApiErrorMessage(cause, "설문을 저장하지 못했습니다.")); }
         finally { setSaving(false); }
@@ -49,16 +51,24 @@ export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = 
                                 <h1 className="text-2xl font-bold text-ink">{question.title}</h1>
                                 <p className="text-sm font-semibold text-muted">{step + 1}/8</p>
                             </div>
+                            {question.multiple && <p className="mt-3 text-sm text-muted">해당하는 경험을 모두 선택해 주세요. 중복 선택이 가능합니다.</p>}
                             <div className="mt-8 space-y-2">
                                 {question.options.map((option) => {
-                                    const selected = answers[step] === option;
+                                    const selected = answers[step]?.includes(option) ?? false;
                                     return (
                                         <button
                                             key={option}
+                                            type="button"
+                                            aria-pressed={selected}
                                             onClick={() =>
                                                 setAnswers((current) => {
                                                     const next = [...current];
-                                                    next[step] = option;
+                                                    const selectedAnswers = current[step] ?? [];
+                                                    next[step] = question.multiple
+                                                        ? selectedAnswers.includes(option)
+                                                            ? selectedAnswers.filter(answer => answer !== option)
+                                                            : [...selectedAnswers, option]
+                                                        : [option];
                                                     return next;
                                                 })
                                             }
@@ -75,7 +85,7 @@ export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = 
                             {error && <p role="alert" className="mt-4 text-sm text-red-500">{error}</p>}
                             <div className="mt-auto flex justify-end gap-3 pt-8">
                                 <Button variant="secondary" size="lg" disabled={saving} onClick={() => setStep((current) => current - 1)}>이전</Button>
-                                <Button variant="primary" size="lg" disabled={!answers[step] || saving} onClick={() => void next()}>{saving ? "저장 중…" : step === SURVEY_QUESTIONS.length - 1 ? "결과 저장" : "다음"}</Button>
+                                <Button variant="primary" size="lg" disabled={!answers[step]?.length || saving} onClick={() => void next()}>{saving ? "저장 중…" : step === SURVEY_QUESTIONS.length - 1 ? "결과 저장" : "다음"}</Button>
                             </div>
                         </>
                     )
