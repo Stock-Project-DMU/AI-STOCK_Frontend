@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { getAccounts, getHoldings } from "@/lib/api/portfolio";
+import { MARKET_REFRESH_INTERVAL_MS } from "@/lib/api/market";
 import { addWatchlist, removeWatchlist, WATCHLIST_CHANGED, RECENT_VIEWED_CHANGED, getRecentViewed, getStockPrice, getWatchlist } from "@/lib/api/stock";
 import type { Holding, SidebarStockItem } from "./types";
 
@@ -73,8 +74,9 @@ export function useSidebarPortfolio() {
 
         let cancelled = false;
 
-        const load = async () => {
-            setData((current) => ({ ...current, isLoading: true, error: "" }));
+        // silent: 주기적 시세 갱신용 — 로딩 표시·중간 목록 교체 없이 값만 바꾸고, 실패해도 기존 화면을 유지한다.
+        const load = async (silent: boolean) => {
+            if (!silent) setData((current) => ({ ...current, isLoading: true, error: "" }));
 
             try {
                 const [accounts, watchlistRows, recentRows] = await Promise.all([
@@ -86,7 +88,7 @@ export function useSidebarPortfolio() {
                 if (cancelled) return;
                 setFavoriteCodes(new Set(watchlistRows.map(item => item.stockCode)));
                 // Show saved lists immediately; slow quote requests should not hide navigation.
-                setData(current => {
+                if (!silent) setData(current => {
                     const known = new Map([...current.watchlist, ...current.recent].map(item => [item.meta, item]));
                     const toSavedItem = (item: { stockCode: string; stockName: string }): SidebarStockItem => ({
                         name: item.stockName || item.stockCode,
@@ -101,8 +103,11 @@ export function useSidebarPortfolio() {
                 const stockCodes = [...new Set([...watchlistRows, ...recentRows].map((item) => item.stockCode))];
                 const prices = await Promise.allSettled(stockCodes.map((code) => getStockPrice(code)));
                 const priceMap = new Map(prices.flatMap((result, index) => result.status === "fulfilled" ? [[stockCodes[index], result.value] as const] : []));
-                const toStockItem = (item: { stockCode: string; stockName: string }): SidebarStockItem => {
+                // 시세 조회가 일시적으로 실패한 종목은 직전에 표시하던 가격을 유지한다(주기 갱신 중 깜빡임 방지).
+                const toStockItem = (known: Map<string, SidebarStockItem>) => (item: { stockCode: string; stockName: string }): SidebarStockItem => {
                     const price = priceMap.get(item.stockCode);
+                    const previous = known.get(item.stockCode);
+                    if (!price && previous) return { ...previous, name: item.stockName || previous.name };
                     return {
                         name: item.stockName || price?.stockName || item.stockCode,
                         meta: item.stockCode,
@@ -113,26 +118,29 @@ export function useSidebarPortfolio() {
 
                 if (cancelled) return;
 
-                setData({
-                    holdings: holdingRows.map((holding) => {
-                        const cost = holding.avgPrice * holding.quantity;
-                        return {
-                            stockCode: holding.stockCode,
-                            name: holding.stockName || holding.stockCode,
-                            quantity: holding.quantity,
-                            amountValue: holding.currentPrice * holding.quantity,
-                            profitValue: holding.evaluationProfit,
-                            rate: formatRate(cost === 0 ? 0 : (holding.evaluationProfit / cost) * 100),
-                        };
-                    }),
-                    balances: accounts.map((account) => account.balance),
-                    watchlist: watchlistRows.map(toStockItem),
-                    recent: recentRows.map(toStockItem),
-                    isLoading: false,
-                    error: "",
+                setData(current => {
+                    const known = new Map([...current.watchlist, ...current.recent].map(item => [item.meta, item]));
+                    return {
+                        holdings: holdingRows.map((holding) => {
+                            const cost = holding.avgPrice * holding.quantity;
+                            return {
+                                stockCode: holding.stockCode,
+                                name: holding.stockName || holding.stockCode,
+                                quantity: holding.quantity,
+                                amountValue: holding.currentPrice * holding.quantity,
+                                profitValue: holding.evaluationProfit,
+                                rate: formatRate(cost === 0 ? 0 : (holding.evaluationProfit / cost) * 100),
+                            };
+                        }),
+                        balances: accounts.map((account) => account.balance),
+                        watchlist: watchlistRows.map(toStockItem(known)),
+                        recent: recentRows.map(toStockItem(known)),
+                        isLoading: false,
+                        error: "",
+                    };
                 });
             } catch (error) {
-                if (!cancelled) {
+                if (!cancelled && !silent) {
                     setData((current) => ({
                         ...current,
                         isLoading: false,
@@ -142,9 +150,14 @@ export function useSidebarPortfolio() {
             }
         };
 
-        void load();
+        void load(false);
+        // 내 투자(평가액)·관심·최근 본 종목 가격을 화면이 보이는 동안 주기적으로 갱신한다.
+        const timer = window.setInterval(() => {
+            if (document.visibilityState === "visible") void load(true);
+        }, MARKET_REFRESH_INTERVAL_MS);
         return () => {
             cancelled = true;
+            window.clearInterval(timer);
         };
     }, [authenticated, revision]);
 

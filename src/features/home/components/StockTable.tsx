@@ -7,7 +7,7 @@ import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { addWatchlist, getWatchlist, removeWatchlist, WATCHLIST_CHANGED } from "@/lib/api/stock";
 import { HOME_STOCK_PAGE_SIZE } from "../constants/stockData";
-import { getMarketRankings, type MarketRanking } from "@/lib/api/market";
+import { getMarketRankings, MARKET_REFRESH_INTERVAL_MS, type MarketRanking } from "@/lib/api/market";
 
 type SortKey = "현재가" | "상승순" | "하락순" | "거래량" | "거래대금";
 
@@ -54,7 +54,18 @@ export default function StockTable() {
             } catch (error) { if (active) { setMarketRows([]); setMarketError(getApiErrorMessage(error, "시세를 불러오지 못했습니다.")); } }
             finally { if (active) setLoadingMarket(false); }
         }
-        void load(); return () => { active = false; };
+        // 화면이 보이는 동안 주기적으로 조용히 다시 불러와 새로고침 없이 시세가 바뀌게 한다.
+        // 일시적인 실패는 기존 목록을 그대로 두고 다음 주기에 다시 시도한다.
+        async function refresh() {
+            if (document.visibilityState !== "visible") return;
+            try {
+                const items = await getMarketRankings(RANKING_SORT[sortKey]);
+                if (active) { setMarketRows(items); setMarketError(""); }
+            } catch { /* 다음 주기에 재시도 */ }
+        }
+        void load();
+        const timer = window.setInterval(() => void refresh(), MARKET_REFRESH_INTERVAL_MS);
+        return () => { active = false; window.clearInterval(timer); };
     }, [sortKey, authenticated]);
 
     useEffect(() => {

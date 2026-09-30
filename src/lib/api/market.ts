@@ -11,3 +11,6 @@ export const getStockHistory = (code: string, months: number) => apiRequest<Hist
 export const getStockResearch = (code: string, section: string) => apiRequest<unknown>(`/api/market/stocks/${encodeURIComponent(code)}/${section === "overview" ? "detail" : "research?section=" + encodeURIComponent(section)}`, { auth: false });
 export const getMarketIndexes = () => apiRequest<MarketIndex[]>("/api/market/indexes", { auth: false });
 export const getMarketNews = (query: string, signal?: AbortSignal) => apiRequest<{ results: MarketNews[] }>(`/api/market/news?query=${encodeURIComponent(query)}`, { signal, auth: false });
+
+// 홈 주요 종목·우측 사이드바 시세 자동 갱신 주기. 백엔드 순위 조회가 10초 캐시라 그보다 짧게 잡아도 값이 바뀌지 않는다.
+export const MARKET_REFRESH_INTERVAL_MS = 10_000;
