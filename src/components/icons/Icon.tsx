@@ -212,6 +212,16 @@ export function PlusIcon({ className = "h-4 w-4" }: IconProps) {
     );
 }
 
+export function MoreHorizontalIcon({ className = "h-4 w-4" }: IconProps) {
+    return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="1.8" />
+            <circle cx="12" cy="12" r="1.8" />
+            <circle cx="19" cy="12" r="1.8" />
+        </svg>
+    );
+}
+
 export function NewsIcon({ className = "h-4 w-4" }: IconProps) {
     return (
         <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none">

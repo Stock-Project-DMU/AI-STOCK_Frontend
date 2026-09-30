@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { PlusIcon } from "@/components/icons/Icon";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { MoreHorizontalIcon, PlusIcon } from "@/components/icons/Icon";
 import type { PlanningSession } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
 
@@ -16,13 +16,35 @@ type PlannerHistoryProps = {
 
 export default function PlannerHistory({ onNewDiagnosis, onNewChat, loading, sessions, selectedId, onSelect, onRename, onDelete }: PlannerHistoryProps) {
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
     const [draftTitle, setDraftTitle] = useState("");
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [busyId, setBusyId] = useState<number | null>(null);
     const [error, setError] = useState("");
+    const openMenuRef = useRef<HTMLDivElement | null>(null);
+    const menuButtonRef = useRef<HTMLButtonElement | null>(null);
     const deletingSession = sessions.find(session => session.sessionId === deletingId);
 
+    useEffect(() => {
+        if (openMenuId === null) return;
+        const closeOnOutsideClick = (event: PointerEvent) => {
+            if (!openMenuRef.current?.contains(event.target as Node)) setOpenMenuId(null);
+        };
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") return;
+            setOpenMenuId(null);
+            menuButtonRef.current?.focus();
+        };
+        document.addEventListener("pointerdown", closeOnOutsideClick);
+        document.addEventListener("keydown", closeOnEscape);
+        return () => {
+            document.removeEventListener("pointerdown", closeOnOutsideClick);
+            document.removeEventListener("keydown", closeOnEscape);
+        };
+    }, [openMenuId]);
+
     function beginEdit(session: PlanningSession) {
+        setOpenMenuId(null);
         setEditingId(session.sessionId);
         setDraftTitle(session.title || "새 상담");
         setDeletingId(null);
@@ -69,17 +91,21 @@ export default function PlannerHistory({ onNewDiagnosis, onNewChat, loading, ses
         <div className="cq-planner-session-list flex max-h-48 overflow-auto">
             {sessions.map(session => {
                 const editing = editingId === session.sessionId;
+                const menuOpen = openMenuId === session.sessionId;
                 const title = session.title || "새 상담";
-                return <div key={session.sessionId} className={`w-60 max-w-full shrink-0 border-l-2 p-2 ${selectedId === session.sessionId ? "border-primary bg-primary/6" : "border-transparent hover:bg-surface-soft"}`}>
+                return <div key={session.sessionId} ref={menuOpen ? openMenuRef : null} className={`w-60 max-w-full shrink-0 border-l-2 p-2 ${selectedId === session.sessionId ? "border-primary bg-primary/6" : "border-transparent hover:bg-surface-soft"}`}>
                     {editing ? <form onSubmit={event => void saveTitle(event, session.sessionId)} className="space-y-2">
                         <input autoFocus aria-label="채팅명" value={draftTitle} maxLength={100} onChange={event => setDraftTitle(event.target.value)} disabled={busyId !== null} className="w-full rounded border border-hairline bg-white px-2 py-1 text-sm outline-none focus:border-primary" />
                         <div className="flex gap-1.5 text-xs"><button type="submit" disabled={!draftTitle.trim() || busyId !== null} className="rounded-md bg-primary px-2.5 py-1 font-semibold text-white disabled:opacity-50">저장</button><button type="button" onClick={() => setEditingId(null)} disabled={busyId !== null} className="rounded-md border border-hairline bg-white px-2.5 py-1 text-body disabled:opacity-50">취소</button></div>
                     </form> : <>
                         <div className="flex min-w-0 items-center gap-1">
-                            <button type="button" onClick={() => onSelect(session.sessionId)} aria-pressed={selectedId === session.sessionId} disabled={busyId !== null} title={title} className={`min-w-0 flex-1 truncate text-left text-sm ${selectedId === session.sessionId ? "font-semibold text-primary" : "text-body"}`}>{title}</button>
-                            <button type="button" onClick={() => beginEdit(session)} aria-label={`${title} 이름 수정`} disabled={busyId !== null} className="shrink-0 rounded-md border border-hairline bg-white px-2 py-1 text-xs font-semibold text-body hover:border-primary hover:text-primary disabled:opacity-50">수정</button>
-                            <button type="button" onClick={() => { setDeletingId(session.sessionId); setEditingId(null); setError(""); }} aria-label={`${title} 삭제`} disabled={busyId !== null} className="shrink-0 rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">삭제</button>
+                            <button type="button" onClick={() => { setOpenMenuId(null); onSelect(session.sessionId); }} aria-pressed={selectedId === session.sessionId} disabled={busyId !== null} title={title} className={`min-w-0 flex-1 truncate text-left text-sm ${selectedId === session.sessionId ? "font-semibold text-primary" : "text-body"}`}>{title}</button>
+                            <button type="button" ref={menuOpen ? menuButtonRef : null} onClick={() => setOpenMenuId(current => current === session.sessionId ? null : session.sessionId)} aria-label={`${title} 옵션 ${menuOpen ? "닫기" : "열기"}`} aria-expanded={menuOpen} aria-controls={menuOpen ? `planner-session-options-${session.sessionId}` : undefined} disabled={busyId !== null} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-hairline bg-white text-muted hover:border-primary hover:text-primary disabled:opacity-50"><MoreHorizontalIcon /></button>
                         </div>
+                        {menuOpen && <div id={`planner-session-options-${session.sessionId}`} className="mt-2 flex gap-1.5 rounded-lg border border-hairline bg-white p-1.5 shadow-sm">
+                            <button type="button" onClick={() => beginEdit(session)} className="flex-1 rounded-md px-2 py-1.5 text-xs font-semibold text-body hover:bg-surface-soft hover:text-primary">수정</button>
+                            <button type="button" onClick={() => { setOpenMenuId(null); setDeletingId(session.sessionId); setEditingId(null); setError(""); }} className="flex-1 rounded-md px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50">삭제</button>
+                        </div>}
                     </>}
                 </div>;
             })}
