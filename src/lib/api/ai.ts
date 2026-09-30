@@ -16,7 +16,7 @@ export const saveGoalPlan = (id: number) => apiRequest<GoalPlan>(`/api/goal-plan
 export const deleteGoalPlan = (id: number) => apiRequest<null>(`/api/goal-plans/${id}`, { method: "DELETE" });
 export type NewsOutlet = { outletDomain: string; outletName: string };
 export type NewsSetting = NewsOutlet & { deliveryTime: string; lastAttemptAt: string | null };
-export type NewsBriefing = NewsOutlet & { briefingDate: string; content: string; sources: { title: string; link: string; outlet: string }[]; createdAt: string };
+export type NewsBriefing = NewsOutlet & { deliveryTime: string | null; briefingDate: string; content: string; sources: { title: string; link: string; outlet: string }[]; createdAt: string };
 export const getNewsOutlets = () => apiRequest<NewsOutlet[]>("/api/ai/news/outlets");
 export const getNewsSetting = () => apiRequest<NewsSetting | null>("/api/ai/news/settings");
 export const saveNewsSetting = (outletDomain: string, deliveryTime: string) => apiRequest<NewsSetting>("/api/ai/news/settings", { method: "PUT", body: JSON.stringify({ outletDomain, deliveryTime }) });
@@ -25,6 +25,15 @@ export const getBriefingByDate = (date: string) => apiRequest<NewsBriefing>(`/ap
 export type NewsChatTurn = { role: "USER" | "ASSISTANT"; content: string };
 export type NewsChatAnswer = { content: string; searchedAt: string; sources: { title: string; description: string; link: string; pubDate: string; outlet: string }[] };
 export const sendNewsChat = (content: string, history: NewsChatTurn[]) => apiRequest<NewsChatAnswer>("/api/ai/news/chat", { method: "POST", body: JSON.stringify({ content, history }) });
+export type NewsChatSession = { sessionId: number; outletDomain: string | null; outletName: string; deliveryTime: string | null; createdAt: string; updatedAt: string };
+export type NewsChatMessage = NewsChatTurn & { messageId: number; sources: NewsChatAnswer["sources"]; searchedAt: string | null; createdAt: string };
+export type NewsChatSessions = { currentSessionId: number; sessions: NewsChatSession[] };
+export const syncNewsChatSessions = () => apiRequest<NewsChatSessions>("/api/ai/news/chat/sessions/sync", { method: "POST" });
+export const getNewsChatMessages = (sessionId: number) => apiRequest<NewsChatMessage[]>(`/api/ai/news/chat/sessions/${sessionId}/messages`);
+export const sendNewsChatMessage = (sessionId: number, content: string, briefingDate: string | null) =>
+    apiRequest<NewsChatMessage[]>(`/api/ai/news/chat/sessions/${sessionId}/messages`, {
+        method: "POST", body: JSON.stringify({ content, briefingDate }),
+    });
 
 export type PlanningPreferences = { savedBriefingDates: string[]; linkedBriefingDates: string[]; linkedGoalPlanIds: number[] };
 export type PlanningConnectionOptions = {
