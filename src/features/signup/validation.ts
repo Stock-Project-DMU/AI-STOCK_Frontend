@@ -3,6 +3,13 @@ const NAME_PATTERN = /^[가-힣A-Za-z ]+$/;
 const EMAIL_LOCAL_PATTERN = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/;
 const EMAIL_DOMAIN_PATTERN = /^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
 
+export function formatBirthDateInput(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (digits.length < 4) return digits;
+    if (digits.length < 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+    return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+}
+
 export function parseBirthDate(value: string) {
     const match = /^(\d{4})(\d{2})(\d{2})$/.exec(value.trim());
 

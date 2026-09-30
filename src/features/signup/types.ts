@@ -1,4 +1,4 @@
-export type SignupStep = "terms" | "account" | "experience";
+export type SignupStep = "terms" | "account" | "survey";
 
 export type SignupFormData = {
     userId: string;
@@ -15,5 +15,3 @@ export type SignupFormErrors = Partial<Record<keyof SignupFormData, string>> & {
     emailVerification?: string;
     submit?: string;
 };
-
-export type InvestmentExperienceLevel = "beginner" | "intermediate" | "advanced";
