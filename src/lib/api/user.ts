@@ -26,6 +26,7 @@ export function changePassword(currentPassword: string, newPassword: string) {
 
 export function saveInvestmentSurvey(request: {
     answers: number[];
+    experienceAnswers: number[];
 }) {
     return apiRequest<InvestmentProfileResponse>("/api/users/me/survey", {
         method: "POST",

@@ -19,7 +19,7 @@ import InvestmentSurvey from "@/features/ai-financial-planner/components/Investm
 import { getApiErrorMessage, isAuthenticated } from "@/lib/api/client";
 import { needsSocialProfileCompletion } from "@/lib/api/auth-navigation";
 import { getAccountProfit, getAccounts, getOrders, getChargeRequests, getRealizedReturns, requestCharge } from "@/lib/api/portfolio";
-import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse, RealizedReturnResponse } from "@/lib/api/types";
+import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse, RealizedReturnResponse, UserInfoResponse } from "@/lib/api/types";
 import { getMyInfo, updateMyInfo, updateProfile, getInvestmentProfile } from "@/lib/api/user";
 
 export default function MyPageDashboard() {
@@ -34,6 +34,7 @@ export default function MyPageDashboard() {
   const [draftProfile, setDraftProfile] = useState(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isSocialAccount, setIsSocialAccount] = useState(false);
+  const [socialProvider, setSocialProvider] = useState<UserInfoResponse["socialProvider"]>(null);
   const [profileErrors, setProfileErrors] = useState<ProfileErrors>({});
   const [showPasswordCheck, setShowPasswordCheck] = useState(false);
   const [passwordCheckValue, setPasswordCheckValue] = useState("");
@@ -90,6 +91,7 @@ export default function MyPageDashboard() {
           return;
         }
         setIsSocialAccount(user.loginId === null);
+        setSocialProvider(user.socialProvider ?? null);
 
         setProfile((current) => ({
           ...current,
@@ -327,6 +329,7 @@ export default function MyPageDashboard() {
               draftProfile={draftProfile}
               isEditing={isEditing}
               isSocialAccount={isSocialAccount}
+              socialProvider={socialProvider}
               errors={profileErrors}
               saveError={profileSaveError}
               isSaving={isSavingProfile}

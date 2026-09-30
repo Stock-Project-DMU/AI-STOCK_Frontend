@@ -29,6 +29,7 @@ export type UserInfoResponse = {
     email: string | null;
     role: "USER" | "ADMIN";
     status: "ACTIVE" | "SUSPENDED" | "WITHDRAWN";
+    socialProvider?: "KAKAO" | "NAVER" | "GOOGLE" | null;
 };
 
 export type InvestmentProfileResponse = {

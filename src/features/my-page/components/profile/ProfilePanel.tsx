@@ -10,12 +10,14 @@ import type {
   ProfileErrors,
   ProfileField,
 } from "../../model";
+import type { UserInfoResponse } from "@/lib/api/types";
 
 type ProfilePanelProps = {
   profile: Profile;
   draftProfile: Profile;
   isEditing: boolean;
   isSocialAccount: boolean;
+  socialProvider?: UserInfoResponse["socialProvider"];
   errors: ProfileErrors;
   saveError?: string;
   isSaving?: boolean;
@@ -58,6 +60,7 @@ export default function ProfilePanel({
   draftProfile,
   isEditing,
   isSocialAccount,
+  socialProvider,
   errors,
   saveError,
   isSaving = false,
@@ -71,6 +74,11 @@ export default function ProfilePanel({
 }: ProfilePanelProps) {
   const accountRows = isSocialAccount ? rows.slice(2, 5) : rows.slice(0, 5);
   const investmentRows = rows.slice(5);
+  const providerInfo = socialProvider ? {
+    KAKAO: { label: "카카오", symbol: "K", className: "bg-[#fee500] text-[#191919]" },
+    NAVER: { label: "네이버", symbol: "N", className: "bg-[#03c75a] text-white" },
+    GOOGLE: { label: "구글", symbol: "G", className: "border border-hairline bg-white text-[#4285f4]" },
+  }[socialProvider] : null;
 
   const renderRows = (items: typeof rows, editable = isEditing) => (
     <dl className="divide-y divide-gray-200">
@@ -136,6 +144,17 @@ export default function ProfilePanel({
         <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
           <div className="mb-2"><h2 className="font-bold">기본 정보</h2></div>
           {renderRows(accountRows)}
+          {isSocialAccount && (
+            <dl className="border-t border-gray-200">
+              <div className="grid min-h-12 grid-cols-[100px_minmax(0,1fr)] items-center gap-3 py-2 sm:grid-cols-[110px_minmax(0,1fr)]">
+                <dt className="text-xs font-semibold text-muted sm:text-sm">소셜 로그인</dt>
+                <dd className="flex items-center gap-2 text-sm font-bold text-ink">
+                  {providerInfo && <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-md text-xs font-black ${providerInfo.className}`}>{providerInfo.symbol}</span>}
+                  <span>{providerInfo?.label ?? "소셜 계정"}</span>
+                </dd>
+              </div>
+            </dl>
+          )}
         </section>
 
         <section className="rounded-lg border border-hairline p-4 sm:p-5">
