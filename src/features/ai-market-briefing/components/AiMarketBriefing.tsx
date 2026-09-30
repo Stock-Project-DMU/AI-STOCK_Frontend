@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { GearIcon, NewsIcon } from "@/components/icons/Icon";
 import { getBriefingByDate, getBriefingHistory, getPlanningPreferences, savePlanningPreferences, type NewsBriefing, type PlanningPreferences } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
+import FinancialSummary from "@/features/ai-financial-planner/components/FinancialSummary";
 import DailyBriefing from "./DailyBriefing";
-import MarketDashboard from "./MarketDashboard";
 import NewsChat from "./NewsChat";
 import SavedBriefingsModal from "./SavedBriefingsModal";
 
@@ -116,7 +116,7 @@ export default function AiMarketBriefing() {
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <div className={`cq-planner-chat-row min-h-0 min-w-0 flex-1 flex-col ${view === "chat" ? "flex" : "hidden"}`}>
                 <NewsChat briefings={briefings} focusedBriefingDate={selectedDate} jumpTarget={jumpTarget} />
-                <MarketDashboard />
+                <FinancialSummary />
             </div>
             {view === "settings" && <div className="min-h-0 min-w-0 flex-1 overflow-y-auto"><DailyBriefing briefings={briefings} selectedDate={selectedDate} onSelectedDate={setSelectedDate} savedBriefingDates={savedDates} savedLoading={savedLoading} savingDate={savingDate} onSave={date => updateSavedBriefing(date, true)} onRemove={date => updateSavedBriefing(date, false)} /></div>}
         </div>

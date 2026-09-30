@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { getAccounts, getAccountProfit } from "@/lib/api/portfolio";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { MarketDashboardContent } from "@/features/ai-market-briefing/components/MarketDashboard";
 
 type AssetTotals = { asset: number; profit: number; accountCount: number };
 
@@ -66,6 +66,6 @@ export default function FinancialSummary() {
             <strong className="num mt-2 block">{totals ? totals.profit.toLocaleString() + "원" : "—"}</strong>
         </div>
         {totals?.accountCount === 0 && <p className="mt-3 text-xs text-muted">등록된 계좌가 없습니다.</p>}
-        <Link href="/my-page" className="mt-4 block rounded border border-hairline p-3 text-center text-sm">상세 자산 보기</Link>
+        <div className="mt-6 border-t border-hairline pt-5"><MarketDashboardContent /></div>
     </aside>;
 }

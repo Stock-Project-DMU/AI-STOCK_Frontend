@@ -77,7 +77,7 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
                     setAccount(null); setOrders(null); setHoldings(null);
                 }
 
-                const firstFailure = [stockResult, hogaResult, accountResult].find(
+                const firstFailure = [stockResult, accountResult].find(
                     (result) => result.status === "rejected",
                 );
                 if (firstFailure?.status === "rejected") {

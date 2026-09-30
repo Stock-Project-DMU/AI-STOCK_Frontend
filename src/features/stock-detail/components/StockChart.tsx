@@ -89,7 +89,7 @@ export default function StockChart({ stockCode, stock, hoga, ticks }: { stockCod
                 {!ticks.length && <p className="p-5 text-sm text-muted">새 시세 수신을 기다리고 있습니다.</p>}
             </section>
         </div>
-        <aside className="rounded-lg border border-hairline bg-canvas p-3"><h2 className="font-bold">실시간 호가</h2>{!hoga && <p className="mt-4 text-xs text-muted">호가 수신 대기 중</p>}
+        <aside className="rounded-lg border border-hairline bg-canvas p-3"><h2 className="font-bold">실시간 호가</h2>{!hoga && <p className="mt-4 text-xs text-muted">현재 제공된 호가가 없습니다. 실시간 수신 시 표시됩니다.</p>}
             {hoga?.askPrices.slice(0, 5).reverse().map((price, index) => <div key={index} className="mt-3 flex justify-between text-xs text-up"><strong>{price.toLocaleString()}</strong><span>{hoga.askVolumes[Math.min(5, hoga.askPrices.length) - 1 - index]?.toLocaleString()}</span></div>)}
             <p className="my-4 border-y border-hairline py-3 font-bold">{stock ? stock.currentPrice.toLocaleString() + "원" : "현재가 수신 대기"}</p>
             {hoga?.bidPrices.slice(0, 5).map((price, index) => <div key={index} className="mt-3 flex justify-between text-xs text-down"><strong>{price.toLocaleString()}</strong><span>{hoga.bidVolumes[index]?.toLocaleString()}</span></div>)}
