@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { HEADER_LINKS } from "@/constants/navigation";
-import { SearchIcon, UserIcon } from "@/components/icons/Icon";
+import { CloseIcon, SearchIcon, UserIcon } from "@/components/icons/Icon";
 import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { apiRequest, getApiErrorMessage } from "@/lib/api/client";
 import { logout } from "@/lib/api/auth";
@@ -19,13 +19,21 @@ export default function Header() {
     const [query, setQuery] = useState("");
     const [searchError, setSearchError] = useState("");
     const [searching, setSearching] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const searchToggleRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        if (searchOpen) searchInputRef.current?.focus();
+    }, [searchOpen]);
+
     async function search(event: React.FormEvent) {
         event.preventDefault();
         if (!query.trim() || searching) return;
         setSearching(true); setSearchError("");
         try {
             const code = await apiRequest<string>(`/api/market/search?query=${encodeURIComponent(query.trim())}`, { auth: false });
-            router.push(`/stock-detail?code=${code}`); setQuery("");
+            router.push(`/stock-detail?code=${code}`); setQuery(""); setSearchOpen(false);
         } catch (error) { setSearchError(getApiErrorMessage(error, "종목을 찾지 못했습니다.")); }
         finally { setSearching(false); }
     }
@@ -75,9 +83,30 @@ export default function Header() {
                     <span className="group hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[12px] font-bold text-emerald-700 transition-[background-color,border-color] duration-200 ease-out hover:border-emerald-300 hover:bg-emerald-100/70 xl:flex">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 transition-transform duration-200 ease-out group-hover:scale-125 motion-reduce:transform-none motion-reduce:transition-none" /> 모의투자
                     </span>
-                    <form onSubmit={search} className="relative hidden items-center rounded-md border border-hairline bg-surface-soft px-3.5 2xl:flex">
+                    <button
+                        ref={searchToggleRef}
+                        type="button"
+                        aria-label={searchOpen ? "종목 검색 닫기" : "종목 검색 열기"}
+                        aria-expanded={searchOpen}
+                        aria-controls="header-stock-search"
+                        onClick={() => { setSearchOpen(open => !open); setSearchError(""); }}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-hairline text-body hover:bg-surface-soft hover:text-ink 2xl:hidden"
+                    >
+                        {searchOpen ? <CloseIcon className="h-4 w-4" /> : <SearchIcon className="h-4 w-4" />}
+                    </button>
+                    <form
+                        id="header-stock-search"
+                        onSubmit={search}
+                        onKeyDown={event => {
+                            if (event.key === "Escape") {
+                                setSearchOpen(false);
+                                searchToggleRef.current?.focus();
+                            }
+                        }}
+                        className={`absolute inset-x-4 top-[calc(100%+1px)] z-10 items-center gap-2 rounded-lg border border-hairline bg-canvas p-3 shadow-lg ${searchOpen ? "flex" : "hidden"} 2xl:relative 2xl:inset-auto 2xl:top-auto 2xl:flex 2xl:gap-0 2xl:rounded-md 2xl:bg-surface-soft 2xl:px-3.5 2xl:py-0 2xl:shadow-none`}
+                    >
                         <SearchIcon className="h-4 w-4 text-muted" />
-                        <input className="w-36 bg-transparent px-2 py-2 text-sm text-ink outline-none placeholder:text-muted-soft" placeholder="종목명·코드 검색" aria-label="종목명·코드 검색" value={query} onChange={event => setQuery(event.target.value)} disabled={searching} />
+                        <input ref={searchInputRef} className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-ink outline-none placeholder:text-muted-soft 2xl:w-36 2xl:flex-none" placeholder="종목명·코드 검색" aria-label="종목명·코드 검색" value={query} onChange={event => setQuery(event.target.value)} disabled={searching} />
                         <button type="submit" className="text-xs" disabled={searching}>검색</button>
                         {searchError && <span role="alert" className="absolute right-0 top-full mt-2 w-64 rounded bg-canvas p-3 text-xs text-red-500 shadow">{searchError}</span>}
                     </form>
