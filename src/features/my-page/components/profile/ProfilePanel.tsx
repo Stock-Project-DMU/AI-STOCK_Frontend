@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   fundProfileChoices,
   investmentLevelChoices,
@@ -75,9 +76,9 @@ export default function ProfilePanel({
   const accountRows = isSocialAccount ? rows.slice(2, 5) : rows.slice(0, 5);
   const investmentRows = rows.slice(5);
   const providerInfo = loginProvider ? {
-    KAKAO: { label: "카카오", symbol: "K", className: "bg-[#fee500] text-[#191919]" },
-    NAVER: { label: "네이버", symbol: "N", className: "bg-[#03c75a] text-white" },
-    GOOGLE: { label: "구글", symbol: "G", className: "border border-hairline bg-white text-[#4285f4]" },
+    KAKAO: { label: "카카오", image: "/images/social/kakao.png" },
+    NAVER: { label: "네이버", image: "/images/social/naver.png" },
+    GOOGLE: { label: "구글", image: "/images/social/google.png" },
   }[loginProvider] : null;
 
   const renderRows = (items: typeof rows, editable = isEditing) => (
@@ -149,7 +150,7 @@ export default function ProfilePanel({
               <div className="grid min-h-12 grid-cols-[100px_minmax(0,1fr)] items-center gap-3 py-2 sm:grid-cols-[110px_minmax(0,1fr)]">
                 <dt className="text-xs font-semibold text-muted sm:text-sm">소셜 로그인</dt>
                 <dd className="flex items-center gap-2 text-sm font-bold text-ink">
-                  <span aria-hidden="true" className={`flex size-6 items-center justify-center rounded-md text-xs font-black ${providerInfo.className}`}>{providerInfo.symbol}</span>
+                  <Image src={providerInfo.image} alt="" width={32} height={32} className="size-8 shrink-0 object-contain" />
                   <span>{providerInfo.label}</span>
                 </dd>
               </div>
