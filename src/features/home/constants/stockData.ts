@@ -514,7 +514,8 @@ const SAMPLE_METRICS = [
     { changeRate: "+0.40%", currentPrice: "900,000", tradingValue: "5.2억원" },
 ] as const;
 
-export const HOME_STOCK_PAGE_SIZE = 100;
+// 홈 주요 종목 무한 스크롤에서 목록 하단에 닿을 때마다 추가로 보여줄 종목 수.
+export const HOME_STOCK_PAGE_SIZE = 15;
 
 export const HOME_STOCKS = STOCK_IDENTITIES.map(([code, name], index) => ({
     code,
