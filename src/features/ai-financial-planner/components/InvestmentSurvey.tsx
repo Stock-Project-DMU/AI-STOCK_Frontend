@@ -9,10 +9,10 @@ import { Button } from "@/components/common/Button";
 import { CheckIcon } from "@/components/icons/Icon";
 import { SURVEY_QUESTIONS } from "../constants/surveyQuestions";
 
-type InvestmentSurveyProps = { completeLabel?: string; onComplete: (result: InvestmentProfileResponse) => void; onSaved?: (result: InvestmentProfileResponse) => void };
+type InvestmentSurveyProps = { skipIntro?: boolean; completeLabel?: string; onComplete: (result: InvestmentProfileResponse) => void; onSaved?: (result: InvestmentProfileResponse) => void };
 
-export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = "확인" }: InvestmentSurveyProps) {
-    const [step, setStep] = useState(-1);
+export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = "확인", skipIntro = false }: InvestmentSurveyProps) {
+    const [step, setStep] = useState(skipIntro ? 0 : -1);
     const [answers, setAnswers] = useState<string[][]>([]);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");

@@ -317,7 +317,16 @@ export default function SignupFlow() {
     };
 
     if (currentStep === "survey") {
-        return <div className="market-theme"><InvestmentSurvey onComplete={() => router.replace("/home")} completeLabel="AI STOCK 시작하기" /></div>;
+        return (
+            <div className="market-theme">
+                <InvestmentSurvey
+                    skipIntro
+                    onSaved={() => router.replace("/welcome")}
+                    onComplete={() => router.replace("/welcome")}
+                    completeLabel="가입 완료"
+                />
+            </div>
+        );
     }
 
     return (

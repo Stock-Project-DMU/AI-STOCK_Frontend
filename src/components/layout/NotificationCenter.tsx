@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { apiRequest, getApiErrorMessage } from "@/lib/api/client";
 import { formatDateTime } from "@/lib/format/dateTime";
@@ -52,6 +53,39 @@ export default function NotificationCenter() {
     const [error, setError] = useState("");
     const [readingId, setReadingId] = useState<number | null>(null);
     const rootRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const panelRef = useRef<HTMLElement>(null);
+    const [panelPosition, setPanelPosition] = useState<{ left: number; top: number; width: number; maxHeight: number } | null>(null);
+
+    const updatePanelPosition = useCallback(() => {
+        const button = buttonRef.current;
+        if (!button) return;
+        const rect = button.getBoundingClientRect();
+        const margin = 12;
+        const width = Math.min(320, window.innerWidth - margin * 2);
+        const top = rect.bottom + 8;
+        setPanelPosition({
+            left: Math.max(margin, Math.min(rect.right - width, window.innerWidth - width - margin)),
+            top,
+            width,
+            maxHeight: Math.max(0, Math.min(window.innerHeight * 0.56, 420, window.innerHeight - top - margin)),
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!open) return;
+        const frame = requestAnimationFrame(updatePanelPosition);
+        const observer = new ResizeObserver(updatePanelPosition);
+        if (buttonRef.current) observer.observe(buttonRef.current);
+        window.addEventListener("resize", updatePanelPosition);
+        window.addEventListener("scroll", updatePanelPosition, true);
+        return () => {
+            cancelAnimationFrame(frame);
+            observer.disconnect();
+            window.removeEventListener("resize", updatePanelPosition);
+            window.removeEventListener("scroll", updatePanelPosition, true);
+        };
+    }, [open, updatePanelPosition]);
 
     const refreshCount = useCallback(async () => {
         try {
@@ -98,7 +132,7 @@ export default function NotificationCenter() {
             if (document.visibilityState === "visible") void refreshItems(true);
         }, 15000);
         const onPointerDown = (event: PointerEvent) => {
-            if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+            if (!rootRef.current?.contains(event.target as Node) && !panelRef.current?.contains(event.target as Node)) setOpen(false);
         };
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") setOpen(false);
@@ -113,7 +147,10 @@ export default function NotificationCenter() {
     }, [open, refreshItems]);
 
     function toggle() {
-        if (!open) void refreshItems();
+        if (!open) {
+            updatePanelPosition();
+            void refreshItems();
+        }
         setOpen(value => !value);
     }
 
@@ -134,14 +171,14 @@ export default function NotificationCenter() {
 
     return (
         <div ref={rootRef} className="relative">
-            <button type="button" onClick={toggle} aria-label={`알림${unreadCount ? `, 읽지 않은 알림 ${unreadCount}개` : ""}`} aria-expanded={open} aria-controls="notification-center"
+            <button ref={buttonRef} type="button" onClick={toggle} aria-label={`알림${unreadCount ? `, 읽지 않은 알림 ${unreadCount}개` : ""}`} aria-expanded={open} aria-controls="notification-center"
                 className="relative flex h-9 w-9 items-center justify-center rounded-md border border-hairline bg-canvas text-body hover:bg-surface-soft hover:text-ink">
                 <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" />
                 </svg>
                 {unreadCount > 0 && <span className="absolute -right-1.5 -top-1.5 flex min-w-5 items-center justify-center rounded-full bg-up px-1 text-[10px] font-bold leading-5 text-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}
             </button>
-            {open && <section id="notification-center" aria-label="내 알림" className="fixed right-3 top-[76px] z-[60] flex max-h-[min(56vh,420px)] w-[min(88vw,320px)] flex-col overflow-hidden rounded-xl border border-hairline bg-canvas shadow-xl sm:right-6">
+            {open && panelPosition && createPortal(<section ref={panelRef} id="notification-center" aria-label="내 알림" style={panelPosition} className="fixed z-[60] flex flex-col overflow-hidden rounded-xl border border-hairline bg-canvas shadow-xl">
                 <div className="flex items-center justify-between border-b border-hairline px-3 py-2.5">
                     <div><h2 className="text-sm font-bold text-ink">알림</h2><p className="text-[11px] text-muted">읽지 않은 알림 {unreadCount}개</p></div>
                     <button type="button" onClick={() => void refreshItems()} disabled={loading} className="text-xs font-semibold text-primary disabled:opacity-50">새로고침</button>
@@ -166,7 +203,7 @@ export default function NotificationCenter() {
                         </article>;
                     })}
                 </div>
-            </section>}
+            </section>, document.body)}
         </div>
     );
 }
