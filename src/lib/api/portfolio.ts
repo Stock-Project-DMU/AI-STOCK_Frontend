@@ -12,6 +12,31 @@ export function getAccounts() {
     return apiRequest<AccountInfoResponse[]>("/api/accounts");
 }
 
+export type AccountTransactionResponse = {
+    transactionId: number;
+    accountId: number;
+    type: "INITIAL_GRANT" | "AUTO_CHARGE" | "ADMIN_CHARGE" | "ADMIN_DEDUCTION" | "ORDER_BUY" | "ORDER_SELL" | "ORDER_REFUND";
+    amount: number;
+    balanceBefore: number;
+    balanceAfter: number;
+    reason: string | null;
+    createdAt: string;
+};
+
+export async function getAccountTransactions(accountId: number, signal?: AbortSignal) {
+    const transactions: AccountTransactionResponse[] = [];
+    let page = 0;
+    while (true) {
+        const result = await apiRequest<{ content: AccountTransactionResponse[]; last: boolean }>(
+            `/api/accounts/${accountId}/transactions?page=${page}&size=100&sort=createdAt,desc&sort=transactionId,desc`,
+            { signal },
+        );
+        transactions.push(...result.content);
+        if (result.last || result.content.length === 0) return transactions;
+        page += 1;
+    }
+}
+
 export type ChargeRequestResponse = { requestId: number; accountId: number; amount: number; reason: string; status: "PENDING" | "APPROVED" | "REJECTED"; decisionReason: string | null; requestedAt: string; decidedAt: string | null };
 export function getChargeRequests(accountId: number) {
     return apiRequest<{ content: ChargeRequestResponse[] }>(`/api/accounts/${accountId}/charge-requests?size=100`);

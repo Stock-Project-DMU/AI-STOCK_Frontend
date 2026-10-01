@@ -1,5 +1,5 @@
 export type MyPageTab = "profile" | "account" | "recharge" | "orders" | "returns";
-export type AccountView = "summary" | "recharge" | "reason" | "history" | "detail";
+export type AccountView = "summary" | "transactions" | "recharge" | "reason" | "history" | "detail";
 export type RechargeStatus = "승인" | "거절" | "대기";
 
 export type RechargeRecord = {
