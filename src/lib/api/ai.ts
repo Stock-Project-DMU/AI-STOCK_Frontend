@@ -1,7 +1,7 @@
 import { apiRequest } from "./client";
 import type { SimulationSettings } from "@/features/goal-simulation/types";
 export type PlanningSession = { sessionId: number; title: string | null; status: string; createdAt: string; updatedAt: string };
-export type PlanningMessage = { messageId: number; role: "USER" | "ASSISTANT" | "MODEL"; content: string; createdAt: string };
+export type PlanningMessage = { messageId: number; role: "USER" | "AI" | "ASSISTANT" | "MODEL"; content: string; createdAt: string };
 export const getPlanningSessions = () => apiRequest<PlanningSession[]>("/api/ai/planning/sessions");
 export const createPlanningSession = () => apiRequest<PlanningSession>("/api/ai/planning/sessions", { method: "POST" });
 export const renamePlanningSession = (id: number, title: string) => apiRequest<PlanningSession>(`/api/ai/planning/sessions/${id}`, { method: "PATCH", body: JSON.stringify({ title }) });

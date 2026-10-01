@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { SparkleIcon, SendIcon } from "@/components/icons/Icon";
 import { createPlanningSession, getPlanningMessages, sendPlanningMessage, type PlanningMessage } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
+import PlannerMessageContent from "./PlannerMessageContent";
 export default function PlannerChat({ sessionId, onSessionChange }: { sessionId: number | null; onSessionChange: (id: number) => void }) {
     const createdSession = useRef<number | null>(null);
     const mounted = useRef(true);
@@ -51,7 +52,7 @@ export default function PlannerChat({ sessionId, onSessionChange }: { sessionId:
             {loadingMessages && <p role="status" className="text-sm text-muted">대화 기록을 불러오는 중입니다...</p>}
             {!loadingMessages && !messages.length && <p className="text-sm text-muted">투자 목표와 궁금한 점을 입력해 주세요. 저장된 투자 성향과 내 계좌를 반영해 상담합니다. 진단을 다시 진행하지 않아도 대화할 수 있습니다.</p>}
             {messages.map(message => <div key={message.messageId} className={`flex ${message.role === "USER" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex max-w-[700px] gap-3 ${message.role === "USER" ? "flex-row-reverse" : ""}`}>{message.role === "ASSISTANT" && <span className="theme-accent-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-md"><SparkleIcon className="h-4 w-4" /></span>}<p className={`whitespace-pre-wrap rounded-lg border border-hairline px-5 py-4 text-sm leading-7 ${message.role === "USER" ? "chat-user-bubble" : "bg-canvas text-body"}`}>{message.content}</p></div>
+                <div className={`flex min-w-0 max-w-[700px] gap-3 ${message.role === "USER" ? "flex-row-reverse" : ""}`}>{message.role !== "USER" && <span className="theme-accent-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-md"><SparkleIcon className="h-4 w-4" /></span>}<p className={`min-w-0 whitespace-pre-wrap rounded-lg border border-hairline px-5 py-4 text-sm leading-7 ${message.role === "USER" ? "chat-user-bubble" : "bg-canvas text-body"}`}>{message.role !== "USER" ? <PlannerMessageContent content={message.content} /> : message.content}</p></div>
             </div>)}
             {busy && <p role="status" className="text-sm text-muted">AI가 자료를 분석하고 있습니다...</p>}
             {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
