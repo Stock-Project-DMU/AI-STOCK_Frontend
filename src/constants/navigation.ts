@@ -7,8 +7,8 @@ export const HEADER_LINKS = [
 ] as const;
 
 export const FOOTER_LINKS = [
-    { href: "/home", label: "개인정보 처리 방침" },
-    { href: "/home", label: "서비스 이용 약관" },
-    { href: "/home", label: "투자 유의사항" },
-    { href: "/home", label: "이용자 권리 및 유의사항" },
+    { href: "/privacy-policy", label: "개인정보 처리 방침" },
+    { href: "/terms-of-service", label: "서비스 이용 약관" },
+    { href: "/investment-notice", label: "투자 유의사항" },
+    { href: "/user-rights", label: "이용자 권리 및 유의사항" },
 ] as const;
