@@ -3,6 +3,7 @@ import { rechargeAmounts, won } from "../../data";
 import type { AccountView, RechargeRecord } from "../../model";
 import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format/dateTime";
+import AccountTransactions from "./AccountTransactions";
 
 type AccountPanelProps = {
   mode: "info" | "recharge";
@@ -58,6 +59,11 @@ export default function AccountPanel({
           <h1 className="text-xl font-bold">{mode === "info" ? "계좌 정보" : "가상계좌 충전"}</h1>
           <p className="mt-1 text-sm text-muted">{mode === "info" ? "계좌 상태와 적용 정책, 누적 수익을 확인할 수 있습니다." : "가상캐시 충전을 요청하고 처리 이력을 확인할 수 있습니다."}</p>
         </div>
+        {mode === "info" && (
+          <button type="button" onClick={() => onViewChange(view === "transactions" ? "summary" : "transactions")} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">
+            {view === "transactions" ? "계좌 정보" : "계좌내역"}
+          </button>
+        )}
         {mode === "recharge" && (
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => onViewChange("history")} className={`rounded-lg border px-3.5 py-2 text-sm font-bold ${view === "history" || view === "detail" ? "theme-accent-soft border-[var(--market-accent)] theme-accent-text" : "border-hairline hover:bg-surface-soft"}`}>충전 이력</button>
@@ -67,7 +73,8 @@ export default function AccountPanel({
       </div>
 
       <div className="min-h-[360px] rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
-        {mode === "info" && <AccountSummary accounts={accounts} profit={profit} realizedProfit={realizedProfit} isLoading={isLoading} error={error} />}
+        {mode === "info" && view !== "transactions" && <AccountSummary accounts={accounts} profit={profit} realizedProfit={realizedProfit} isLoading={isLoading} error={error} />}
+        {mode === "info" && view === "transactions" && (isLoading ? <p role="status">계좌 정보를 불러오는 중입니다.</p> : error ? <p role="alert" className="text-up">{error}</p> : <AccountTransactions accounts={accounts ?? []} />)}
         {mode === "recharge" && view === "recharge" && <RechargeAmount selectedAmount={selectedAmount} customAmount={customAmount} onSelectAmount={onSelectAmount} onCustomAmount={onCustomAmount} onCancel={onResetRequest} onNext={() => requestedAmount > 0 && onViewChange("reason")} />}
         {mode === "recharge" && view === "reason" && <RechargeReason amount={requestedAmount} reason={reason} onReasonChange={onReasonChange} onBack={() => onViewChange("recharge")} onRequest={onRequest} />}
         {mode === "recharge" && view === "history" && <RechargeHistory rechargeHistory={chargeHistory} onBack={() => onViewChange("recharge")} onSelect={onSelectHistory} />}
