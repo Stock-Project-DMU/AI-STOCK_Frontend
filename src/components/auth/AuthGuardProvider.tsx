@@ -72,7 +72,10 @@ function isProtectedPath(pathname: string) {
 }
 
 function isProfileGateExempt(pathname: string) {
-    return pathname === "/complete-profile"
+    // Signup owns its account -> automatic login -> survey flow. Replacing its
+    // children during the post-login profile check would reset that flow.
+    return pathname === "/signup"
+        || pathname === "/complete-profile"
         || /^\/oauth\/(?:callback\/[^/]+|[^/]+\/callback)$/.test(pathname);
 }
 
