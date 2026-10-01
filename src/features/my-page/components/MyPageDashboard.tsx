@@ -462,7 +462,7 @@ export default function MyPageDashboard() {
         </Modal>
       )}
 
-      {showWithdrawal && <WithdrawalModal onClose={() => setShowWithdrawal(false)} />}
+      {showWithdrawal && <WithdrawalModal isSocialAccount={isSocialAccount} accountEmail={profile.email} onClose={() => setShowWithdrawal(false)} />}
       {isLeaveModalOpen && (
         <UnsavedChangesModal
           onStay={stayOnPage}
