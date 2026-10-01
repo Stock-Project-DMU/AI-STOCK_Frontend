@@ -7,7 +7,7 @@ import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { addWatchlist, getWatchlist, removeWatchlist, WATCHLIST_CHANGED } from "@/lib/api/stock";
 import { HOME_STOCK_PAGE_SIZE } from "../constants/stockData";
-import { getMarketRankings, MARKET_REFRESH_INTERVAL_MS, type MarketRanking } from "@/lib/api/market";
+import { getAllMarketRankings, MARKET_REFRESH_INTERVAL_MS, type MarketRanking } from "@/lib/api/market";
 
 type SortKey = "현재가" | "상승순" | "하락순" | "거래량" | "거래대금";
 
@@ -22,10 +22,10 @@ const RANKING_SORT: Record<SortKey, string> = {
 
 export default function StockTable() {
     const router = useRouter();
-    const tableRef = useRef<HTMLElement>(null);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
     const { authenticated, requireLogin } = useAuthGuard();
     const [sortKey, setSortKey] = useState<SortKey>("현재가");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [visibleCount, setVisibleCount] = useState(HOME_STOCK_PAGE_SIZE);
     const [favoriteCodes, setFavoriteCodes] = useState<Set<string>>(new Set());
     const [pendingCode, setPendingCode] = useState("");
     const [watchlistError, setWatchlistError] = useState("");
@@ -49,17 +49,18 @@ export default function StockTable() {
         async function load() {
             setLoadingMarket(true); setMarketError("");
             try {
-                const items = await getMarketRankings(RANKING_SORT[sortKey]);
+                const items = await getAllMarketRankings(RANKING_SORT[sortKey]);
                 if (active) setMarketRows(items);
             } catch (error) { if (active) { setMarketRows([]); setMarketError(getApiErrorMessage(error, "시세를 불러오지 못했습니다.")); } }
             finally { if (active) setLoadingMarket(false); }
         }
         // 화면이 보이는 동안 주기적으로 조용히 다시 불러와 새로고침 없이 시세가 바뀌게 한다.
         // 일시적인 실패는 기존 목록을 그대로 두고 다음 주기에 다시 시도한다.
+        // 전체 목록을 요청 1회로 통째로 교체하므로, 스크롤로 펼쳐 둔 개수(visibleCount)는 그대로 유지된다.
         async function refresh() {
             if (document.visibilityState !== "visible") return;
             try {
-                const items = await getMarketRankings(RANKING_SORT[sortKey]);
+                const items = await getAllMarketRankings(RANKING_SORT[sortKey]);
                 if (active) { setMarketRows(items); setMarketError(""); }
             } catch { /* 다음 주기에 재시도 */ }
         }
@@ -111,17 +112,25 @@ export default function StockTable() {
             changeRate: item.changeRate == null ? "—" : (item.changeRate >= 0 ? "+" : "") + item.changeRate.toFixed(2) + "%",
             currentPrice: item.price?.toLocaleString("ko-KR") ?? "—" }));
     }, [marketRows]);
-    const totalPages = Math.max(1, Math.ceil(rows.length / HOME_STOCK_PAGE_SIZE));
-    const pageStart = (currentPage - 1) * HOME_STOCK_PAGE_SIZE;
-    const visibleRows = rows.slice(pageStart, pageStart + HOME_STOCK_PAGE_SIZE);
+    const visibleRows = rows.slice(0, visibleCount);
+    const hasMore = visibleCount < rows.length;
 
-    function changePage(page: number) {
-        setCurrentPage(page);
-        tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    // 목록 하단 감시 요소가 화면에 들어오면 이미 받아 둔 전체 목록에서 15개씩 더 보여준다(추가 네트워크 요청 없음).
+    // visibleCount가 바뀔 때마다 다시 관찰해, 추가한 뒤에도 감시 요소가 계속 보이면(화면이 큰 경우) 이어서 더 펼친다.
+    useEffect(() => {
+        const target = loadMoreRef.current;
+        if (!target || !hasMore) return;
+        const observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                setVisibleCount((count) => count + HOME_STOCK_PAGE_SIZE);
+            }
+        }, { rootMargin: "200px 0px" });
+        observer.observe(target);
+        return () => observer.disconnect();
+    }, [hasMore, visibleCount]);
 
     return (
-        <section ref={tableRef} className="home-stock-table scroll-mt-20 min-w-0 overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
+        <section className="home-stock-table scroll-mt-20 min-w-0 overflow-hidden rounded-xl border border-hairline bg-white shadow-[0_4px_12px_rgba(10,11,13,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3">
                 <h2 className="text-base font-bold text-ink">주요 종목</h2>
                 <div className="flex flex-wrap gap-1.5">
@@ -133,7 +142,7 @@ export default function StockTable() {
                             className="!h-7 !px-3 !text-[12px]"
                             onClick={() => {
                                 setSortKey(label);
-                                setCurrentPage(1);
+                                setVisibleCount(HOME_STOCK_PAGE_SIZE);
                             }}
                         >
                             {label}
@@ -178,11 +187,11 @@ export default function StockTable() {
                                     }}
                                     className="cursor-pointer border-b border-hairline-soft transition-colors last:border-0 hover:bg-surface-soft focus-visible:bg-surface-soft focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
                                 >
-                                    <td className="home-stock-rank-column num px-1 py-2 text-center text-muted">{pageStart + rowIndex + 1}</td>
+                                    <td className="home-stock-rank-column num px-1 py-2 text-center text-muted">{rowIndex + 1}</td>
                                     <td className="px-1 py-2 text-center" onClick={(event) => event.stopPropagation()}><FavoriteButton size="sm" favorite={authenticated && favoriteCodes.has(stock.code)} disabled={!!pendingCode} onToggle={(nextFavorite) => void handleFavorite(stock.code, nextFavorite)} /></td>
                                     <td className="min-w-0 px-1.5 py-2">
                                         <div className="group block min-w-0">
-                                            <strong title={stock.name} className="block truncate font-bold text-ink group-hover:text-primary"><span className="home-stock-rank-inline hidden">{pageStart + rowIndex + 1}. </span>{stock.name}</strong>
+                                            <strong title={stock.name} className="block truncate font-bold text-ink group-hover:text-primary"><span className="home-stock-rank-inline hidden">{rowIndex + 1}. </span>{stock.name}</strong>
                                             <span className="mt-0.5 block truncate text-[12px] text-muted">{stock.code} · KRX</span>
                                         </div>
                                     </td>
@@ -195,28 +204,16 @@ export default function StockTable() {
                 </table>
             </div>
 
+            {/* 무한 스크롤 감시 요소 — 화면에 들어오면 다음 15개를 펼친다. */}
+            {hasMore && <div ref={loadMoreRef} aria-hidden="true" className="h-px" />}
+
             <div className="flex flex-col items-center justify-between gap-3 border-t border-hairline px-4 py-3 sm:flex-row">
-                <p className="text-[12px] text-muted">
-                    총 {rows.length}개 중 {rows.length ? pageStart + 1 : 0}-{Math.min(pageStart + HOME_STOCK_PAGE_SIZE, rows.length)}개
+                <p role="status" className="text-[12px] text-muted">
+                    총 {rows.length}개 중 {visibleRows.length}개 표시
                 </p>
-                <nav aria-label="종목 목록 페이지" className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                        <button
-                            key={page}
-                            type="button"
-                            onClick={() => changePage(page)}
-                            aria-label={`${page}페이지`}
-                            aria-current={currentPage === page ? "page" : undefined}
-                            className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-xs font-bold transition-colors ${
-                                currentPage === page
-                                    ? "bg-primary text-white"
-                                    : "text-muted hover:bg-surface-soft hover:text-ink"
-                            }`}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                </nav>
+                {!!rows.length && (
+                    <p className="text-[12px] text-muted">{hasMore ? "아래로 스크롤하면 더 보여드립니다" : "모든 종목을 표시했습니다"}</p>
+                )}
             </div>
         </section>
     );
