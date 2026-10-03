@@ -1,5 +1,4 @@
 import { apiRequest } from "./client";
-import type { SimulationSettings } from "@/features/goal-simulation/types";
 export type PlanningSession = { sessionId: number; title: string | null; status: string; createdAt: string; updatedAt: string };
 export type PlanningMessage = { messageId: number; role: "USER" | "AI" | "ASSISTANT" | "MODEL"; content: string; createdAt: string };
 export const getPlanningSessions = () => apiRequest<PlanningSession[]>("/api/ai/planning/sessions");
@@ -8,12 +7,6 @@ export const renamePlanningSession = (id: number, title: string) => apiRequest<P
 export const deletePlanningSession = (id: number) => apiRequest<null>(`/api/ai/planning/sessions/${id}`, { method: "DELETE" });
 export const getPlanningMessages = (id: number) => apiRequest<PlanningMessage[]>(`/api/ai/planning/sessions/${id}/messages`);
 export const sendPlanningMessage = (id: number, content: string) => apiRequest<PlanningMessage>(`/api/ai/planning/sessions/${id}/messages`, { method: "POST", body: JSON.stringify({ content }) });
-export type GoalPlan = { planId: number; settings: SimulationSettings; futureValue: number; aggressiveFutureValue: number; saved: boolean; createdAt: string };
-export const createGoalPlan = (settings: SimulationSettings) => apiRequest<GoalPlan>("/api/goal-plans", { method: "POST", body: JSON.stringify(settings) });
-export const getGoalPlans = () => apiRequest<GoalPlan[]>("/api/goal-plans");
-export const updateGoalPlan = (id: number, settings: SimulationSettings) => apiRequest<GoalPlan>(`/api/goal-plans/${id}`, { method: "PUT", body: JSON.stringify(settings) });
-export const saveGoalPlan = (id: number) => apiRequest<GoalPlan>(`/api/goal-plans/${id}/saved`, { method: "PATCH" });
-export const deleteGoalPlan = (id: number) => apiRequest<null>(`/api/goal-plans/${id}`, { method: "DELETE" });
 export type NewsOutlet = { outletDomain: string; outletName: string };
 export type NewsSetting = NewsOutlet & { deliveryTime: string; lastAttemptAt: string | null };
 export type NewsBriefing = NewsOutlet & { deliveryTime: string | null; briefingDate: string; content: string; sources: { title: string; link: string; outlet: string }[]; createdAt: string };
@@ -35,11 +28,57 @@ export const sendNewsChatMessage = (sessionId: number, content: string, briefing
         method: "POST", body: JSON.stringify({ content, briefingDate }),
     });
 
-export type PlanningPreferences = { savedBriefingDates: string[]; linkedBriefingDates: string[]; linkedGoalPlanIds: number[] };
+// linkedGoalPlanIds는 예전 적립식 목표(goal_plans), linkedSimulationIds는 목표 도달 시뮬레이션에서 저장한 결과 — 두 목록을 합쳐 최대 2개
+export type PlanningPreferences = { savedBriefingDates: string[]; linkedBriefingDates: string[]; linkedGoalPlanIds: number[]; linkedSimulationIds: number[] };
 export type PlanningConnectionOptions = {
     goals: { planId: number; goal: string; monthlyPayment: number; years: number }[];
+    simulations: { simulationId: number; goalText: string; targetAmount: number; periodMonths: number | null; rebalancedReachDate: string | null; createdAt: string }[];
     briefings: { briefingDate: string; outletName: string }[];
 };
 export const getPlanningPreferences = () => apiRequest<PlanningPreferences>("/api/ai/planning/preferences");
 export const getPlanningConnectionOptions = () => apiRequest<PlanningConnectionOptions>("/api/ai/planning/preferences/options");
 export const savePlanningPreferences = (request: PlanningPreferences) => apiRequest<PlanningPreferences>("/api/ai/planning/preferences", { method: "PUT", body: JSON.stringify(request) });
+// 목표 도달 시뮬레이션(보유종목 유지 vs 투자성향 리밸런싱 비교) — 백엔드 SimulationController
+export type SimulationPoint = { date: string; value: number };
+export type PortfolioAllocation = { stockCode: string; stockName: string; weight: number; monthlyGrowthRate: number };
+export type PortfolioProjection = {
+    monthlyGrowthRate: number;
+    cashWeight: number;
+    allocations: PortfolioAllocation[];
+    excludedStockNames: string[];
+    points: SimulationPoint[];
+    reachMonths: number | null;
+    reachDate: string | null;
+    achievableWithinPeriod: boolean | null;
+};
+export type SimulationResult = {
+    simulationId: number | null;
+    pendingSimulationId: string | null;
+    goalText: string;
+    targetAmount: number;
+    periodMonths: number | null;
+    startAmount: number;
+    holdingsAmount: number;
+    cashAmount: number;
+    monthlyContribution: number;
+    current: PortfolioProjection;
+    rebalanced: PortfolioProjection;
+    shortenedMonths: number | null;
+    rebalanceReason: string;
+    timeReductionExplanation: string;
+    createdAt: string;
+};
+export type SimulationSummary = {
+    simulationId: number;
+    goalText: string;
+    targetAmount: number;
+    periodMonths: number | null;
+    currentReachDate: string | null;
+    rebalancedReachDate: string | null;
+    createdAt: string;
+};
+export const runSimulation = (goalText: string, monthlyContribution: number) => apiRequest<SimulationResult>("/api/simulations", { method: "POST", body: JSON.stringify({ goalText, monthlyContribution }) });
+export const saveSimulation = (pendingSimulationId: string) => apiRequest<SimulationResult>("/api/simulations/saved", { method: "POST", body: JSON.stringify({ pendingSimulationId }) });
+export const getSimulations = () => apiRequest<SimulationSummary[]>("/api/simulations");
+export const getSimulation = (simulationId: number) => apiRequest<SimulationResult>(`/api/simulations/${simulationId}`);
+export const deleteSimulation = (simulationId: number) => apiRequest<null>(`/api/simulations/${simulationId}`, { method: "DELETE" });
