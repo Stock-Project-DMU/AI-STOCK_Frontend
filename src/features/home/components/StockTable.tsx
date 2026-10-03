@@ -11,13 +11,23 @@ import { getAllMarketRankings, MARKET_REFRESH_INTERVAL_MS, type MarketRanking } 
 
 type SortKey = "현재가" | "상승순" | "하락순" | "거래량" | "거래대금";
 
-// 상승순/하락순은 현재 목록 재정렬이 아니라 코스피·코스닥 전체 시장 기준 순위를 백엔드에서 받아온다.
+// 정렬은 현재 목록 재정렬이 아니라 백엔드 순위(all=true)를 받아온다. all=true 순위는 시장 전체가 아니라 등록 종목
+// (stocks.json, 105개) 범위의 순위라, 시가총액 비중 등도 등록 종목 합계 기준이다(real/mock 공통, 2026-10-02).
 const RANKING_SORT: Record<SortKey, string> = {
     현재가: "market-cap",
     상승순: "rise",
     하락순: "fall",
     거래량: "volume",
     거래대금: "value",
+};
+
+// 정렬 버튼 툴팁 — 같은 종목이라도 시장 전체 순위(AI 상담·사이드바)와 숫자가 다를 수 있어 기준을 알려준다.
+const RANKING_TOOLTIP: Record<SortKey, string> = {
+    현재가: "등록 종목 기준 시가총액 순입니다. 시가총액 비중은 시장 전체가 아니라 등록 종목 합계 대비 비중입니다.",
+    상승순: "등록 종목 중 오늘 상승한 종목을 상승률 순으로 보여줍니다.",
+    하락순: "등록 종목 중 오늘 하락한 종목을 하락률 순으로 보여줍니다.",
+    거래량: "등록 종목 기준 오늘 누적 거래량 순입니다.",
+    거래대금: "등록 종목 기준 오늘 누적 거래대금 순입니다.",
 };
 
 export default function StockTable() {
@@ -140,6 +150,7 @@ export default function StockTable() {
                             variant={sortKey === label ? "primary" : "secondary"}
                             size="sm"
                             className="!h-7 !px-3 !text-[12px]"
+                            title={RANKING_TOOLTIP[label]}
                             onClick={() => {
                                 setSortKey(label);
                                 setVisibleCount(HOME_STOCK_PAGE_SIZE);
