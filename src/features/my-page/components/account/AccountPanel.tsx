@@ -1,8 +1,9 @@
 import { CheckIcon, CloseIcon } from "@/components/icons/Icon";
-import { rechargeAmounts, won } from "../../data";
+import { rechargeAmounts, won, SELF_CHARGE_MAX, REQUEST_CHARGE_MAX } from "../../data";
 import type { AccountView, RechargeRecord } from "../../model";
 import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format/dateTime";
+import { formatAccountNumber } from "@/lib/format/account";
 import AccountTransactions from "./AccountTransactions";
 
 type AccountPanelProps = {
@@ -20,6 +21,7 @@ type AccountPanelProps = {
   onCustomAmount: (value: string) => void;
   onReasonChange: (value: string) => void;
   onRequest: () => void;
+  onAutoCharge: () => void;
   onSelectHistory: (record: RechargeRecord) => void;
   onResetRequest: () => void;
   accounts: AccountInfoResponse[] | null;
@@ -27,6 +29,7 @@ type AccountPanelProps = {
   realizedProfit: number;
   isLoading: boolean;
   error: string;
+  chargeError: string;
 };
 
 export default function AccountPanel({
@@ -44,6 +47,7 @@ export default function AccountPanel({
   onCustomAmount,
   onReasonChange,
   onRequest,
+  onAutoCharge,
   onSelectHistory,
   onResetRequest,
   accounts,
@@ -51,7 +55,11 @@ export default function AccountPanel({
   realizedProfit,
   isLoading,
   error,
+  chargeError,
 }: AccountPanelProps) {
+  const primaryAccount = accounts?.[0];
+  const autoChargeAvailable = primaryAccount ? primaryAccount.chargeCount < primaryAccount.maxChargeCount : false;
+
   return (
     <div className="mx-auto max-w-[1180px]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -75,13 +83,28 @@ export default function AccountPanel({
       <div className="min-h-[360px] rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
         {mode === "info" && view !== "transactions" && <AccountSummary accounts={accounts} profit={profit} realizedProfit={realizedProfit} isLoading={isLoading} error={error} />}
         {mode === "info" && view === "transactions" && (isLoading ? <p role="status">계좌 정보를 불러오는 중입니다.</p> : error ? <p role="alert" className="text-up">{error}</p> : <AccountTransactions accounts={accounts ?? []} />)}
-        {mode === "recharge" && view === "recharge" && <RechargeAmount selectedAmount={selectedAmount} customAmount={customAmount} onSelectAmount={onSelectAmount} onCustomAmount={onCustomAmount} onCancel={onResetRequest} onNext={() => requestedAmount > 0 && onViewChange("reason")} />}
+        {mode === "recharge" && view === "recharge" && (
+          <RechargeAmount
+            selectedAmount={selectedAmount}
+            customAmount={customAmount}
+            instant={autoChargeAvailable}
+            requestingCharge={requestingCharge}
+            onSelectAmount={onSelectAmount}
+            onCustomAmount={onCustomAmount}
+            onCancel={onResetRequest}
+            onNext={() => {
+              if (requestedAmount <= 0 || requestingCharge) return;
+              if (autoChargeAvailable) onAutoCharge();
+              else onViewChange("reason");
+            }}
+          />
+        )}
         {mode === "recharge" && view === "reason" && <RechargeReason amount={requestedAmount} reason={reason} onReasonChange={onReasonChange} onBack={() => onViewChange("recharge")} onRequest={onRequest} />}
         {mode === "recharge" && view === "history" && <RechargeHistory rechargeHistory={chargeHistory} onBack={() => onViewChange("recharge")} onSelect={onSelectHistory} />}
         {mode === "recharge" && view === "detail" && selectedHistory && <RechargeDetail record={selectedHistory} onBack={() => onViewChange("history")} />}
       </div>
       {requestingCharge && <p role="status">충전 요청 중...</p>}
-      {mode === "recharge" && error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
+      {mode === "recharge" && chargeError && <p role="alert" className="mt-3 text-red-500">{chargeError}</p>}
     </div>
   );
 }
@@ -106,14 +129,14 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
     { label: "주문 동결 금액", value: won(account.frozenBalance) },
     { label: "총 평가 자산", value: won(profit?.totalAsset ?? account.balance + account.frozenBalance) },
     { label: "평가 손익", value: won(profit?.profitAmount ?? 0) },
-    { label: "자동 충전 사용", value: `${account.chargeCount}/3회` },
+    { label: "자동 충전 남은 횟수", value: `${Math.max((account.maxChargeCount ?? 0) - account.chargeCount, 0)}/${account.maxChargeCount ?? 0}` },
   ];
   const accountDetails = [
-    { label: "예치 이자율", value: "연 0.00%" },
-    { label: "거래 수수료", value: "0.00%" },
+    { label: "예치 이자율", value: `연 ${(account.interestRate ?? 0).toFixed(2)}%` },
+    { label: "거래 수수료", value: "0.1%" },
     { label: "누적 판매 수익", value: won(realizedProfit), tone: realizedProfit > 0 ? "text-red-500" : realizedProfit < 0 ? "text-blue-500" : "" },
     { label: "누적 배당금", value: won(0) },
-    { label: "누적 이자", value: won(0) },
+    { label: "누적 이자", value: won(account.totalInterest ?? 0) },
   ];
 
   return (
@@ -122,7 +145,7 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold text-muted">{account.accountName}</p>
-            <p className="num mt-1.5 text-base font-bold tracking-[0.06em] sm:text-lg">{account.accountNumber}</p>
+            <p className="num mt-1.5 text-base font-bold tracking-[0.06em] sm:text-lg">{formatAccountNumber(account.accountNumber)}</p>
           </div>
           <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${account.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-500"}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${account.status === "ACTIVE" ? "bg-emerald-500" : "bg-red-500"}`} />
@@ -154,7 +177,7 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
           <dl className="grid border-b border-hairline sm:grid-cols-2 lg:grid-cols-3">
             {accountDetails.map((detail) => <div key={detail.label} className="flex min-h-20 flex-col justify-between border-t border-hairline px-1 py-4 sm:px-4"><dt className="text-xs font-semibold text-muted">{detail.label}</dt><dd className={`num mt-2 text-right text-base font-bold ${detail.tone ?? ""}`}>{detail.value}</dd></div>)}
           </dl>
-          <p className="mt-4 rounded-lg bg-surface-soft px-3.5 py-3 text-xs leading-5 text-muted">현재 모의투자에서는 예치 이자와 배당금이 지급되지 않으며, 거래 수수료도 부과되지 않습니다.</p>
+          <p className="mt-4 rounded-lg bg-surface-soft px-3.5 py-3 text-xs leading-5 text-muted">예치금에는 연 {account.interestRate.toFixed(2)}%의 이자가 적립되며, 매도 체결 시 거래 금액의 0.1%가 수수료로 차감됩니다.</p>
         </section>
       </div>
     </article>
@@ -164,26 +187,33 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
 type RechargeAmountProps = {
   selectedAmount: number | null;
   customAmount: string;
+  instant: boolean;
+  requestingCharge: boolean;
   onSelectAmount: (amount: number) => void;
   onCustomAmount: (value: string) => void;
   onCancel: () => void;
   onNext: () => void;
 };
 
-function RechargeAmount({ selectedAmount, customAmount, onSelectAmount, onCustomAmount, onCancel, onNext }: RechargeAmountProps) {
+function RechargeAmount({ selectedAmount, customAmount, instant, requestingCharge, onSelectAmount, onCustomAmount, onCancel, onNext }: RechargeAmountProps) {
+  const maxAmount = instant ? SELF_CHARGE_MAX : REQUEST_CHARGE_MAX;
+  const amount = selectedAmount ?? (Number(customAmount) || 0);
+  const exceedsMax = amount > maxAmount;
+
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-4"><h2 className="text-base font-bold">충전 금액 선택</h2><p className="mt-1 text-sm text-muted">금액을 선택하거나 직접 입력해 주세요.</p></div>
+      <div className="mb-4"><h2 className="text-base font-bold">충전 금액 선택</h2><p className="mt-1 text-sm text-muted">금액을 선택하거나 직접 입력해 주세요. (1회 최대 {won(maxAmount)})</p></div>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        {rechargeAmounts.map((amount) => <button key={amount} type="button" onClick={() => onSelectAmount(amount)} className={`num min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 ${selectedAmount === amount ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_2px_4px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}>{won(amount)}</button>)}
+        {rechargeAmounts.filter((value) => value <= maxAmount).map((value) => <button key={value} type="button" onClick={() => onSelectAmount(value)} className={`num min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 ${selectedAmount === value ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_2px_4px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}>{won(value)}</button>)}
       </div>
       <label className="mt-3 flex items-center rounded-lg border border-hairline bg-white px-3.5 focus-within:border-[var(--market-accent)] focus-within:ring-2 focus-within:ring-[var(--market-accent-soft)]">
         <input aria-label="직접 충전 금액" value={customAmount} onChange={(event) => onCustomAmount(event.target.value)} inputMode="numeric" placeholder="직접 입력" className="num min-w-0 flex-1 bg-transparent py-3 text-sm font-bold outline-none" />
         <span className="text-sm font-bold text-[#6e6f6f]">원</span>
       </label>
+      {exceedsMax && <p role="alert" className="mt-2 text-xs text-up">{instant ? "1회 충전 금액은 최대 1억원입니다." : "1회 충전 요청 금액은 최대 1조원입니다."}</p>}
       <div className="mt-5 flex justify-end gap-3">
         <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>
-        <button type="button" onClick={onNext} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40" disabled={!selectedAmount && !customAmount}>다음</button>
+        <button type="button" onClick={onNext} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40" disabled={(!selectedAmount && !customAmount) || requestingCharge || exceedsMax}>{instant && requestingCharge ? "충전 중..." : instant ? "충전" : "다음"}</button>
       </div>
     </div>
   );
@@ -210,8 +240,8 @@ function RechargeHistory({ onBack, onSelect, rechargeHistory }: { onBack: () => 
       <button type="button" onClick={onBack} className="mb-4 text-sm font-bold text-muted hover:text-ink">← 계좌 요약으로</button>
       <div className="overflow-x-auto rounded-lg border border-hairline bg-white">
         <table className="w-full min-w-[680px] border-collapse text-left text-xs sm:text-sm">
-          <thead className="bg-surface-soft"><tr>{["요청 일시", "유형", "요청 금액", "충전 전 잔액", "처리 상태"].map((head) => <th key={head} className="border-b border-hairline px-3 py-2 text-xs font-semibold text-muted">{head}</th>)}</tr></thead>
-          <tbody>{rechargeHistory.map((record) => <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-hairline last:border-0 hover:bg-surface-soft"><td className="whitespace-nowrap px-3 py-2.5 text-muted">{formatDateTime(record.date)}</td><td className="px-3 py-2.5 font-bold">{record.type}</td><td className="num px-3 py-2.5 text-right font-bold">+{won(record.amount)}</td><td className="num px-3 py-2.5 text-right font-semibold">{record.balance === null ? "—" : won(record.balance)}</td><td className="px-3 py-2.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td></tr>)}</tbody>
+          <thead className="bg-surface-soft"><tr>{["요청 일시", "구분", "요청 금액", "충전 후 잔액", "처리 상태"].map((head) => <th key={head} className="border-b border-hairline px-3 py-2 text-xs font-semibold text-muted">{head}</th>)}</tr></thead>
+          <tbody>{rechargeHistory.map((record) => <tr key={record.id} onClick={() => onSelect(record)} className="cursor-pointer border-b border-hairline last:border-0 hover:bg-surface-soft"><td className="whitespace-nowrap px-3 py-2.5 text-muted">{formatDateTime(record.date)}</td><td className="px-3 py-2.5 font-bold">{record.source === "SELF" ? "셀프 충전" : "관리자 충전"}</td><td className="num px-3 py-2.5 text-right font-bold">+{won(record.amount)}</td><td className="num px-3 py-2.5 text-right font-semibold">{record.balance === null ? "—" : won(record.balance)}</td><td className="px-3 py-2.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${record.status === "승인" ? "bg-emerald-500/10 text-emerald-500" : record.status === "대기" ? "bg-amber-500/10 text-amber-600" : "bg-red-500/10 text-red-500"}`}>{record.status}</span></td></tr>)}</tbody>
         </table>
       </div>
     </div>

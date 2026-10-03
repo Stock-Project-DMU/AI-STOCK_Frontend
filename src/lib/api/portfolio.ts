@@ -15,11 +15,12 @@ export function getAccounts() {
 export type AccountTransactionResponse = {
     transactionId: number;
     accountId: number;
-    type: "INITIAL_GRANT" | "AUTO_CHARGE" | "ADMIN_CHARGE" | "ADMIN_DEDUCTION" | "ORDER_BUY" | "ORDER_SELL" | "ORDER_REFUND";
+    type: "INITIAL_GRANT" | "AUTO_CHARGE" | "ADMIN_CHARGE" | "ADMIN_DEDUCTION" | "ORDER_BUY" | "ORDER_SELL" | "ORDER_REFUND" | "INTEREST" | "TRADE_FEE";
     amount: number;
     balanceBefore: number;
     balanceAfter: number;
     reason: string | null;
+    relatedOrderId: number | null;
     createdAt: string;
 };
 
@@ -38,11 +39,24 @@ export async function getAccountTransactions(accountId: number, signal?: AbortSi
 }
 
 export type ChargeRequestResponse = { requestId: number; accountId: number; amount: number; reason: string; status: "PENDING" | "APPROVED" | "REJECTED"; decisionReason: string | null; requestedAt: string; decidedAt: string | null };
-export function getChargeRequests(accountId: number) {
-    return apiRequest<{ content: ChargeRequestResponse[] }>(`/api/accounts/${accountId}/charge-requests?size=100`);
-}
 export function requestCharge(accountId: number, amount: number, reason: string) {
     return apiRequest<ChargeRequestResponse>(`/api/accounts/${accountId}/charge-requests`, { method: "POST", body: JSON.stringify({ amount, reason }) });
+}
+
+// 셀프 충전(자동 승인)과 관리자 충전(요청·직접 지급)을 합친 전체 이력 — 최신순 배열, 페이지 없음.
+export type ChargeHistoryResponse = {
+    requestId: number;
+    source: "SELF" | "ADMIN";
+    status: "APPROVED" | "PENDING" | "REJECTED";
+    amount: number;
+    balanceAfter: number | null;
+    reason: string | null;
+    decisionReason: string | null;
+    requestedAt: string;
+    decidedAt: string | null;
+};
+export function getChargeHistory(accountId: number) {
+    return apiRequest<ChargeHistoryResponse[]>(`/api/accounts/${accountId}/charge-history`);
 }
 
 export function getAccountProfit(accountId: number) {
@@ -53,8 +67,8 @@ export function getRealizedReturns(accountId: number) {
     return apiRequest<RealizedReturnResponse[]>(`/api/accounts/${accountId}/returns`);
 }
 
-export function chargeAccount(accountId: number) {
-    return apiRequest<AccountInfoResponse>(`/api/accounts/${accountId}/charge`, { method: "POST" });
+export function chargeAccount(accountId: number, amount: number) {
+    return apiRequest<AccountInfoResponse>(`/api/accounts/${accountId}/charge`, { method: "POST", body: JSON.stringify({ amount }) });
 }
 
 export function getOrders(accountId: number) {

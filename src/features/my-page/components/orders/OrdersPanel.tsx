@@ -14,7 +14,6 @@ type OrdersPanelProps = {
 
 const formatWon = (value: number) => `${value.toLocaleString("ko-KR")}원`;
 const formatDate = (value: string | null) => value ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)) : "-";
-const transactionFeeRate = 0;
 type OrderFilter = "ALL" | "BUY" | "SELL";
 
 export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLoading, error }: OrdersPanelProps) {
@@ -34,6 +33,7 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
         side: `${order.orderType === "SELL" ? "매도" : "매수"} ${order.status === "EXECUTED" ? "체결" : order.status === "PENDING" ? "대기" : "취소"}`,
         quantity: `${order.quantity.toLocaleString("ko-KR")}주`,
         transactionAmount: (order.execPrice ?? order.orderPrice) * order.quantity,
+        fee: order.fee,
         price: formatWon((order.execPrice ?? order.orderPrice) * order.quantity),
         averagePrice: formatWon(order.execPrice ?? order.orderPrice),
         orderedAt: formatDate(order.orderedAt),
@@ -62,8 +62,8 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
   }
 
   const isSell = selected.side.startsWith("매도") || selected.side === "판매완료";
-  const feeAmount = Math.floor(selected.transactionAmount * transactionFeeRate / 100);
   const isExecuted = selected.status === "EXECUTED";
+  const feeRate = selected.transactionAmount > 0 ? (selected.fee / selected.transactionAmount) * 100 : 0;
   const detailRows = [
     [isExecuted ? "1주 평균 체결가" : "1주 주문가", selected.averagePrice],
     [isExecuted ? "체결 수량" : "주문 수량", selected.quantity],
@@ -71,7 +71,7 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
     ["주문 시간", selected.orderedAt],
     ["체결 시간", selected.executedAt],
     ["주문 유형", selected.priceType],
-    ["거래 수수료", `${formatWon(feeAmount)} (${transactionFeeRate.toFixed(2)}%)`],
+    ...(selected.orderType === "SELL" ? [["거래 수수료", `${formatWon(selected.fee)} (${feeRate.toFixed(2)}%)`]] : []),
   ];
 
   return (
@@ -120,7 +120,7 @@ function OrderListHeader({ filter, filterItems, visibleCount }: { filter: OrderF
         <h2 className="font-bold">주문 목록</h2>
         <p className="mt-1 text-xs text-muted">{filterItems.find((item) => item.id === filter)?.label} {visibleCount}건</p>
       </div>
-      <span className="shrink-0 rounded-full border border-hairline bg-white px-2.5 py-1 text-xs font-bold text-muted">수수료율 {transactionFeeRate.toFixed(2)}%</span>
+      <span className="shrink-0 rounded-full border border-hairline bg-white px-2.5 py-1 text-xs font-bold text-muted">수수료 0.1%</span>
     </div>
   );
 }

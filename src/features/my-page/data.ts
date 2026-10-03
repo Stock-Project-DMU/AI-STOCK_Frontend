@@ -1,4 +1,4 @@
-import type { MyPageTab, Order, Profile, ProfileChoice, RechargeRecord } from "./model";
+import type { MyPageTab, Order, Profile, ProfileChoice } from "./model";
 
 export const navItems: { id: MyPageTab; label: string; description: string }[] = [
   { id: "profile", label: "내 정보", description: "회원 정보 및 투자 성향" },
@@ -54,12 +54,9 @@ export const rechargeAmounts = [
   1_000_000_000,
 ];
 
-export const rechargeHistory: RechargeRecord[] = [
-  { id: 1, date: "2023.10.27 14:35", type: "추가 충전", amount: 100_000_000, balance: 200_000_000, status: "승인", requester: "김철수", note: "학습 목적 정당 요청. 거래 패턴 정상, 수익률 양호. 승인 처리." },
-  { id: 2, date: "2023.10.27 14:35", type: "추가 충전", amount: 100_000_000, balance: 100_000_000, status: "거절", requester: "박지성", note: "누적 지급액 한도 초과 (₩200,000,000). 계정 정지 이력 존재." },
-  { id: 3, date: "2023.10.27 14:35", type: "추가 충전", amount: 500_000_000, balance: 100_000_000, status: "거절", requester: "김진우", note: "누적 지급액 한도를 확인해 주세요." },
-  { id: 4, date: "2023.10.27 14:35", type: "초기 지급", amount: 100_000_000, balance: 100_000_000, status: "승인", requester: "김진우", note: "초기 가상캐시 지급 완료." },
-];
+// 1회 충전 한도 — 셀프 충전(즉시 처리)과 관리자 승인 요청은 한도가 다르다.
+export const SELF_CHARGE_MAX = 100_000_000;
+export const REQUEST_CHARGE_MAX = 1_000_000_000_000;
 
 export const orders: Order[] = [
   { id: 1, name: "삼성전자", side: "판매완료", quantity: "100주", price: "1,000,000원" },

@@ -157,6 +157,12 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     return payload.data;
 }
 
+// 백엔드는 보통 한글 메시지를 그대로 내려주지만, 혹시 코드값만 오는 경우를 대비한 안전망.
+const ERROR_CODE_MESSAGES: Record<string, string> = {
+    DEPOSIT_LIMIT_EXCEEDED: "계좌 예치금은 최대 1조원까지 보유할 수 있습니다.",
+};
+
 export function getApiErrorMessage(error: unknown, fallback: string) {
-    return error instanceof ApiError ? error.message : fallback;
+    if (!(error instanceof ApiError)) return fallback;
+    return ERROR_CODE_MESSAGES[error.message] ?? error.message;
 }

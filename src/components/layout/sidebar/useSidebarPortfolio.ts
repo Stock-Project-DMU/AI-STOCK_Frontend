@@ -2,24 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
+import { useLivePortfolio } from "@/hooks/LivePortfolioProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { getAccounts, getHoldings } from "@/lib/api/portfolio";
 import { MARKET_REFRESH_INTERVAL_MS } from "@/lib/api/market";
 import { addWatchlist, removeWatchlist, WATCHLIST_CHANGED, RECENT_VIEWED_CHANGED, getRecentViewed, getStockPrice, getWatchlist } from "@/lib/api/stock";
 import type { Holding, SidebarStockItem } from "./types";
 
-type SidebarPortfolioData = {
-    holdings: Holding[];
-    balances: number[];
+type SidebarWatchData = {
     watchlist: SidebarStockItem[];
     recent: SidebarStockItem[];
     isLoading: boolean;
     error: string;
 };
 
-const initialData: SidebarPortfolioData = {
-    holdings: [],
-    balances: [],
+const initialData: SidebarWatchData = {
     watchlist: [],
     recent: [],
     isLoading: false,
@@ -28,7 +24,9 @@ const initialData: SidebarPortfolioData = {
 
 const formatRate = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 
+// 보유종목·평가손익 계산은 useLivePortfolio(실시간 시세 구독)로 공유하고, 여기서는 관심·최근 본 종목만 관리한다.
 export function useSidebarPortfolio() {
+    const live = useLivePortfolio();
     const [data, setData] = useState(initialData);
     const { authenticated, requireLogin } = useAuthGuard();
     const [revision, setRevision] = useState(0);
@@ -79,12 +77,10 @@ export function useSidebarPortfolio() {
             if (!silent) setData((current) => ({ ...current, isLoading: true, error: "" }));
 
             try {
-                const [accounts, watchlistRows, recentRows] = await Promise.all([
-                    getAccounts(),
+                const [watchlistRows, recentRows] = await Promise.all([
                     getWatchlist(),
                     getRecentViewed(),
                 ]);
-                const primaryAccount = accounts[0];
                 if (cancelled) return;
                 setFavoriteCodes(new Set(watchlistRows.map(item => item.stockCode)));
                 // Show saved lists immediately; slow quote requests should not hide navigation.
@@ -98,7 +94,6 @@ export function useSidebarPortfolio() {
                     });
                     return { ...current, watchlist: watchlistRows.map(toSavedItem), recent: recentRows.map(toSavedItem), isLoading: false };
                 });
-                const holdingRows = primaryAccount ? await getHoldings(primaryAccount.accountId) : [];
 
                 const stockCodes = [...new Set([...watchlistRows, ...recentRows].map((item) => item.stockCode))];
                 const prices = await Promise.allSettled(stockCodes.map((code) => getStockPrice(code)));
@@ -121,18 +116,6 @@ export function useSidebarPortfolio() {
                 setData(current => {
                     const known = new Map([...current.watchlist, ...current.recent].map(item => [item.meta, item]));
                     return {
-                        holdings: holdingRows.map((holding) => {
-                            const cost = holding.avgPrice * holding.quantity;
-                            return {
-                                stockCode: holding.stockCode,
-                                name: holding.stockName || holding.stockCode,
-                                quantity: holding.quantity,
-                                amountValue: holding.currentPrice * holding.quantity,
-                                profitValue: holding.evaluationProfit,
-                                rate: formatRate(cost === 0 ? 0 : (holding.evaluationProfit / cost) * 100),
-                            };
-                        }),
-                        balances: accounts.map((account) => account.balance),
                         watchlist: watchlistRows.map(toStockItem(known)),
                         recent: recentRows.map(toStockItem(known)),
                         isLoading: false,
@@ -151,7 +134,7 @@ export function useSidebarPortfolio() {
         };
 
         void load(false);
-        // 내 투자(평가액)·관심·최근 본 종목 가격을 화면이 보이는 동안 주기적으로 갱신한다.
+        // 관심·최근 본 종목 가격을 화면이 보이는 동안 주기적으로 갱신한다.
         const timer = window.setInterval(() => {
             if (document.visibilityState === "visible") void load(true);
         }, MARKET_REFRESH_INTERVAL_MS);
@@ -161,5 +144,26 @@ export function useSidebarPortfolio() {
         };
     }, [authenticated, revision]);
 
-    return { ...(authenticated ? data : initialData), actionError: authenticated ? actionError : "", favoriteCodes: authenticated ? favoriteCodes : new Set<string>(), pendingCodes, onFavorite };
+    const holdings: Holding[] = authenticated ? live.holdings.map((holding) => ({
+        stockCode: holding.stockCode,
+        name: holding.stockName || holding.stockCode,
+        quantity: holding.quantity,
+        amountValue: holding.currentPrice * holding.quantity,
+        profitValue: holding.evaluationProfit,
+        rate: formatRate(holding.profitRate),
+    })) : [];
+    const balances = authenticated ? live.accounts.map(account => account.balance) : [];
+
+    return {
+        holdings,
+        balances,
+        watchlist: authenticated ? data.watchlist : [],
+        recent: authenticated ? data.recent : [],
+        isLoading: authenticated ? data.isLoading || live.isLoading : false,
+        error: authenticated ? (data.error || live.error) : "",
+        actionError: authenticated ? actionError : "",
+        favoriteCodes: authenticated ? favoriteCodes : new Set<string>(),
+        pendingCodes,
+        onFavorite,
+    };
 }
