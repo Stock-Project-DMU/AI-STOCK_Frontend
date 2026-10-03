@@ -5,7 +5,7 @@ export type RechargeStatus = "승인" | "거절" | "대기";
 export type RechargeRecord = {
   id: number;
   date: string;
-  type: string;
+  source: "SELF" | "ADMIN";
   amount: number;
   balance: number | null;
   status: RechargeStatus;

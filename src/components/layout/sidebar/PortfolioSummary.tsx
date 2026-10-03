@@ -23,7 +23,7 @@ export default function PortfolioSummary({
                 <span>평가액</span>
                 <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <span className="num">{formatWon(evaluationTotal)}</span>
-                    <span className={`num text-xs font-bold ${profitTotal >= 0 ? "text-up" : "text-down"}`}>
+                    <span className={`num text-xs font-bold ${profitTotal >= 0 ? "text-up" : "text-down"}`} aria-label={`보유 주식 수익률 ${formatSignedWon(profitTotal)} ${profitRate.toFixed(2)}%`}>
                         {formatSignedWon(profitTotal)} ({profitRate.toFixed(2)}%)
                     </span>
                 </div>

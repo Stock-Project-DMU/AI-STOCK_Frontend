@@ -46,6 +46,9 @@ export type AccountInfoResponse = {
     frozenBalance: number;
     baseBalance: number;
     chargeCount: number;
+    maxChargeCount: number;
+    interestRate: number;
+    totalInterest: number;
     status: "ACTIVE" | "SUSPENDED";
 };
 
@@ -77,6 +80,7 @@ export type OrderHistoryResponse = {
     execPrice: number | null;
     quantity: number;
     status: "PENDING" | "EXECUTED" | "CANCELLED";
+    fee: number;
     orderedAt: string;
     executedAt: string | null;
 };
