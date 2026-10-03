@@ -1,32 +1,32 @@
-export function calculateFutureValue(
-    monthlyPayment: number,
-    years: number,
-    annualReturn: number,
-) {
-    const months = years * 12;
-    const monthlyRate = annualReturn / 100 / 12;
-
-    if (monthlyRate === 0) {
-        return monthlyPayment * months;
-    }
-
-    return (
-        monthlyPayment *
-        ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate)
-    );
-}
-
 export function formatWon(value: number) {
     return `${Math.round(value).toLocaleString("ko-KR")}원`;
 }
 
-export function buildGrowthPoints(
-    monthlyPayment: number,
-    years: number,
-    annualReturn: number,
-) {
-    return Array.from({ length: 11 }, (_, index) => {
-        const elapsedYears = (years * index) / 10;
-        return calculateFutureValue(monthlyPayment, elapsedYears, annualReturn);
-    });
+// 차트 축·요약처럼 좁은 자리에 쓰는 짧은 금액 표기 (예: 1.2억, 3,500만)
+export function formatCompactWon(value: number) {
+    if (value >= 100_000_000) {
+        const eok = value / 100_000_000;
+        return `${eok >= 10 ? Math.round(eok).toLocaleString("ko-KR") : eok.toFixed(1).replace(/\.0$/, "")}억`;
+    }
+    if (value >= 10_000) return `${Math.round(value / 10_000).toLocaleString("ko-KR")}만`;
+    return Math.round(value).toLocaleString("ko-KR");
+}
+
+// 개월 수를 "2년 3개월" 형태로
+export function formatMonths(months: number) {
+    const years = Math.floor(months / 12);
+    const rest = months % 12;
+    if (years === 0) return `${rest}개월`;
+    return rest === 0 ? `${years}년` : `${years}년 ${rest}개월`;
+}
+
+// "2033-06-01" → "2033년 6월"
+export function formatYearMonth(date: string) {
+    const [year, month] = date.split("-");
+    return `${year}년 ${Number(month)}월`;
+}
+
+// 월 성장률(소수) → "0.35%"
+export function formatMonthlyRate(rate: number) {
+    return `${(rate * 100).toFixed(2)}%`;
 }

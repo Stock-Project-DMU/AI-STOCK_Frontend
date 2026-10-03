@@ -114,17 +114,9 @@ export function GoalSimulationSkeleton() {
             <div className="mx-auto w-full max-w-[1500px]">
                 <Skeleton className="h-9 w-64" />
                 <Skeleton className="mt-3 h-5 w-96 max-w-full" />
-                <div className="cq-simulation-skeleton mt-6 grid gap-4">
-                    <Card className="space-y-5">
-                        {[0, 1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-16 w-full" />)}
-                        <Skeleton className="h-12 w-full" />
-                    </Card>
-                    <div className="space-y-4">
-                        <Card><Skeleton className="h-[360px] w-full" /></Card>
-                        <div className="grid gap-4 sm:grid-cols-3">
-                            {[0, 1, 2].map((item) => <Card key={item}><Skeleton className="h-20 w-full" /></Card>)}
-                        </div>
-                    </div>
+                <Card className="mt-6"><Skeleton className="h-20 w-full" /></Card>
+                <div className="cq-simulation-compare mt-4 grid gap-4">
+                    {[0, 1].map((item) => <Card key={item}><Skeleton className="h-[360px] w-full" /></Card>)}
                 </div>
             </div>
         </main>
