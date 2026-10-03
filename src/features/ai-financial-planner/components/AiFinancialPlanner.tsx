@@ -60,7 +60,8 @@ export default function AiFinancialPlanner() {
         getPlanningConnectionOptions()
             .then(options => {
                 if (!active) return;
-                setSavedCounts({ goals: options.goals.length, briefings: options.briefings.length });
+                // 저장 목표 = 목표 도달 시뮬레이션에서 저장한 결과 + 예전 적립식 목표
+                setSavedCounts({ goals: options.simulations.length + options.goals.length, briefings: options.briefings.length });
                 setConnectionError("");
             })
             .catch(cause => { if (active) setConnectionError(getApiErrorMessage(cause, "연동 정보를 불러오지 못했습니다.")); });

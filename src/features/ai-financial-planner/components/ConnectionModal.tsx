@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CloseIcon } from "@/components/icons/Icon";
 import { getPlanningConnectionOptions, getPlanningPreferences, savePlanningPreferences, type PlanningConnectionOptions, type PlanningPreferences } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { formatCompactWon, formatMonths, formatYearMonth } from "@/features/goal-simulation/utils/simulation";
 
 type ConnectionModalProps = {
     onClose: () => void;
@@ -14,6 +15,33 @@ type ConnectionModalProps = {
 const PAGE_SIZE = 5;
 const MAX_CONNECTIONS = 5;
 const MAX_GOALS = 2;
+
+// 목표 연동 항목 — 목표 도달 시뮬레이션에서 저장한 결과(simulation)와 예전 적립식 목표(goalPlan)는 ID 체계가 달라 종류를 함께 둔다.
+type GoalItem = { kind: "simulation" | "goalPlan"; id: number; label: string };
+
+function buildGoalItems(options: PlanningConnectionOptions): GoalItem[] {
+    const simulations = options.simulations.map<GoalItem>(simulation => ({
+        kind: "simulation",
+        id: simulation.simulationId,
+        label: `${simulation.goalText} · 목표 ${formatCompactWon(simulation.targetAmount)}원`
+            + (simulation.periodMonths !== null ? ` · 기한 ${formatMonths(simulation.periodMonths)}` : "")
+            + (simulation.rebalancedReachDate ? ` · 리밸런싱 도달 ${formatYearMonth(simulation.rebalancedReachDate)}` : ""),
+    }));
+    const goalPlans = options.goals.map<GoalItem>(goal => ({
+        kind: "goalPlan",
+        id: goal.planId,
+        label: `(이전 목표) ${goal.goal === "house" ? "내 집 마련" : "노후 준비"} · 월 ${goal.monthlyPayment.toLocaleString()}원 · ${goal.years}년`,
+    }));
+    return [...simulations, ...goalPlans];
+}
+
+function linkedGoalCount(preferences: PlanningPreferences) {
+    return preferences.linkedGoalPlanIds.length + preferences.linkedSimulationIds.length;
+}
+
+function isGoalLinked(preferences: PlanningPreferences, item: GoalItem) {
+    return item.kind === "simulation" ? preferences.linkedSimulationIds.includes(item.id) : preferences.linkedGoalPlanIds.includes(item.id);
+}
 
 function PaginationControls({ page, total, onPage, label }: { page: number; total: number; onPage: (page: number) => void; label: string }) {
     const pageCount = Math.ceil(total / PAGE_SIZE);
@@ -35,6 +63,7 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
     const [goalPage, setGoalPage] = useState(0);
     const [briefingPage, setBriefingPage] = useState(0);
     const closeButton = useRef<HTMLButtonElement>(null);
+    const goalItems = options ? buildGoalItems(options) : null;
 
     useEffect(() => {
         const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -53,6 +82,7 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
             .then(([available, current]) => {
                 if (!active) return;
                 const goalIds = new Set(available.goals.map(goal => goal.planId));
+                const simulationIds = new Set(available.simulations.map(simulation => simulation.simulationId));
                 const briefingDates = new Set(available.briefings.map(briefing => briefing.briefingDate));
                 setOptions(available);
                 setGoalPage(0);
@@ -61,6 +91,7 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
                     savedBriefingDates: current.savedBriefingDates.filter(date => briefingDates.has(date)),
                     linkedBriefingDates: current.linkedBriefingDates.filter(date => briefingDates.has(date)),
                     linkedGoalPlanIds: current.linkedGoalPlanIds.filter(id => goalIds.has(id)),
+                    linkedSimulationIds: (current.linkedSimulationIds ?? []).filter(id => simulationIds.has(id)),
                 });
             })
             .catch(cause => { if (active) setError(getApiErrorMessage(cause, "연동 자료를 불러오지 못했습니다.")); })
@@ -68,25 +99,28 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
         return () => { active = false; };
     }, [loadKey]);
 
-    const toggleGoal = (id: number) => {
+    const toggleGoal = (item: GoalItem) => {
         if (!preferences) return;
-        const selected = preferences.linkedGoalPlanIds.includes(id);
-        if (!selected && preferences.linkedGoalPlanIds.length >= MAX_GOALS) {
+        const selected = isGoalLinked(preferences, item);
+        if (!selected && linkedGoalCount(preferences) >= MAX_GOALS) {
             setError("목표 시뮬레이션은 최대 2개까지 연동할 수 있습니다.");
             return;
         }
-        if (!selected && preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length >= MAX_CONNECTIONS) {
+        if (!selected && linkedGoalCount(preferences) + preferences.linkedBriefingDates.length >= MAX_CONNECTIONS) {
             setError("목표와 브리핑을 합쳐 최대 5개까지 연동할 수 있습니다.");
             return;
         }
         setError("");
-        setPreferences({ ...preferences, linkedGoalPlanIds: selected ? preferences.linkedGoalPlanIds.filter(item => item !== id) : [...preferences.linkedGoalPlanIds, id] });
+        const toggle = (ids: number[]) => selected ? ids.filter(id => id !== item.id) : [...ids, item.id];
+        setPreferences(item.kind === "simulation"
+            ? { ...preferences, linkedSimulationIds: toggle(preferences.linkedSimulationIds) }
+            : { ...preferences, linkedGoalPlanIds: toggle(preferences.linkedGoalPlanIds) });
     };
 
     const toggleBriefing = (date: string) => {
         if (!preferences) return;
         const selected = preferences.linkedBriefingDates.includes(date);
-        if (!selected && preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length >= MAX_CONNECTIONS) {
+        if (!selected && linkedGoalCount(preferences) + preferences.linkedBriefingDates.length >= MAX_CONNECTIONS) {
             setError("목표와 브리핑을 합쳐 최대 5개까지 연동할 수 있습니다.");
             return;
         }
@@ -96,8 +130,8 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
 
     const save = async () => {
         if (!preferences || busy) return;
-        if (preferences.linkedGoalPlanIds.length > MAX_GOALS
-            || preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length > MAX_CONNECTIONS) {
+        if (linkedGoalCount(preferences) > MAX_GOALS
+            || linkedGoalCount(preferences) + preferences.linkedBriefingDates.length > MAX_CONNECTIONS) {
             setError("연동은 전체 최대 5개이며, 목표는 최대 2개까지 선택할 수 있습니다.");
             return;
         }
@@ -106,12 +140,14 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
         try {
             const [latest, available] = await Promise.all([getPlanningPreferences(), getPlanningConnectionOptions()]);
             const validGoalIds = new Set(available.goals.map(goal => goal.planId));
+            const validSimulationIds = new Set(available.simulations.map(simulation => simulation.simulationId));
             const validBriefingDates = new Set(available.briefings.map(briefing => briefing.briefingDate));
             await savePlanningPreferences({
                 ...latest,
                 savedBriefingDates: latest.savedBriefingDates.filter(date => validBriefingDates.has(date)),
                 linkedBriefingDates: preferences.linkedBriefingDates.filter(date => validBriefingDates.has(date)),
                 linkedGoalPlanIds: preferences.linkedGoalPlanIds.filter(id => validGoalIds.has(id)),
+                linkedSimulationIds: preferences.linkedSimulationIds.filter(id => validSimulationIds.has(id)),
             });
             onSaved();
             onClose();
@@ -133,19 +169,19 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
             </div>
             <div className="min-h-0 overflow-y-auto px-5 py-4 sm:px-6">
                 <p className="text-xs text-muted">투자 성향과 대표 보유 종목은 상담에 자동 반영됩니다. 아래에서 저장한 목표와 브리핑을 추가로 연결할 수 있습니다.</p>
-                {preferences && <p className="mt-2 text-sm font-semibold text-primary">현재 연동 {preferences.linkedGoalPlanIds.length + preferences.linkedBriefingDates.length}/{MAX_CONNECTIONS}건</p>}
+                {preferences && <p className="mt-2 text-sm font-semibold text-primary">현재 연동 {linkedGoalCount(preferences) + preferences.linkedBriefingDates.length}/{MAX_CONNECTIONS}건</p>}
                 {error && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
                 {loading && <p role="status" className="mt-5 text-sm text-muted">연동 자료를 불러오는 중입니다...</p>}
                 {!loading && !options && <button type="button" onClick={() => { setLoading(true); setError(""); setLoadKey(key => key + 1); }} className="mt-4 rounded-lg border border-hairline px-4 py-2 text-sm font-semibold">다시 시도</button>}
-                {options && preferences && <>
+                {options && preferences && goalItems && <>
                     <section className="mt-6">
-                        <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 목표 시뮬레이션 · {options.goals.length}건</h3><span className="text-xs text-muted">{preferences.linkedGoalPlanIds.length}/{MAX_GOALS} 연동</span></div>
-                        {!options.goals.length && <p className="mt-3 text-sm text-muted">저장한 목표가 없습니다. <Link href="/goal-simulation" className="font-semibold text-primary underline">목표 시뮬레이션으로 이동</Link></p>}
-                        <div className="mt-3 space-y-2">{options.goals.slice(goalPage * PAGE_SIZE, (goalPage + 1) * PAGE_SIZE).map(goal => <label key={goal.planId} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
-                            <input type="checkbox" checked={preferences.linkedGoalPlanIds.includes(goal.planId)} onChange={() => toggleGoal(goal.planId)} disabled={busy} className="accent-primary" />
-                            <span className="min-w-0">{goal.goal === "house" ? "내 집 마련" : "노후 준비"} · 월 {goal.monthlyPayment.toLocaleString()}원 · {goal.years}년</span>
+                        <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 목표 시뮬레이션 · {goalItems.length}건</h3><span className="text-xs text-muted">{linkedGoalCount(preferences)}/{MAX_GOALS} 연동</span></div>
+                        {!goalItems.length && <p className="mt-3 text-sm text-muted">저장한 목표가 없습니다. <Link href="/goal-simulation" className="font-semibold text-primary underline">목표 시뮬레이션으로 이동</Link></p>}
+                        <div className="mt-3 space-y-2">{goalItems.slice(goalPage * PAGE_SIZE, (goalPage + 1) * PAGE_SIZE).map(item => <label key={`${item.kind}-${item.id}`} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
+                            <input type="checkbox" checked={isGoalLinked(preferences, item)} onChange={() => toggleGoal(item)} disabled={busy} className="accent-primary" />
+                            <span className="min-w-0 break-words">{item.label}</span>
                         </label>)}</div>
-                        <PaginationControls page={goalPage} total={options.goals.length} onPage={setGoalPage} label="목표 시뮬레이션" />
+                        <PaginationControls page={goalPage} total={goalItems.length} onPage={setGoalPage} label="목표 시뮬레이션" />
                     </section>
                     <section className="mt-7">
                         <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 뉴스 브리핑 · {options.briefings.length}건</h3><span className="text-xs text-muted">{preferences.linkedBriefingDates.length}/{MAX_CONNECTIONS} 연동</span></div>
