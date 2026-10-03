@@ -247,8 +247,8 @@ a {
     grid-template-columns: minmax(0, 1fr) 220px;
   }
 
-  .cq-goal-controls {
-    grid-template-columns: 320px minmax(0, 1fr);
+  .cq-simulation-compare {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cq-featured-news {
@@ -336,10 +336,6 @@ a {
 
   .cq-report-layout {
     grid-template-columns: minmax(0, 1fr) 320px;
-  }
-
-  .cq-simulation-skeleton {
-    grid-template-columns: 380px minmax(0, 1fr);
   }
 }
 
