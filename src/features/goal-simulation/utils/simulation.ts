@@ -26,7 +26,17 @@ export function formatYearMonth(date: string) {
     return `${year}년 ${Number(month)}월`;
 }
 
+// "2033-06-01" → "2033.06" (수치 요약처럼 좁은 자리용)
+export function formatYearMonthDot(date: string) {
+    return date.slice(0, 7).replace("-", ".");
+}
+
 // 월 성장률(소수) → "0.35%"
 export function formatMonthlyRate(rate: number) {
     return `${(rate * 100).toFixed(2)}%`;
+}
+
+// 월 성장률(소수)을 복리로 연 환산 → "4.3%"
+export function formatAnnualizedRate(monthlyRate: number) {
+    return `${((Math.pow(1 + monthlyRate, 12) - 1) * 100).toFixed(1)}%`;
 }

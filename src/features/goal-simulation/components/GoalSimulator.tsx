@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import FinancialSummary from "@/features/ai-financial-planner/components/FinancialSummary";
 import { Button } from "@/components/common/Button";
+import { useLivePortfolio } from "@/hooks/LivePortfolioProvider";
 import { runSimulation, saveSimulation, type SimulationResult } from "@/lib/api/ai";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 import { formatMonths, formatWon, formatYearMonth } from "../utils/simulation";
@@ -39,6 +40,8 @@ function describeShortening(result: SimulationResult) {
 export default function GoalSimulator() {
     const [goalText, setGoalText] = useState("");
     const [contributionInput, setContributionInput] = useState("0");
+    // 현재 계좌(보유종목 평가금액 + 예수금)를 시작 금액으로 쓸지 여부. 끄면 0원에서 월 추가 납입액만으로 시작한다.
+    const [includeCurrentPortfolio, setIncludeCurrentPortfolio] = useState(true);
     const [result, setResult] = useState<SimulationResult | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
@@ -48,8 +51,17 @@ export default function GoalSimulator() {
     const [saveError, setSaveError] = useState("");
     const [historyOpen, setHistoryOpen] = useState(false);
 
+    const live = useLivePortfolio();
+    // 백엔드 SimulationService와 같은 기준: 예수금 = 잔액 + 지정가 매수 대기 금액(frozenBalance)
+    const liveCashAmount = live.account ? live.account.balance + live.account.frozenBalance : 0;
+
     const monthlyContribution = Number(contributionInput.replace(/[^0-9]/g, "") || "0");
-    const canRun = goalText.trim().length > 0 && goalText.trim().length <= 200 && monthlyContribution <= MAX_MONTHLY_CONTRIBUTION && !busy;
+    // 계좌를 반영하지 않으면 시작 금액이 0원이라 납입액도 0원이면 곡선이 0에서 움직이지 않는다.
+    const needsContribution = !includeCurrentPortfolio && monthlyContribution === 0;
+    // 첫 조회(isLoading)가 끝나기 전에는 계좌·보유종목이 비어 있어 미리보기가 0원으로 보이므로 실행을 잠시 막는다.
+    // 10초 주기 갱신은 isLoading을 바꾸지 않아(LivePortfolioProvider의 silent 조회) 버튼이 깜빡이지 않는다.
+    const portfolioLoading = includeCurrentPortfolio && live.isLoading;
+    const canRun = goalText.trim().length > 0 && goalText.trim().length <= 200 && monthlyContribution <= MAX_MONTHLY_CONTRIBUTION && !needsContribution && !portfolioLoading && !busy;
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -59,7 +71,7 @@ export default function GoalSimulator() {
         setSurveyRequired(false);
         setSaveError("");
         try {
-            setResult(await runSimulation(goalText.trim(), monthlyContribution));
+            setResult(await runSimulation(goalText.trim(), monthlyContribution, includeCurrentPortfolio));
         } catch (runError) {
             setError(getApiErrorMessage(runError, "시뮬레이션 실행에 실패했습니다."));
             setSurveyRequired(runError instanceof ApiError && runError.status === 403);
@@ -138,6 +150,33 @@ export default function GoalSimulator() {
                                 {busy ? "분석 중..." : "시뮬레이션 실행"}
                             </Button>
                         </div>
+                        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-hairline bg-canvas px-3 py-2.5">
+                            <button
+                                type="button"
+                                role="switch"
+                                aria-checked={includeCurrentPortfolio}
+                                aria-describedby="portfolio-include-help"
+                                onClick={() => setIncludeCurrentPortfolio((value) => !value)}
+                                className="flex shrink-0 items-center gap-2 text-sm font-semibold text-ink"
+                            >
+                                <span className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${includeCurrentPortfolio ? "bg-primary" : "bg-hairline"}`} aria-hidden="true">
+                                    <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${includeCurrentPortfolio ? "translate-x-4" : "translate-x-0.5"}`} />
+                                </span>
+                                현재 계좌 반영
+                                <span className={`text-xs font-bold ${includeCurrentPortfolio ? "text-primary" : "text-muted"}`}>{includeCurrentPortfolio ? "ON" : "OFF"}</span>
+                            </button>
+                            <p id="portfolio-include-help" className="num min-w-0 text-xs text-body">
+                                {!includeCurrentPortfolio
+                                    ? "월 납입액부터 시작하는 시뮬레이션입니다."
+                                    : live.isLoading
+                                        ? "현재 포트폴리오를 불러오는 중입니다..."
+                                        : live.account
+                                            ? `현재 포트폴리오: 보유종목 ${formatWon(live.totalEvaluationAmount)} + 예수금 ${formatWon(liveCashAmount)} = ${formatWon(live.totalAsset)}`
+                                            : live.error
+                                                ? "계좌 정보를 불러오지 못했습니다. 실행 시 서버에서 계좌를 다시 확인합니다."
+                                                : "개설된 계좌가 없어 현재 계좌를 반영할 수 없습니다. 계좌 반영을 끄고 실행해 주세요."}
+                            </p>
+                        </div>
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span className="text-xs text-muted">예시</span>
                             {GOAL_EXAMPLES.map((example) => (
@@ -147,9 +186,11 @@ export default function GoalSimulator() {
                             ))}
                         </div>
                         <p id="contribution-help" className="mt-2 text-xs text-muted">
-                            시작 금액은 내 계좌의 보유종목 평가금액과 예수금으로 자동 계산됩니다. 월 추가 납입액은 최대 1억원까지 입력할 수 있습니다.
+                            {includeCurrentPortfolio ? "시작 금액은 내 계좌의 보유종목 평가금액과 예수금으로 자동 계산됩니다. " : "시작 금액 0원에서 매달 납입액만 쌓아 계산합니다. "}
+                            월 추가 납입액은 최대 1억원까지 입력할 수 있습니다.
                         </p>
                         {monthlyContribution > MAX_MONTHLY_CONTRIBUTION && <p role="alert" className="mt-1 text-xs text-red-600">월 추가 납입액은 1억원 이하로 입력해 주세요.</p>}
+                        {needsContribution && <p role="alert" className="mt-1 text-xs text-red-600">현재 계좌를 반영하지 않으면 월 추가 납입액을 입력해 주세요.</p>}
                     </form>
 
                     {busy && (
@@ -185,7 +226,9 @@ export default function GoalSimulator() {
                                 <div>
                                     <dt className="text-xs text-muted">시작 금액</dt>
                                     <dd className="num mt-1 font-semibold text-ink">{formatWon(result.startAmount)}</dd>
-                                    <dd className="text-xs text-muted">보유종목 {formatWon(result.holdingsAmount)} + 예수금 {formatWon(result.cashAmount)}</dd>
+                                    <dd className="text-xs text-muted">
+                                        {result.startAmount === 0 ? "월 납입액부터 시작" : `보유종목 ${formatWon(result.holdingsAmount)} + 예수금 ${formatWon(result.cashAmount)}`}
+                                    </dd>
                                 </div>
                                 <div>
                                     <dt className="text-xs text-muted">월 추가 납입</dt>
@@ -196,7 +239,7 @@ export default function GoalSimulator() {
                             <div className="cq-simulation-compare grid gap-4">
                                 <ProjectionPanel
                                     title="현재 보유 유지"
-                                    description="지금 보유한 종목과 예수금 비중을 그대로 유지할 때"
+                                    description={result.startAmount === 0 ? "납입금을 종목 없이 모두 예수금(현금)으로 둘 때" : "지금 보유한 종목과 예수금 비중을 그대로 유지할 때"}
                                     projection={result.current}
                                     targetAmount={result.targetAmount}
                                     periodMonths={result.periodMonths}
