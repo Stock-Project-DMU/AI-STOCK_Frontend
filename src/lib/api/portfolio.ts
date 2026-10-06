@@ -16,7 +16,8 @@ export type AccountTransactionResponse = {
     transactionId: number;
     accountId: number;
     // AUTO_DEDUCTION: 관리자 계정이 본인 계좌를 직접 차감한 경우에만 내려옴(백엔드 확인됨).
-    type: "INITIAL_GRANT" | "AUTO_CHARGE" | "ADMIN_CHARGE" | "ADMIN_DEDUCTION" | "AUTO_DEDUCTION" | "ORDER_BUY" | "ORDER_SELL" | "ORDER_REFUND" | "INTEREST" | "TRADE_FEE";
+    // DIVIDEND: 보유 종목 현금배당 입금(feature/dividend).
+    type: "INITIAL_GRANT" | "AUTO_CHARGE" | "ADMIN_CHARGE" | "ADMIN_DEDUCTION" | "AUTO_DEDUCTION" | "ORDER_BUY" | "ORDER_SELL" | "ORDER_REFUND" | "INTEREST" | "TRADE_FEE" | "DIVIDEND";
     amount: number;
     balanceBefore: number;
     balanceAfter: number;
