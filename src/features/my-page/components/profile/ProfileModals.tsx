@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { apiRequest, clearAuthTokens, getApiErrorMessage } from "@/lib/api/client";
+import PasswordInput from "@/components/common/PasswordInput";
 import Modal from "../Modal";
 
 type PasswordCheckModalProps = {
@@ -50,37 +51,43 @@ export function ProfileSavedModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function WithdrawalModal({ onClose, isSocialAccount, accountEmail }: { onClose: () => void; isSocialAccount: boolean; accountEmail: string }) {
+export function WithdrawalModal({ onClose, isSocialAccount, accountEmail, isAdmin }: { onClose: () => void; isSocialAccount: boolean; accountEmail: string; isAdmin?: boolean }) {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [adminCode, setAdminCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const canSubmit = isAdmin ? Boolean(password) && Boolean(adminCode.trim()) : isSocialAccount ? Boolean(email.trim()) : Boolean(password);
   async function withdraw() {
-    if (busy || (isSocialAccount ? !email.trim() : !password)) return;
-    if (isSocialAccount && (!accountEmail || email.trim().toLowerCase() !== accountEmail.trim().toLowerCase())) {
+    if (busy || !canSubmit) return;
+    if (!isAdmin && isSocialAccount && (!accountEmail || email.trim().toLowerCase() !== accountEmail.trim().toLowerCase())) {
       setError("계정에 등록된 본인 이메일을 입력해 주세요.");
       return;
     }
     setBusy(true); setError("");
     try {
-      await apiRequest<null>("/api/users/me", { method: "DELETE", retryOnUnauthorized: false, body: JSON.stringify(isSocialAccount ? { email: email.trim() } : { password }) });
+      const body = isAdmin ? { password, adminCode: adminCode.trim() } : isSocialAccount ? { email: email.trim() } : { password };
+      await apiRequest<null>("/api/users/me", { method: "DELETE", retryOnUnauthorized: false, body: JSON.stringify(body) });
       clearAuthTokens();
       window.location.assign("/home");
-    } catch (error) { setError(getApiErrorMessage(error, "탈퇴 처리에 실패했습니다.")); }
+    } catch (error) { setError(getApiErrorMessage(error, isAdmin ? "관리자 계정 폐기에 실패했습니다." : "탈퇴 처리에 실패했습니다.")); }
     finally { setBusy(false); }
   }
   return (
-    <Modal ariaLabel="회원 탈퇴 확인" onClose={onClose}>
+    <Modal ariaLabel={isAdmin ? "관리자 계정 폐기 확인" : "회원 탈퇴 확인"} onClose={onClose}>
       <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10 text-lg font-bold text-red-500">!</div>
-      <h2 className="mt-3 text-lg font-bold">정말 탈퇴하시겠어요?</h2>
-      {isSocialAccount ? <label className="mt-4 block text-left text-sm">본인 이메일<input type="email" autoComplete="email" value={email} onChange={event => { setEmail(event.target.value); setError(""); }} placeholder="계정에 등록된 이메일" className="mt-2 w-full rounded border border-hairline p-3" /></label>
+      <h2 className="mt-3 text-lg font-bold">{isAdmin ? "정말 관리자 계정을 폐기하시겠어요?" : "정말 탈퇴하시겠어요?"}</h2>
+      {isAdmin ? <>
+        <label className="mt-4 block text-left text-sm">현재 비밀번호<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 w-full rounded border border-hairline p-3" /></label>
+        <label className="mt-3 block text-left text-sm">관리자 인증 코드<PasswordInput value={adminCode} onChange={event => { setAdminCode(event.target.value); setError(""); }} className="mt-2 w-full rounded border border-hairline p-3" /></label>
+      </> : isSocialAccount ? <label className="mt-4 block text-left text-sm">본인 이메일<input type="email" autoComplete="email" value={email} onChange={event => { setEmail(event.target.value); setError(""); }} placeholder="계정에 등록된 이메일" className="mt-2 w-full rounded border border-hairline p-3" /></label>
         : <label className="mt-4 block text-left text-sm">현재 비밀번호<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 w-full rounded border border-hairline p-3" /></label>}
       {error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
-      <p className="mt-2 break-keep text-pretty text-sm leading-6 text-muted">탈퇴하면 저장된 투자 성향, 주문 내역과 수익률 정보를 다시 확인할 수 없습니다.</p>
+      <p className="mt-2 break-keep text-pretty text-sm leading-6 text-muted">{isAdmin ? "폐기하면 관리자 계정과 권한이 모두 삭제됩니다." : "탈퇴하면 저장된 투자 성향, 주문 내역과 수익률 정보를 다시 확인할 수 없습니다."}</p>
       <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2.5 text-left text-xs leading-5 text-red-500">이 작업은 되돌릴 수 없습니다. 계속하기 전에 필요한 정보를 확인해 주세요.</div>
       <div className="mt-5 grid grid-cols-2 gap-3">
         <button type="button" onClick={onClose} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>
-        <button type="button" disabled={busy || (isSocialAccount ? !email.trim() : !password)} onClick={() => void withdraw()} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600 disabled:opacity-50">{busy ? "처리 중..." : "탈퇴하기"}</button>
+        <button type="button" disabled={busy || !canSubmit} onClick={() => void withdraw()} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600 disabled:opacity-50">{busy ? "처리 중..." : isAdmin ? "폐기하기" : "탈퇴하기"}</button>
       </div>
     </Modal>
   );

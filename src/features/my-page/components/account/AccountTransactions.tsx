@@ -17,6 +17,7 @@ const TRANSACTION_META: Record<AccountTransactionResponse["type"], { label: stri
     AUTO_CHARGE: { label: "직접 충전", sign: 1, filter: "충전" },
     ADMIN_CHARGE: { label: "관리자 승인 충전", sign: 1, filter: "충전" },
     ADMIN_DEDUCTION: { label: "관리자 차감", sign: -1, filter: "기타" },
+    AUTO_DEDUCTION: { label: "직접 차감", sign: -1, filter: "기타" },
     ORDER_BUY: { label: "주식 매수", sign: -1, filter: "주식 거래" },
     ORDER_SELL: { label: "주식 매도", sign: 1, filter: "주식 거래" },
     ORDER_REFUND: { label: "주문 취소 환불", sign: 1, filter: "주식 거래" },

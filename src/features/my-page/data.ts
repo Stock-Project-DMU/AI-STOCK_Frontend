@@ -6,6 +6,7 @@ export const navItems: { id: MyPageTab; label: string; description: string }[] =
   { id: "orders", label: "주문내역", description: "완료된 주문 확인" },
   { id: "returns", label: "수익률", description: "실현수익과 종목 분석" },
   { id: "recharge", label: "가상계좌 충전", description: "가상캐시 충전 요청 및 이력" },
+  { id: "inquiry", label: "문의하기", description: "1:1 문의 작성 및 답변 확인" },
 ];
 
 export const initialProfile: Profile = {
@@ -54,9 +55,6 @@ export const rechargeAmounts = [
   1_000_000_000,
 ];
 
-// 1회 충전 한도 — 셀프 충전(즉시 처리)과 관리자 승인 요청은 한도가 다르다.
-export const SELF_CHARGE_MAX = 100_000_000;
-export const REQUEST_CHARGE_MAX = 1_000_000_000_000;
 
 export const orders: Order[] = [
   { id: 1, name: "삼성전자", side: "판매완료", quantity: "100주", price: "1,000,000원" },

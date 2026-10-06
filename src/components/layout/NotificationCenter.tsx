@@ -15,7 +15,45 @@ type Notification = {
     relatedOrderId: number | null;
     isRead: boolean;
     createdAt: string;
+    noticeId: number | null;
 };
+// 팝업으로 띄울 공지 — 닫기는 화면에서만 닫는 거라 서버에 알리지 않는다. 같은 기한 안에 다시 로그인하면 또 뜬다.
+type PopupNotice = { noticeId: number; notiId: number; type: NotificationType; title: string; content: string; popupEndDate: string; createdAt: string };
+
+export function NotificationPopups() {
+    const [queue, setQueue] = useState<PopupNotice[] | null>(null);
+    useEffect(() => {
+        let active = true;
+        apiRequest<PopupNotice[]>("/api/notifications/popups").then(list => { if (active) setQueue(list); }).catch(() => { if (active) setQueue([]); });
+        return () => { active = false; };
+    }, []);
+    const hasPopup = Boolean(queue?.length);
+    function dismiss() {
+        setQueue(prev => (prev ?? []).slice(1));
+    }
+    useEffect(() => {
+        if (!hasPopup) return;
+        const handleEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setQueue(prev => (prev ?? []).slice(1)); };
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        window.addEventListener("keydown", handleEscape);
+        return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", handleEscape); };
+    }, [hasPopup]);
+    if (!queue?.length) return null;
+    const current = queue[0];
+    return createPortal(
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-5" role="presentation">
+            <section role="dialog" aria-modal="true" aria-labelledby="notification-popup-title" className="w-full max-w-sm rounded-2xl border border-hairline bg-white p-6 shadow-2xl">
+                <div className="flex items-start justify-between gap-3">
+                    <h2 id="notification-popup-title" className="text-base font-bold text-ink">{current.title}</h2>
+                    <button type="button" aria-label="닫기" onClick={dismiss} className="shrink-0 rounded-md px-2 text-2xl leading-none text-muted hover:bg-surface-strong hover:text-ink">×</button>
+                </div>
+                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-body">{current.content}</p>
+            </section>
+        </div>,
+        document.body,
+    );
+}
 
 const destination: Partial<Record<NotificationType, string>> = {
     NEWS: "/ai-market-briefing",

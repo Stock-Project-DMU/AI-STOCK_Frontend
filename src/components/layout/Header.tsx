@@ -9,12 +9,12 @@ import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { apiRequest, getApiErrorMessage } from "@/lib/api/client";
 import { getStockSearchSuggestions, type StockSearchSuggestion } from "@/lib/api/market";
 import { logout } from "@/lib/api/auth";
-import NotificationCenter from "./NotificationCenter";
+import NotificationCenter, { NotificationPopups } from "./NotificationCenter";
 
 export default function Header() {
     const pathname = usePathname();
     const router = useRouter();
-    const { authReady, authenticated, userName } = useAuthGuard();
+    const { authReady, authenticated, userName, role } = useAuthGuard();
     const [loggingOut, setLoggingOut] = useState(false);
 
     const [query, setQuery] = useState("");
@@ -205,7 +205,16 @@ export default function Header() {
                         <span aria-hidden="true" className="h-9 w-20 animate-pulse rounded-full bg-surface-strong" />
                     ) : authenticated ? (
                         <div className="flex items-center gap-1.5">
+                            {role === "ADMIN" && (
+                                <Link
+                                    href="/admin"
+                                    className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md border border-hairline px-3 text-[12px] font-semibold text-body hover:bg-surface-soft hover:text-ink"
+                                >
+                                    관리자 페이지로
+                                </Link>
+                            )}
                             <NotificationCenter />
+                            <NotificationPopups />
                             <span
                                 className="inline-flex h-9 max-w-28 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-primary/20 bg-primary/5 px-3 text-xs font-semibold text-primary sm:max-w-44 sm:px-4 sm:text-sm"
                                 aria-label={`로그인 사용자: ${userName ?? "사용자"}`}

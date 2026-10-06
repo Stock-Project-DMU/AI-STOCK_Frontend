@@ -9,6 +9,7 @@ import type { AccountView, MyPageTab, ProfileErrors, ProfileField, RechargeRecor
 import { verifyProfilePassword } from "../services/profileAuth";
 import { hasProfileChanges, validateProfile } from "../validation";
 import AccountPanel from "./account/AccountPanel";
+import InquiryPanel from "./inquiry/InquiryPanel";
 import Modal from "./Modal";
 import MyPageNavigation from "./MyPageNavigation";
 import OrdersPanel from "./orders/OrdersPanel";
@@ -19,7 +20,7 @@ import InvestmentSurvey from "@/features/ai-financial-planner/components/Investm
 import { useLivePortfolio } from "@/hooks/LivePortfolioProvider";
 import { getApiErrorMessage, getAuthenticatedLoginProvider, isAuthenticated, type LoginProvider } from "@/lib/api/client";
 import { needsSocialProfileCompletion } from "@/lib/api/auth-navigation";
-import { chargeAccount, getAccounts, getOrders, getChargeHistory, getRealizedReturns, requestCharge, type ChargeHistoryResponse } from "@/lib/api/portfolio";
+import { chargeAccount, deductAccount, getAccounts, getOrders, getChargeHistory, getRealizedReturns, requestCharge, type ChargeHistoryResponse } from "@/lib/api/portfolio";
 import type { AccountInfoResponse, OrderHistoryResponse, ProfitResponse, RealizedReturnResponse } from "@/lib/api/types";
 import { getMyInfo, updateMyInfo, updateProfile, getInvestmentProfile } from "@/lib/api/user";
 
@@ -48,6 +49,7 @@ export default function MyPageDashboard() {
   const [draftProfile, setDraftProfile] = useState(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isSocialAccount, setIsSocialAccount] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loginProvider, setLoginProvider] = useState<LoginProvider | null>(null);
   const [profileErrors, setProfileErrors] = useState<ProfileErrors>({});
   const [showPasswordCheck, setShowPasswordCheck] = useState(false);
@@ -61,6 +63,7 @@ export default function MyPageDashboard() {
   const [reason, setReason] = useState("");
   const [requestComplete, setRequestComplete] = useState(false);
   const [autoChargeComplete, setAutoChargeComplete] = useState(false);
+  const [deductComplete, setDeductComplete] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState<RechargeRecord | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState(0);
   const [chargeHistory, setChargeHistory] = useState<RechargeRecord[]>([]);
@@ -77,7 +80,7 @@ export default function MyPageDashboard() {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      if (requestedTab === "profile" || requestedTab === "account" || requestedTab === "recharge" || requestedTab === "orders" || requestedTab === "returns") {
+      if (requestedTab === "profile" || requestedTab === "account" || requestedTab === "recharge" || requestedTab === "orders" || requestedTab === "returns" || requestedTab === "inquiry") {
         setActiveTab(requestedTab);
         if (requestedTab === "recharge") setAccountView("history");
       }
@@ -106,6 +109,7 @@ export default function MyPageDashboard() {
           return;
         }
         setIsSocialAccount(user.loginId === null);
+        setIsAdmin(user.role === "ADMIN");
         setLoginProvider(getAuthenticatedLoginProvider());
 
         setProfile((current) => ({
@@ -166,6 +170,7 @@ export default function MyPageDashboard() {
   const liveProfit: ProfitResponse | null = live.account
     ? { totalAsset: live.totalAsset, profitAmount: live.accountProfitAmount, profitRate: live.accountProfitRate }
     : null;
+  const isUnlimitedCharge = accounts?.[0]?.unlimitedCharge ?? false;
 
   const requestedAmount = useMemo(
     () => selectedAmount ?? (Number(customAmount.replaceAll(",", "")) || 0),
@@ -340,6 +345,24 @@ export default function MyPageDashboard() {
     finally { setRequestingCharge(false); }
   };
 
+  const submitDeduct = async () => {
+    const account = accounts?.[0];
+    if (!account || requestingCharge) return;
+    setRequestingCharge(true);
+    setChargeError("");
+    try {
+      const updated = await deductAccount(account.accountId, requestedAmount);
+      setAccounts(current => current?.map(item => item.accountId === updated.accountId ? updated : item) ?? current);
+      live.refresh();
+      const history = await getChargeHistory(account.accountId);
+      setChargeHistory(toRechargeRecords(history, profile.name));
+      setSelectedAmount(null);
+      setCustomAmount("");
+      setDeductComplete(true);
+    } catch (error) { setChargeError(getApiErrorMessage(error, "차감에 실패했습니다.")); }
+    finally { setRequestingCharge(false); }
+  };
+
   const discardProfileChangesAndLeave = () => {
     setDraftProfile(profile);
     setProfileErrors({});
@@ -351,7 +374,7 @@ export default function MyPageDashboard() {
     <div className="market-theme market-grid min-h-[calc(100vh-4rem)] break-keep text-ink">
       <section className="min-w-0 px-3 py-4 sm:px-5 lg:px-8">
         <div className="my-page-layout mx-auto w-full max-w-[1540px]">
-          <MyPageNavigation activeTab={activeTab} onChange={changeTab} />
+          <MyPageNavigation activeTab={activeTab} onChange={changeTab} isUnlimitedCharge={isUnlimitedCharge} />
 
         <div className="min-w-0 rounded-xl border border-hairline bg-white px-4 py-5 shadow-[0_4px_12px_rgba(10,11,13,.04)] sm:px-6 lg:px-8 lg:py-6">
           {activeTab === "profile" && showSurvey && <>
@@ -372,6 +395,7 @@ export default function MyPageDashboard() {
               draftProfile={draftProfile}
               isEditing={isEditing}
               isSocialAccount={isSocialAccount}
+              isAdmin={isAdmin}
               loginProvider={loginProvider}
               errors={profileErrors}
               saveError={profileSaveError}
@@ -426,6 +450,7 @@ export default function MyPageDashboard() {
               onReasonChange={setReason}
               onRequest={() => void submitRechargeRequest()}
               onAutoCharge={() => void submitAutoCharge()}
+              onDeduct={() => void submitDeduct()}
               chargeHistory={chargeHistory}
               requestingCharge={requestingCharge}
               onSelectHistory={(record) => {
@@ -463,6 +488,7 @@ export default function MyPageDashboard() {
               onReasonChange={setReason}
               onRequest={() => void submitRechargeRequest()}
               onAutoCharge={() => void submitAutoCharge()}
+              onDeduct={() => void submitDeduct()}
               chargeHistory={chargeHistory}
               requestingCharge={requestingCharge}
               onSelectHistory={(record) => {
@@ -481,6 +507,7 @@ export default function MyPageDashboard() {
 
           {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} apiOrders={apiOrders} isLoading={isDashboardLoading} error={dashboardError} />}
           {activeTab === "returns" && <ReturnsPanel live={live} rows={realizedReturns} />}
+          {activeTab === "inquiry" && <InquiryPanel />}
         </div>
         </div>
       </section>
@@ -517,7 +544,15 @@ export default function MyPageDashboard() {
         </Modal>
       )}
 
-      {showWithdrawal && <WithdrawalModal isSocialAccount={isSocialAccount} accountEmail={profile.email} onClose={() => setShowWithdrawal(false)} />}
+      {deductComplete && (
+        <Modal ariaLabel="차감 완료" onClose={() => setDeductComplete(false)}>
+          <p className="text-base font-bold">가상캐시가 차감되었습니다</p>
+          <p className="mt-2 text-sm text-muted">계좌 잔액에 바로 반영되었습니다.</p>
+          <button type="button" onClick={() => { setDeductComplete(false); setAccountView("history"); }} className="mt-5 cursor-pointer rounded-md bg-black px-4 py-2 text-sm font-bold text-white">이력 확인</button>
+        </Modal>
+      )}
+
+      {showWithdrawal && <WithdrawalModal isSocialAccount={isSocialAccount} accountEmail={profile.email} isAdmin={isAdmin} onClose={() => setShowWithdrawal(false)} />}
       {isLeaveModalOpen && (
         <UnsavedChangesModal
           onStay={stayOnPage}
