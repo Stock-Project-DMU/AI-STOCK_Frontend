@@ -23,6 +23,7 @@ const TRANSACTION_META: Record<AccountTransactionResponse["type"], { label: stri
     ORDER_REFUND: { label: "주문 취소 환불", sign: 1, filter: "주식 거래" },
     INTEREST: { label: "예치금 이자", sign: 1, filter: "이자·수수료" },
     TRADE_FEE: { label: "거래 수수료", sign: -1, filter: "이자·수수료" },
+    DIVIDEND: { label: "배당금 입금", sign: 1, filter: "배당금" },
 };
 
 type TransactionRow = AccountTransactionResponse & { label: string; sign: 1 | -1; filter: Filter };
@@ -62,7 +63,7 @@ export default function AccountTransactions({ accounts }: { accounts: AccountInf
             <div className="mb-5 flex flex-wrap gap-2" aria-label="계좌내역 종류">
                 {(["전체", ...filters] as const).map(value => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`rounded-md border px-3 py-2 text-xs font-semibold ${filter === value ? "theme-accent-soft theme-accent-text border-primary/30" : "border-hairline bg-canvas hover:bg-surface-soft"}`}>{value}</button>)}
             </div>
-            <p className="mb-4 text-xs leading-5 text-muted">충전, 주식 거래, 이자·수수료 등 계좌에서 발생한 모든 내역입니다. 종목 관련 내역은 클릭하면 주문내역에서 자세히 볼 수 있습니다.</p>
+            <p className="mb-4 text-xs leading-5 text-muted">충전, 주식 거래, 이자·수수료, 배당금 등 계좌에서 발생한 모든 내역입니다. 종목 관련 내역은 클릭하면 주문내역에서 자세히 볼 수 있습니다.</p>
             {!accountId ? <p className="py-12 text-center text-sm text-muted">표시할 계좌가 없습니다.</p>
                 : loading ? <p role="status" className="py-12 text-center text-sm text-muted">계좌내역을 불러오는 중입니다.</p>
                 : error ? <div role="alert" className="py-8 text-center"><p className="text-sm text-up">{error}</p><button type="button" onClick={() => { setResult(null); setRetry(value => value + 1); }} className="mt-3 rounded-md border border-hairline px-3 py-2 text-sm">다시 시도</button></div>

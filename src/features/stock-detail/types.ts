@@ -5,5 +5,6 @@ export type InformationTab =
     | "finance"
     | "earnings"
     | "dividend"
+    | "dividendSchedule"
     | "peers"
     | "analysts";

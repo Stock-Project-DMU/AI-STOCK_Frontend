@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { CheckIcon, CloseIcon } from "@/components/icons/Icon";
 import { rechargeAmounts, won } from "../../data";
 import type { AccountView, RechargeRecord } from "../../model";
@@ -5,6 +6,9 @@ import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format/dateTime";
 import { formatAccountNumber } from "@/lib/format/account";
 import AccountTransactions from "./AccountTransactions";
+import UpcomingDividends from "./UpcomingDividends";
+import { getMyDividends } from "@/lib/api/dividend";
+import { isAuthenticated } from "@/lib/api/client";
 
 type AccountPanelProps = {
   mode: "info" | "recharge";
@@ -139,7 +143,28 @@ export default function AccountPanel({
   );
 }
 
+// 지급 완료된 배당 합계. 비로그인이면 호출하지 않고, 실패하면 0원으로 둔다. null은 로딩 중.
+function useCumulativeDividend() {
+  const [authenticated] = useState(isAuthenticated);
+  const [total, setTotal] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!authenticated) return;
+    const controller = new AbortController();
+    void getMyDividends(controller.signal).then((items) => {
+      if (!controller.signal.aborted) setTotal(items.reduce((sum, item) => sum + item.totalAmount, 0));
+    }).catch(() => {
+      if (!controller.signal.aborted) setTotal(0);
+    });
+    return () => controller.abort();
+  }, [authenticated]);
+
+  return authenticated ? total : 0;
+}
+
 function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: { accounts: AccountInfoResponse[] | null; profit: ProfitResponse | null; realizedProfit: number; isLoading: boolean; error: string }) {
+  const cumulativeDividend = useCumulativeDividend();
+
   if (isLoading) {
     return <div className="flex min-h-72 items-center justify-center text-sm font-semibold text-muted">계좌 정보를 불러오는 중입니다.</div>;
   }
@@ -165,7 +190,7 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
     { label: "예치 이자율", value: `연 ${(account.interestRate ?? 0).toFixed(2)}%` },
     { label: "거래 수수료", value: "0.1%" },
     { label: "누적 판매 수익", value: won(realizedProfit), tone: realizedProfit > 0 ? "text-red-500" : realizedProfit < 0 ? "text-blue-500" : "" },
-    { label: "누적 배당금", value: won(0) },
+    { label: "누적 배당금", value: cumulativeDividend === null ? <span role="status" aria-label="누적 배당금 불러오는 중" className="inline-block h-5 w-24 animate-pulse rounded-md bg-surface-strong align-middle motion-reduce:animate-none" /> : won(cumulativeDividend) },
     { label: "누적 이자", value: won(account.totalInterest ?? 0) },
   ];
 
@@ -209,6 +234,8 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
           </dl>
           <p className="mt-4 rounded-lg bg-surface-soft px-3.5 py-3 text-xs leading-5 text-muted">예치금에는 연 {account.interestRate.toFixed(2)}%의 이자가 적립되며, 매도 체결 시 거래 금액의 0.1%가 수수료로 차감됩니다.</p>
         </section>
+
+        <UpcomingDividends />
       </div>
     </article>
   );
