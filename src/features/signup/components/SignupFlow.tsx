@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { checkLoginId, login, sendEmailVerificationCode, signup, verifyEmailCode } from "@/lib/api/auth";
+import { checkInitialAdminExists, checkLoginId, login, sendEmailVerificationCode, signup, verifyEmailCode } from "@/lib/api/auth";
 import InvestmentSurvey from "@/features/ai-financial-planner/components/InvestmentSurvey";
 import {
     TERMS_AND_CONDITIONS,
     type TermDetail,
 } from "@/features/signup/constants/terms";
 import TermDetailModal from "./TermDetailModal";
+import InitialAdminModal from "./InitialAdminModal";
 import SignupCard from "./SignupCard";
 import SignupFormStep from "./SignupFormStep";
 import TermsAgreementStep from "./TermsAgreementStep";
@@ -71,6 +72,13 @@ export default function SignupFlow() {
     const [isSubmittingSignup, setIsSubmittingSignup] = useState(false);
     const [checkedLoginId, setCheckedLoginId] = useState("");
     const [checkingLoginId, setCheckingLoginId] = useState(false);
+    const [showInitialAdminModal, setShowInitialAdminModal] = useState(false);
+
+    useEffect(() => {
+        let active = true;
+        checkInitialAdminExists().then(result => { if (active && !result.adminExists) setShowInitialAdminModal(true); }).catch(() => {});
+        return () => { active = false; };
+    }, []);
 
     const handleCheckLoginId = async () => {
         const loginId = formData.userId.trim();
@@ -325,12 +333,19 @@ export default function SignupFlow() {
                     onComplete={() => router.replace("/welcome")}
                     completeLabel="가입 완료"
                 />
+                {showInitialAdminModal ? (
+                    <InitialAdminModal onClose={() => setShowInitialAdminModal(false)} />
+                ) : null}
             </div>
         );
     }
 
     return (
         <SignupCard title={STEP_TITLE[currentStep]} onBack={handleBack}>
+            {showInitialAdminModal ? (
+                <InitialAdminModal onClose={() => setShowInitialAdminModal(false)} />
+            ) : null}
+
             {currentStep === "terms" ? (
                 <TermsAgreementStep
                     checkedTerms={checkedTerms}

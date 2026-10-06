@@ -1,5 +1,5 @@
 import { CheckIcon, CloseIcon } from "@/components/icons/Icon";
-import { rechargeAmounts, won, SELF_CHARGE_MAX, REQUEST_CHARGE_MAX } from "../../data";
+import { rechargeAmounts, won } from "../../data";
 import type { AccountView, RechargeRecord } from "../../model";
 import type { AccountInfoResponse, ProfitResponse } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format/dateTime";
@@ -22,6 +22,7 @@ type AccountPanelProps = {
   onReasonChange: (value: string) => void;
   onRequest: () => void;
   onAutoCharge: () => void;
+  onDeduct: () => void;
   onSelectHistory: (record: RechargeRecord) => void;
   onResetRequest: () => void;
   accounts: AccountInfoResponse[] | null;
@@ -48,6 +49,7 @@ export default function AccountPanel({
   onReasonChange,
   onRequest,
   onAutoCharge,
+  onDeduct,
   onSelectHistory,
   onResetRequest,
   accounts,
@@ -58,14 +60,17 @@ export default function AccountPanel({
   chargeError,
 }: AccountPanelProps) {
   const primaryAccount = accounts?.[0];
-  const autoChargeAvailable = primaryAccount ? primaryAccount.chargeCount < primaryAccount.maxChargeCount : false;
+  const isUnlimitedCharge = primaryAccount?.unlimitedCharge ?? false;
+  const autoChargeAvailable = primaryAccount ? (isUnlimitedCharge || primaryAccount.chargeCount < primaryAccount.maxChargeCount) : false;
+  const chargeMaxAmount = primaryAccount?.chargeableAmount ?? 0;
+  const deductMaxAmount = primaryAccount?.deductibleAmount ?? 0;
 
   return (
     <div className="mx-auto max-w-[1180px]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">{mode === "info" ? "계좌 정보" : "가상계좌 충전"}</h1>
-          <p className="mt-1 text-sm text-muted">{mode === "info" ? "계좌 상태와 적용 정책, 누적 수익을 확인할 수 있습니다." : "가상캐시 충전을 요청하고 처리 이력을 확인할 수 있습니다."}</p>
+          <h1 className="text-xl font-bold">{mode === "info" ? "계좌 정보" : isUnlimitedCharge ? "가상계좌 관리" : "가상계좌 충전"}</h1>
+          <p className="mt-1 text-sm text-muted">{mode === "info" ? "계좌 상태와 적용 정책, 누적 수익을 확인할 수 있습니다." : isUnlimitedCharge ? "가상캐시를 바로 충전하고 이력을 확인할 수 있습니다." : "가상캐시 충전을 요청하고 처리 이력을 확인할 수 있습니다."}</p>
         </div>
         {mode === "info" && (
           <button type="button" onClick={() => onViewChange(view === "transactions" ? "summary" : "transactions")} className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-bold hover:bg-surface-soft">
@@ -75,7 +80,14 @@ export default function AccountPanel({
         {mode === "recharge" && (
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => onViewChange("history")} className={`rounded-lg border px-3.5 py-2 text-sm font-bold ${view === "history" || view === "detail" ? "theme-accent-soft border-[var(--market-accent)] theme-accent-text" : "border-hairline hover:bg-surface-soft"}`}>충전 이력</button>
-            <button type="button" onClick={() => onViewChange("recharge")} className={`rounded-lg px-3.5 py-2 text-sm font-bold ${view === "recharge" || view === "reason" ? "theme-accent-bg" : "border border-hairline hover:bg-surface-soft"}`}>충전 요청</button>
+            {isUnlimitedCharge ? (
+              <>
+                <button type="button" onClick={() => onViewChange("recharge")} className={`rounded-lg px-3.5 py-2 text-sm font-bold ${view === "recharge" ? "theme-accent-bg" : "border border-hairline hover:bg-surface-soft"}`}>충전</button>
+                <button type="button" onClick={() => onViewChange("deduct")} className={`rounded-lg px-3.5 py-2 text-sm font-bold ${view === "deduct" ? "theme-accent-bg" : "border border-hairline hover:bg-surface-soft"}`}>차감</button>
+              </>
+            ) : (
+              <button type="button" onClick={() => onViewChange("recharge")} className={`rounded-lg px-3.5 py-2 text-sm font-bold ${view === "recharge" || view === "reason" ? "theme-accent-bg" : "border border-hairline hover:bg-surface-soft"}`}>충전 요청</button>
+            )}
           </div>
         )}
       </div>
@@ -83,11 +95,14 @@ export default function AccountPanel({
       <div className="min-h-[360px] rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
         {mode === "info" && view !== "transactions" && <AccountSummary accounts={accounts} profit={profit} realizedProfit={realizedProfit} isLoading={isLoading} error={error} />}
         {mode === "info" && view === "transactions" && (isLoading ? <p role="status">계좌 정보를 불러오는 중입니다.</p> : error ? <p role="alert" className="text-up">{error}</p> : <AccountTransactions accounts={accounts ?? []} />)}
-        {mode === "recharge" && view === "recharge" && (
+        {mode === "recharge" && view === "recharge" && isLoading && <p role="status">계좌 정보를 불러오는 중입니다.</p>}
+        {mode === "recharge" && view === "recharge" && !isLoading && error && <p role="alert" className="text-up">{error}</p>}
+        {mode === "recharge" && view === "recharge" && !isLoading && !error && (
           <RechargeAmount
             selectedAmount={selectedAmount}
             customAmount={customAmount}
             instant={autoChargeAvailable}
+            maxAmount={chargeMaxAmount}
             requestingCharge={requestingCharge}
             onSelectAmount={onSelectAmount}
             onCustomAmount={onCustomAmount}
@@ -100,10 +115,25 @@ export default function AccountPanel({
           />
         )}
         {mode === "recharge" && view === "reason" && <RechargeReason amount={requestedAmount} reason={reason} onReasonChange={onReasonChange} onBack={() => onViewChange("recharge")} onRequest={onRequest} />}
+        {mode === "recharge" && view === "deduct" && isLoading && <p role="status">계좌 정보를 불러오는 중입니다.</p>}
+        {mode === "recharge" && view === "deduct" && !isLoading && error && <p role="alert" className="text-up">{error}</p>}
+        {mode === "recharge" && view === "deduct" && !isLoading && !error && (
+          <DeductAmount
+            customAmount={customAmount}
+            maxAmount={deductMaxAmount}
+            requestingCharge={requestingCharge}
+            onCustomAmount={onCustomAmount}
+            onCancel={onResetRequest}
+            onNext={() => {
+              if (requestedAmount <= 0 || requestingCharge) return;
+              onDeduct();
+            }}
+          />
+        )}
         {mode === "recharge" && view === "history" && <RechargeHistory rechargeHistory={chargeHistory} onBack={() => onViewChange("recharge")} onSelect={onSelectHistory} />}
         {mode === "recharge" && view === "detail" && selectedHistory && <RechargeDetail record={selectedHistory} onBack={() => onViewChange("history")} />}
       </div>
-      {requestingCharge && <p role="status">충전 요청 중...</p>}
+      {requestingCharge && <p role="status">{view === "deduct" ? "차감 중..." : isUnlimitedCharge ? "충전 중..." : "충전 요청 중..."}</p>}
       {mode === "recharge" && chargeError && <p role="alert" className="mt-3 text-red-500">{chargeError}</p>}
     </div>
   );
@@ -129,7 +159,7 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
     { label: "주문 동결 금액", value: won(account.frozenBalance) },
     { label: "총 평가 자산", value: won(profit?.totalAsset ?? account.balance + account.frozenBalance) },
     { label: "평가 손익", value: won(profit?.profitAmount ?? 0) },
-    { label: "자동 충전 남은 횟수", value: `${Math.max((account.maxChargeCount ?? 0) - account.chargeCount, 0)}/${account.maxChargeCount ?? 0}` },
+    ...(account.unlimitedCharge ? [] : [{ label: "자동 충전 남은 횟수", value: `${Math.max((account.maxChargeCount ?? 0) - account.chargeCount, 0)}/${account.maxChargeCount ?? 0}` }]),
   ];
   const accountDetails = [
     { label: "예치 이자율", value: `연 ${(account.interestRate ?? 0).toFixed(2)}%` },
@@ -188,6 +218,7 @@ type RechargeAmountProps = {
   selectedAmount: number | null;
   customAmount: string;
   instant: boolean;
+  maxAmount: number;
   requestingCharge: boolean;
   onSelectAmount: (amount: number) => void;
   onCustomAmount: (value: string) => void;
@@ -195,25 +226,64 @@ type RechargeAmountProps = {
   onNext: () => void;
 };
 
-function RechargeAmount({ selectedAmount, customAmount, instant, requestingCharge, onSelectAmount, onCustomAmount, onCancel, onNext }: RechargeAmountProps) {
-  const maxAmount = instant ? SELF_CHARGE_MAX : REQUEST_CHARGE_MAX;
+function RechargeAmount({ selectedAmount, customAmount, instant, maxAmount, requestingCharge, onSelectAmount, onCustomAmount, onCancel, onNext }: RechargeAmountProps) {
   const amount = selectedAmount ?? (Number(customAmount) || 0);
   const exceedsMax = amount > maxAmount;
+  // 프리셋 목록의 마지막 칸은 고정 금액이 아니라 "최대"(충전 가능 금액 전액 채우기) 버튼으로 둔다.
+  const presetTiles = rechargeAmounts.filter((value) => value <= maxAmount).slice(0, -1);
+  const isMaxFilled = selectedAmount === null && customAmount === String(maxAmount);
 
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-4"><h2 className="text-base font-bold">충전 금액 선택</h2><p className="mt-1 text-sm text-muted">금액을 선택하거나 직접 입력해 주세요. (1회 최대 {won(maxAmount)})</p></div>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        {rechargeAmounts.filter((value) => value <= maxAmount).map((value) => <button key={value} type="button" onClick={() => onSelectAmount(value)} className={`num min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 ${selectedAmount === value ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_2px_4px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}>{won(value)}</button>)}
+        {presetTiles.map((value) => <button key={value} type="button" onClick={() => onSelectAmount(value)} className={`num min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 ${selectedAmount === value ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_2px_4px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}>{won(value)}</button>)}
+        <button type="button" onClick={() => onCustomAmount(String(maxAmount))} disabled={maxAmount === 0} className={`min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 disabled:cursor-not-allowed disabled:opacity-40 ${isMaxFilled ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_2px_4px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}>최대</button>
       </div>
       <label className="mt-3 flex items-center rounded-lg border border-hairline bg-white px-3.5 focus-within:border-[var(--market-accent)] focus-within:ring-2 focus-within:ring-[var(--market-accent-soft)]">
         <input aria-label="직접 충전 금액" value={customAmount} onChange={(event) => onCustomAmount(event.target.value)} inputMode="numeric" placeholder="직접 입력" className="num min-w-0 flex-1 bg-transparent py-3 text-sm font-bold outline-none" />
         <span className="text-sm font-bold text-[#6e6f6f]">원</span>
       </label>
-      {exceedsMax && <p role="alert" className="mt-2 text-xs text-up">{instant ? "1회 충전 금액은 최대 1억원입니다." : "1회 충전 요청 금액은 최대 1조원입니다."}</p>}
+      {exceedsMax && <p role="alert" className="mt-2 text-xs text-up">충전 가능 금액을 초과했습니다. (충전 가능 금액: {won(maxAmount)})</p>}
       <div className="mt-5 flex justify-end gap-3">
         <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>
         <button type="button" onClick={onNext} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40" disabled={(!selectedAmount && !customAmount) || requestingCharge || exceedsMax}>{instant && requestingCharge ? "충전 중..." : instant ? "충전" : "다음"}</button>
+      </div>
+    </div>
+  );
+}
+
+type DeductAmountProps = {
+  customAmount: string;
+  maxAmount: number;
+  requestingCharge: boolean;
+  onCustomAmount: (value: string) => void;
+  onCancel: () => void;
+  onNext: () => void;
+};
+
+function DeductAmount({ customAmount, maxAmount, requestingCharge, onCustomAmount, onCancel, onNext }: DeductAmountProps) {
+  const amount = Number(customAmount) || 0;
+  const exceedsMax = amount > maxAmount;
+  // 충전 화면과 동일한 규칙: 프리셋 목록의 마지막 칸은 고정 금액이 아니라 "최대" 버튼으로 둔다.
+  const presetTiles = rechargeAmounts.filter((value) => value <= maxAmount).slice(0, -1);
+  const isMaxFilled = customAmount === String(maxAmount);
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-4"><h2 className="text-base font-bold">차감 금액 선택</h2><p className="mt-1 text-sm text-muted">금액을 선택하거나 직접 입력해 주세요. (차감 가능 {won(maxAmount)})</p></div>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        {presetTiles.map((value) => <button key={value} type="button" onClick={() => onCustomAmount(String(value))} className={`num min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 ${customAmount === String(value) ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_2px_4px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}>{won(value)}</button>)}
+        <button type="button" onClick={() => onCustomAmount(String(maxAmount))} disabled={maxAmount === 0} className={`min-h-16 rounded-lg border px-2 text-sm font-bold transition-colors sm:min-h-20 disabled:cursor-not-allowed disabled:opacity-40 ${isMaxFilled ? "theme-accent-bg border-[var(--market-accent)] shadow-[0_2px_4px_var(--market-accent-soft)]" : "border-hairline bg-white text-body hover:border-[var(--market-accent)] hover:text-ink"}`}>최대</button>
+      </div>
+      <label className="mt-3 flex items-center rounded-lg border border-hairline bg-white px-3.5 focus-within:border-[var(--market-accent)] focus-within:ring-2 focus-within:ring-[var(--market-accent-soft)]">
+        <input aria-label="직접 차감 금액" value={customAmount} onChange={(event) => onCustomAmount(event.target.value)} inputMode="numeric" placeholder="직접 입력" className="num min-w-0 flex-1 bg-transparent py-3 text-sm font-bold outline-none" />
+        <span className="text-sm font-bold text-[#6e6f6f]">원</span>
+      </label>
+      {exceedsMax && <p role="alert" className="mt-2 text-xs text-up">차감 가능 금액을 초과했습니다. (차감 가능 금액: {won(maxAmount)})</p>}
+      <div className="mt-5 flex justify-end gap-3">
+        <button type="button" onClick={onCancel} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">취소</button>
+        <button type="button" onClick={onNext} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40" disabled={!customAmount || requestingCharge || exceedsMax}>{requestingCharge ? "차감 중..." : "차감"}</button>
       </div>
     </div>
   );
@@ -227,8 +297,8 @@ function RechargeReason({ amount, reason, onReasonChange, onBack, onRequest }: {
         <span className="theme-accent-soft theme-accent-text rounded-full px-2.5 py-1 text-xs font-bold">2단계 중 2단계</span>
       </div>
       <label className="mb-2 block text-sm font-bold" htmlFor="recharge-reason">충전 목적</label>
-      <textarea id="recharge-reason" value={reason} onChange={(event) => onReasonChange(event.target.value)} className="h-40 w-full resize-none rounded-lg border border-hairline bg-white p-3.5 text-sm leading-6 outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]" placeholder="가상캐시가 필요한 목적을 입력해 주세요." />
-      <p className="mt-2 text-right text-xs text-muted">{reason.length}자</p>
+      <textarea id="recharge-reason" value={reason} onChange={(event) => onReasonChange(event.target.value)} maxLength={500} className="h-40 w-full resize-none rounded-lg border border-hairline bg-white p-3.5 text-sm leading-6 outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]" placeholder="가상캐시가 필요한 목적을 입력해 주세요." />
+      <p className="mt-2 text-right text-xs text-muted">{reason.length}/500</p>
       <div className="mt-4 flex justify-end gap-3"><button type="button" onClick={onBack} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">이전</button><button type="button" onClick={onRequest} disabled={!reason.trim()} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40">요청</button></div>
     </div>
   );

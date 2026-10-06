@@ -49,6 +49,9 @@ export type AccountInfoResponse = {
     maxChargeCount: number;
     interestRate: number;
     totalInterest: number;
+    unlimitedCharge: boolean;
+    chargeableAmount: number;
+    deductibleAmount: number;
     status: "ACTIVE" | "SUSPENDED";
 };
 

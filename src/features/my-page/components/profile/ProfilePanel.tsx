@@ -29,6 +29,7 @@ type ProfilePanelProps = {
   onSave: () => void;
   onRequestWithdrawal: () => void;
   onStartSurvey: () => void;
+  isAdmin?: boolean;
 };
 
 const rows: { key: ProfileField; label: string }[] = [
@@ -72,6 +73,7 @@ export default function ProfilePanel({
   onSave,
   onRequestWithdrawal,
   onStartSurvey,
+  isAdmin,
 }: ProfilePanelProps) {
   const accountRows = isSocialAccount ? rows.slice(2, 5) : rows.slice(0, 5);
   const investmentRows = rows.slice(5);
@@ -167,8 +169,8 @@ export default function ProfilePanel({
       </div>
 
       <section className="mt-4 flex flex-col justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 p-4 sm:flex-row sm:items-center sm:px-5">
-        <div><h2 className="text-sm font-bold text-red-500">회원 탈퇴</h2><p className="mt-1 text-xs leading-5 text-muted">계정과 저장된 투자 데이터를 삭제합니다.</p></div>
-        <button type="button" onClick={onRequestWithdrawal} className="shrink-0 rounded-lg border border-red-500/30 px-3.5 py-2 text-sm font-bold text-red-500 hover:bg-red-500 hover:text-white">AI STOCK 탈퇴하기</button>
+        <div><h2 className="text-sm font-bold text-red-500">{isAdmin ? "관리자 계정 폐기" : "회원 탈퇴"}</h2><p className="mt-1 text-xs leading-5 text-muted">{isAdmin ? "관리자 계정과 권한을 삭제합니다." : "계정과 저장된 투자 데이터를 삭제합니다."}</p></div>
+        <button type="button" onClick={onRequestWithdrawal} className="shrink-0 rounded-lg border border-red-500/30 px-3.5 py-2 text-sm font-bold text-red-500 hover:bg-red-500 hover:text-white">{isAdmin ? "관리자 계정 폐기하기" : "AI STOCK 탈퇴하기"}</button>
       </section>
     </div>
   );

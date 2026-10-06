@@ -33,6 +33,7 @@ type AuthGuardContextValue = {
     authReady: boolean;
     authenticated: boolean;
     userName: string | null;
+    role: "USER" | "ADMIN" | null;
     profileCheck: "checking" | "complete" | "incomplete" | "error";
     retryProfileCheck: () => void;
     requireLogin: () => boolean;
@@ -85,6 +86,7 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
     const [authReady, setAuthReady] = useState(false);
     const [authenticated, setAuthenticated] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
+    const [role, setRole] = useState<"USER" | "ADMIN" | null>(null);
     const [profileCheck, setProfileCheck] = useState<AuthGuardContextValue["profileCheck"]>("checking");
     const [profileRetryVersion, setProfileRetryVersion] = useState(0);
     const [requestedModalOpen, setRequestedModalOpen] = useState(false);
@@ -107,6 +109,7 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
             setAuthReady(true);
 
             if (!nextAuthenticated) {
+                setRole(null);
                 setProfileCheck("complete");
                 return;
             }
@@ -118,6 +121,7 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
                     if (controller.signal.aborted || !isAuthenticated()) return;
 
                     setUserName(user.name);
+                    setRole(user.role);
                     setProfileCheck(needsSocialProfileCompletion(user) ? "incomplete" : "complete");
                     if (user.name !== cachedUserName) saveAuthenticatedUserName(user.name);
                     return;
@@ -127,6 +131,7 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
                     if (!isAuthenticated()) {
                         setAuthenticated(false);
                         setUserName(null);
+                        setRole(null);
                         setProfileCheck("complete");
                         return;
                     }
@@ -191,8 +196,8 @@ export default function AuthGuardProvider({ children }: { children: React.ReactN
     }, [closeModal, modalOpen]);
 
     const value = useMemo(
-        () => ({ authReady, authenticated, userName, profileCheck, retryProfileCheck, requireLogin }),
-        [authReady, authenticated, userName, profileCheck, retryProfileCheck, requireLogin],
+        () => ({ authReady, authenticated, userName, role, profileCheck, retryProfileCheck, requireLogin }),
+        [authReady, authenticated, userName, role, profileCheck, retryProfileCheck, requireLogin],
     );
 
     return (

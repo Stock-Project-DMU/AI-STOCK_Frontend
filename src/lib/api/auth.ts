@@ -64,6 +64,18 @@ export function verifyEmailCode(email: string, code: string) {
     });
 }
 
+export function checkInitialAdminExists() {
+    return apiRequest<{ adminExists: boolean }>("/api/auth/initial-admin", { auth: false });
+}
+
+export function createInitialAdmin(request: { loginId: string; password: string; name: string; email: string; setupCode: string }) {
+    return apiRequest<SignupResponse>("/api/auth/initial-admin", {
+        method: "POST",
+        auth: false,
+        body: JSON.stringify(request),
+    });
+}
+
 export function signup(request: {
     loginId: string;
     password: string;

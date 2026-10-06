@@ -15,7 +15,8 @@ export function getAccounts() {
 export type AccountTransactionResponse = {
     transactionId: number;
     accountId: number;
-    type: "INITIAL_GRANT" | "AUTO_CHARGE" | "ADMIN_CHARGE" | "ADMIN_DEDUCTION" | "ORDER_BUY" | "ORDER_SELL" | "ORDER_REFUND" | "INTEREST" | "TRADE_FEE";
+    // AUTO_DEDUCTION: 관리자 계정이 본인 계좌를 직접 차감한 경우에만 내려옴(백엔드 확인됨).
+    type: "INITIAL_GRANT" | "AUTO_CHARGE" | "ADMIN_CHARGE" | "ADMIN_DEDUCTION" | "AUTO_DEDUCTION" | "ORDER_BUY" | "ORDER_SELL" | "ORDER_REFUND" | "INTEREST" | "TRADE_FEE";
     amount: number;
     balanceBefore: number;
     balanceAfter: number;
@@ -69,6 +70,11 @@ export function getRealizedReturns(accountId: number) {
 
 export function chargeAccount(accountId: number, amount: number) {
     return apiRequest<AccountInfoResponse>(`/api/accounts/${accountId}/charge`, { method: "POST", body: JSON.stringify({ amount }) });
+}
+
+// 관리자 계좌에서 가상캐시를 직접 차감한다 (관리자 전용).
+export function deductAccount(accountId: number, amount: number) {
+    return apiRequest<AccountInfoResponse>(`/api/accounts/${accountId}/deduct`, { method: "POST", body: JSON.stringify({ amount }) });
 }
 
 export function getOrders(accountId: number) {
