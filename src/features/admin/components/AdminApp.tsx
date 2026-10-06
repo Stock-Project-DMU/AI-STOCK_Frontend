@@ -128,7 +128,7 @@ function Shell({ section, setSection, logout, children }: { section: Section; se
   return <div className="market-theme admin-workspace">
     <NotificationPopups />
     <aside className="ao-sidebar">
-      <button type="button" onClick={() => setSection("dashboard")} className="ao-brand" aria-label="관리자 대시보드로 이동"><span className="ao-brand-mark">A<span>↗</span></span><span>AI STOCK<small>ADMIN WORKSPACE</small></span></button>
+      <button type="button" onClick={() => setSection("dashboard")} className="ao-brand" aria-label="관리자 대시보드로 이동"><img src="/images/brand/logo-admin.png" alt="AI STOCK" className="ao-brand-logo" /><small>ADMIN WORKSPACE</small></button>
       <p className="ao-nav-label">WORKSPACE</p>
       <nav aria-label="관리자 메뉴">{nav.map(([key, icon, label]) => <button key={key} onClick={() => setSection(key)} aria-current={section === key ? "page" : undefined}><span>{icon}</span>{label}{section === key && <i />}</button>)}</nav>
       <div className="ao-sidebar-footer"><div className="ao-admin-identity"><span className="ao-avatar">A</span><span><b>관리자 계정</b><small>Administrator</small></span></div></div>
