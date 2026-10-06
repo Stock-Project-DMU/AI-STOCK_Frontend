@@ -77,7 +77,8 @@ export type SimulationSummary = {
     rebalancedReachDate: string | null;
     createdAt: string;
 };
-export const runSimulation = (goalText: string, monthlyContribution: number) => apiRequest<SimulationResult>("/api/simulations", { method: "POST", body: JSON.stringify({ goalText, monthlyContribution }) });
+// includeCurrentPortfolio=false면 백엔드가 계좌를 보지 않고 시작 금액 0원에서 월 추가 납입액만으로 계산한다(startAmount·holdingsAmount·cashAmount 모두 0).
+export const runSimulation = (goalText: string, monthlyContribution: number, includeCurrentPortfolio: boolean) => apiRequest<SimulationResult>("/api/simulations", { method: "POST", body: JSON.stringify({ goalText, monthlyContribution, includeCurrentPortfolio }) });
 export const saveSimulation = (pendingSimulationId: string) => apiRequest<SimulationResult>("/api/simulations/saved", { method: "POST", body: JSON.stringify({ pendingSimulationId }) });
 export const getSimulations = () => apiRequest<SimulationSummary[]>("/api/simulations");
 export const getSimulation = (simulationId: number) => apiRequest<SimulationResult>(`/api/simulations/${simulationId}`);
