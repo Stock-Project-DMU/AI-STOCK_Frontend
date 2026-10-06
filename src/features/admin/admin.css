@@ -3,10 +3,9 @@
 .admin-workspace button:disabled { cursor:wait; opacity:.55; }
 .admin-workspace :is(button,a,input,select,textarea):focus-visible { outline:3px solid #90b0ff; outline-offset:3px; }
 .ao-sidebar { width:230px; background:#121e34; color:#97a5bc; position:fixed; inset:0 auto 0 0; z-index:30; display:flex; flex-direction:column; padding:34px 18px 20px; }
-.ao-brand { display:flex; align-items:center; gap:12px; text-align:left; color:#fff; font-weight:800; font-size:19px; letter-spacing:.5px; padding:0 10px; }
-.ao-brand small { display:block; color:#7d90af; font-size:8px; letter-spacing:1.6px; margin-top:4px; }
-.ao-brand-mark { height:38px; width:38px; display:flex; align-items:center; justify-content:center; position:relative; background:#386cf6; border-radius:11px; font-size:25px; }
-.ao-brand-mark span { font-size:17px; position:absolute; right:2px; top:0; }
+.ao-brand { display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; color:#fff; padding:6px 10px 0; width:100%; }
+.ao-brand-logo { height:90px; width:auto; object-fit:contain; }
+.ao-brand small { display:block; color:#7d90af; font-size:8px; letter-spacing:1.6px; }
 .ao-nav-label { margin:48px 14px 15px; font-size:9px; letter-spacing:1.8px; color:#667a9b; font-weight:700; }
 .ao-sidebar nav { display:grid; gap:7px; }
 .ao-sidebar nav button { display:flex; align-items:center; gap:13px; width:100%; border-radius:9px; padding:14px; font-size:13px; font-weight:600; text-align:left; }
