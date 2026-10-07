@@ -121,7 +121,7 @@ export default function Header() {
         <header className="sticky top-0 z-50 h-[72px] border-b border-hairline bg-canvas/95 px-4 text-ink shadow-[0_1px_0_rgba(10,11,13,0.04)] backdrop-blur-xl lg:px-7">
             <div className="mx-auto grid h-full max-w-[1760px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
                 <Link href="/home" className="flex items-center" aria-label="AI STOCK 홈">
-                    <img src="/images/brand/logo-main.png" alt="AI STOCK" className="h-17 w-auto object-contain" width={108} height={68} />
+                    <img src="/images/brand/logo-main.png" alt="AI STOCK" className="h-17 w-auto object-contain" width={137} height={68} />
                 </Link>
 
                 <nav className="flex min-w-0 items-center justify-center gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="주요 메뉴">
