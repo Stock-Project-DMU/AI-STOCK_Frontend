@@ -55,6 +55,10 @@ function aggregate(rows: HistoricalPrice[], period: Period): Candle[] {
     });
     return [...groups.values()];
 }
+// 상한가·하한가 근처처럼 주문이 없는 단계는 가격·잔량이 0으로 내려오므로 호가창에서 제외한다.
+function hogaLevels(prices: number[], volumes: number[]) {
+    return prices.map((price, index) => ({ price, volume: volumes[index] })).filter(level => level.price !== 0).slice(0, 10);
+}
 export default function StockChart({ stockCode, stock, hoga, ticks }: { stockCode: string; stock?: StockPriceResponse | null; hoga?: HogaResponse | null; ticks: (StockPriceResponse & { receivedAt: string })[] }) {
     const [history, setHistory] = useState<HistoricalPrice[]>([]);
     const [period, setPeriod] = useState<Period>("일");
@@ -234,9 +238,11 @@ export default function StockChart({ stockCode, stock, hoga, ticks }: { stockCod
             </section>
         </div>
         <aside className="rounded-lg border border-hairline bg-canvas p-3"><h2 className="font-bold">실시간 호가</h2>{!hoga && <p className="mt-4 text-xs text-muted">현재 제공된 호가가 없습니다. 실시간 수신 시 표시됩니다.</p>}
-            {hoga?.askPrices.slice(0, 5).reverse().map((price, index) => <div key={index} className="mt-3 flex justify-between text-xs text-up"><strong>{price.toLocaleString()}</strong><span>{hoga.askVolumes[Math.min(5, hoga.askPrices.length) - 1 - index]?.toLocaleString()}</span></div>)}
+            {hoga && <div className="mt-3 flex justify-between text-[11px] text-muted"><span>매도 총잔량</span><span>{hoga.totalAskVolume != null ? hoga.totalAskVolume.toLocaleString() : "-"}</span></div>}
+            {hoga && hogaLevels(hoga.askPrices, hoga.askVolumes).reverse().map(level => <div key={level.price} className="mt-3 flex justify-between text-xs text-up"><strong>{level.price.toLocaleString()}</strong><span>{level.volume?.toLocaleString()}</span></div>)}
             <p className="my-4 border-y border-hairline py-3 font-bold">{stock ? stock.currentPrice.toLocaleString() + "원" : "현재가 수신 대기"}</p>
-            {hoga?.bidPrices.slice(0, 5).map((price, index) => <div key={index} className="mt-3 flex justify-between text-xs text-down"><strong>{price.toLocaleString()}</strong><span>{hoga.bidVolumes[index]?.toLocaleString()}</span></div>)}
+            {hoga && hogaLevels(hoga.bidPrices, hoga.bidVolumes).map(level => <div key={level.price} className="mt-3 flex justify-between text-xs text-down"><strong>{level.price.toLocaleString()}</strong><span>{level.volume?.toLocaleString()}</span></div>)}
+            {hoga && <div className="mt-3 flex justify-between text-[11px] text-muted"><span>매수 총잔량</span><span>{hoga.totalBidVolume != null ? hoga.totalBidVolume.toLocaleString() : "-"}</span></div>}
         </aside>
     </div>;
 }
@@ -268,6 +274,14 @@ function CandleShape(props: BarShapeProps) {
     );
 }
 
+// candle.label은 x축 틱 포맷터(LABEL_RULES)와 자리수 기준으로 공유하는 원본 값이라 그대로 두고,
+// 툴팁 표시용으로만 여기서 대시를 붙인다. 주봉은 이미 ISO 날짜(대시 포함), 연봉은 "2026" 그대로라 손대지 않는다.
+function formatCandleDate(label: string) {
+    if (label.includes("-")) return label; // 주봉
+    if (label.length === 8) return `${label.slice(0, 4)}-${label.slice(4, 6)}-${label.slice(6, 8)}`; // 일봉
+    if (label.length === 6) return `${label.slice(0, 4)}-${label.slice(4, 6)}`; // 월봉
+    return label; // 연봉
+}
 function ChartTooltip({ active, payload }: TooltipContentProps) {
     if (!active || !payload?.length) return null;
     const candle = payload[0]?.payload as Candle | undefined;
@@ -277,7 +291,7 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
 
     return (
         <div className="rounded-md border border-hairline bg-canvas px-3 py-2 text-[12px] shadow-[0_0.6px_0.6px_-1.25px_rgba(10,11,13,.12),0_2.2px_2.2px_-2.5px_rgba(10,11,13,.1),0_10px_10px_-3.75px_rgba(10,11,13,.0425)]">
-            <p className="mb-1.5 font-semibold text-ink">{candle.label}</p>
+            <p className="mb-1.5 font-semibold text-ink">{formatCandleDate(candle.label)}</p>
             <div className="space-y-0.5">
                 <TooltipRow label="시가" value={candle.open} />
                 <TooltipRow label="고가" value={candle.high} />

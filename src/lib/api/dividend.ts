@@ -1,20 +1,8 @@
 import { apiRequest } from "./client";
 
-// 세 API 모두 로그인 사용자 전용이다(백엔드 DividendController).
-export type DividendScheduleResponse = {
-    dividendScheduleId: number;
-    stockCode: string;
-    stockName: string | null;
-    fiscalYear: string;
-    period: string;
-    dividendKind: "ANNUAL" | "QUARTERLY" | string;
-    dpsCash: number | null;
-    recordDate: string;
-    exDividendDate: string;
-    payDate: string | null;
-    dividendYield: number | null;
-};
-
+// 두 API 모두 로그인 사용자 전용이다(백엔드 DividendController). 종목 상세의 배당 일정은
+// 더 이상 이 모듈을 쓰지 않고 /api/market/stocks/{code}/research?section=dividend의
+// content.schedules로 내려온다(로그인 불필요) — src/features/stock-detail/types.ts의 DividendSchedule 참고.
 export type DividendEntitlementResponse = {
     dividendEntitlementId: number;
     stockCode: string;
@@ -42,10 +30,6 @@ export type UpcomingDividendResponse = {
     expectedAmount: number | null;
     isEntitled: boolean;
 };
-
-export function getDividendSchedules(stockCode: string, signal?: AbortSignal) {
-    return apiRequest<DividendScheduleResponse[]>(`/api/dividends/schedule?stockCode=${encodeURIComponent(stockCode)}`, { signal });
-}
 
 export function getMyDividends(signal?: AbortSignal) {
     return apiRequest<DividendEntitlementResponse[]>("/api/dividends/my", { signal });

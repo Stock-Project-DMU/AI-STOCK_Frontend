@@ -122,6 +122,8 @@ export type HogaResponse = {
     askVolumes: number[];
     bidPrices: number[];
     bidVolumes: number[];
+    totalAskVolume: number | null;
+    totalBidVolume: number | null;
 };
 
 export type WatchlistResponse = {

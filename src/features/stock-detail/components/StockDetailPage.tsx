@@ -5,6 +5,7 @@ import { getApiErrorMessage } from "@/lib/api/client";
 import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getAccounts, getHoldings, getOrders } from "@/lib/api/portfolio";
 import { getStockHoga, getStockPrice, recordRecentView } from "@/lib/api/stock";
+import { getMarketStatus, MARKET_STATUS_REFRESH_INTERVAL_MS, type MarketStatus } from "@/lib/api/market";
 import type {
     AccountInfoResponse,
     HogaResponse,
@@ -32,9 +33,24 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
     const [recentError, setRecentError] = useState("");
     const [liveStatus, setLiveStatus] = useState("");
     const [ticks, setTicks] = useState<(StockPriceResponse & { receivedAt: string })[]>([]);
+    const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
+    // 종목과 무관하게 시장 전체 상태라 종목코드 변경과 별개로, 09:00/15:30 경계를 놓치지 않게 주기적으로 재조회한다.
+    useEffect(() => {
+        let active = true;
+        async function load() {
+            try {
+                const status = await getMarketStatus();
+                if (active) setMarketStatus(status);
+            } catch { /* 장 상태 조회 실패는 조용히 무시 — 배지만 안 보이고 주문 자체는 막지 않는다 */ }
+        }
+        void load();
+        const interval = setInterval(load, MARKET_STATUS_REFRESH_INTERVAL_MS);
+        return () => { active = false; clearInterval(interval); };
+    }, []);
     useEffect(() => subscribeStock(stockCode, price => {
         setStock(price);
-        setTicks(current => [{ ...price, receivedAt: new Date().toLocaleTimeString("ko-KR") }, ...current].slice(0, 30));
+        // "실시간 시세 수신 기록" 표는 최근 5건만 보여주면 된다(백엔드 요청).
+        setTicks(current => [{ ...price, receivedAt: new Date().toLocaleTimeString("ko-KR") }, ...current].slice(0, 5));
     }, setHoga, setLiveStatus), [stockCode, authenticated]);
     useEffect(() => {
         let active = true;
@@ -112,7 +128,7 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
 
     return (
         <div className="market-theme market-grid min-h-[calc(100vh-4rem)] min-w-0 bg-[var(--market-bg)] text-[var(--market-text)]">
-            <StockHeader stock={stock} />
+            <StockHeader stock={stock} marketStatus={marketStatus} />
             {liveStatus && <p role="status" className="px-4 py-1 text-xs text-muted">{liveStatus}</p>}
             {recentError && <p role="alert" className="px-4 py-2 text-xs text-up">최근 본 종목 저장 실패: {recentError}</p>}
 
@@ -147,11 +163,12 @@ export default function StockDetailPage({ stockCode }: { stockCode: string }) {
                         account={account}
                         orders={orders}
                         holdings={holdings}
+                        marketStatus={marketStatus}
                         onTradingDataChanged={refreshTradingData}
                     />
                 </div>
             ) : (
-                <StockInformation stockCode={stockCode} />
+                <StockInformation key={stockCode} stockCode={stockCode} />
             )}
         </div>
     );
