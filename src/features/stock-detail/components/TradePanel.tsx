@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { cancelOrder, createOrder } from "@/lib/api/portfolio";
+import { marketStatusLabel, type MarketStatus } from "@/lib/api/market";
+import { formatDateTime } from "@/lib/format/dateTime";
 import type {
     AccountInfoResponse,
     HoldingResponse,
@@ -23,10 +25,11 @@ type TradePanelProps = {
     account?: AccountInfoResponse | null;
     orders?: OrderHistoryResponse[] | null;
     holdings?: HoldingResponse[] | null;
+    marketStatus?: MarketStatus | null;
     onTradingDataChanged?: () => Promise<void>;
 };
 
-export default function TradePanel({ stock, account, orders, holdings, onTradingDataChanged }: TradePanelProps) {
+export default function TradePanel({ stock, account, orders, holdings, marketStatus, onTradingDataChanged }: TradePanelProps) {
     const { authReady, authenticated, requireLogin } = useAuthGuard();
     const [tab, setTab] = useState<OrderTab>("buy");
     const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
@@ -44,11 +47,16 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
     const pendingOrders = orders?.filter((order) => order.status === "PENDING") ?? null;
     const accent = tab === "sell" ? "blue" : "red";
     const loginRequired = authReady && !authenticated;
+    const marketClosed = marketStatus != null && !marketStatus.isOpen;
 
     async function handleOrder() {
         if (!requireLogin()) return;
 
         if (isSubmitting) return;
+        if (marketClosed) {
+            setRequestError("정규장(평일 09:00~15:30)에만 주문할 수 있습니다.");
+            return;
+        }
         if (!account || !stock) {
             setRequestError("계좌와 종목 정보를 불러온 뒤 주문할 수 있습니다.");
             return;
@@ -165,10 +173,11 @@ export default function TradePanel({ stock, account, orders, holdings, onTrading
                             <div className="mt-3 flex items-end justify-between border-t border-hairline pt-3"><span className="font-semibold text-body">{priceType === "MARKET" ? "예상 주문 금액" : "총 주문 금액"}</span><strong className={`num text-lg ${accent === "red" ? "text-up" : "text-down"}`}>₩{(price * quantity).toLocaleString("ko-KR")}</strong></div>
                         </div>
 
+                        {marketClosed && <p className="rounded-md bg-surface-strong px-3 py-2 text-[12px] text-muted">정규장(평일 09:00~15:30)에만 주문할 수 있습니다{marketStatus?.state === "HOLIDAY" ? `(${marketStatusLabel(marketStatus)})` : ""}.{marketStatus?.nextOpen && <> 다음 개장: {formatDateTime(marketStatus.nextOpen)}</>}</p>}
                         {requestError && <p className="rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
                         {requestMessage && <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-600">{requestMessage}</p>}
 
-                        <button type="button" onClick={handleOrder} disabled={!authReady || isSubmitting || !account || !stock || quantity < 1 || price < 1} className={`trade-action-button w-full rounded-lg py-3.5 text-sm font-bold transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${tab === "buy" ? "bg-[var(--market-up)]" : "bg-[var(--market-down)]"}`}>{isSubmitting ? "처리 중..." : `${stockName} ${tab === "buy" ? "매수하기" : "매도하기"}`}</button>
+                        <button type="button" onClick={handleOrder} disabled={!authReady || isSubmitting || !account || !stock || quantity < 1 || price < 1 || marketClosed} className={`trade-action-button w-full rounded-lg py-3.5 text-sm font-bold transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${tab === "buy" ? "bg-[var(--market-up)]" : "bg-[var(--market-down)]"}`}>{isSubmitting ? "처리 중..." : `${stockName} ${tab === "buy" ? "매수하기" : "매도하기"}`}</button>
 
                         <Portfolio tab={tab} holding={holding} />
                     </div>
