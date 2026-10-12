@@ -2,6 +2,7 @@
 
 import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import RecoveryCard from "@/features/account-recovery/components/RecoveryCard";
 import RecoveryField from "@/features/account-recovery/components/RecoveryField";
 import RecoveryEmailField from "@/features/account-recovery/components/RecoveryEmailField";
@@ -26,6 +27,7 @@ type FindPasswordFormErrors = Partial<Record<keyof FindPasswordFormData, string>
 type IdentityField = "userId" | "name" | "emailLocal" | "emailDomain";
 
 export default function FindPasswordCard() {
+    const router = useRouter();
     const [formData, setFormData] = useState<FindPasswordFormData>(INITIAL_FORM_DATA);
     const [errors, setErrors] = useState<FindPasswordFormErrors>({});
     const [step, setStep] = useState<"verify" | "reset">("verify");
@@ -216,7 +218,7 @@ export default function FindPasswordCard() {
             </form>
 
             {isComplete && (
-                <RecoveryModal title="비밀번호가 변경되었습니다." onClose={() => setIsComplete(false)} />
+                <RecoveryModal title="비밀번호가 변경되었습니다." closeLabel="로그인하기" onClose={() => router.replace("/login")} />
             )}
         </RecoveryCard>
     );

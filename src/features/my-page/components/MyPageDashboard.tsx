@@ -281,7 +281,7 @@ export default function MyPageDashboard() {
         setPasswordCheckError(
           result.reason === "invalid-password"
             ? "비밀번호가 일치하지 않습니다."
-            : "비밀번호 확인 중 오류가 발생했습니다. 다시 시도해 주세요.",
+            : result.message,
         );
         return;
       }
@@ -292,8 +292,8 @@ export default function MyPageDashboard() {
       setIsEditing(true);
       setShowPasswordCheck(false);
       setPasswordCheckValue("");
-    } catch {
-      setPasswordCheckError("비밀번호 확인 중 오류가 발생했습니다. 다시 시도해 주세요.");
+    } catch (error) {
+      setPasswordCheckError(getApiErrorMessage(error, "비밀번호 확인 중 오류가 발생했습니다. 다시 시도해 주세요."));
     } finally {
       setIsCheckingPassword(false);
     }
