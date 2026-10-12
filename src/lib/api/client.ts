@@ -14,6 +14,7 @@ export class ApiError extends Error {
     constructor(
         message: string,
         public readonly status: number,
+        public readonly code?: string,
     ) {
         super(message);
         this.name = "ApiError";
@@ -78,11 +79,29 @@ export function isAuthenticated() {
 }
 
 async function parseResponse<T>(response: Response): Promise<ApiResponse<T>> {
+    let payload: unknown;
     try {
-        return (await response.json()) as ApiResponse<T>;
+        payload = await response.json();
     } catch {
-        throw new ApiError("서버 응답을 확인할 수 없습니다.", response.status);
+        throw new ApiError(getHttpErrorMessage(response.status), response.status);
     }
+    if (!payload || typeof payload !== "object" || !("success" in payload)
+        || typeof payload.success !== "boolean") {
+        throw new ApiError(getHttpErrorMessage(response.status), response.status);
+    }
+    return payload as ApiResponse<T>;
+}
+
+function getHttpErrorMessage(status: number) {
+    if (status === 401) return "로그인이 만료되었거나 인증이 필요합니다. 다시 로그인해 주세요.";
+    if (status === 403) return "이 작업을 수행할 권한이 없습니다.";
+    if (status === 404) return "요청한 정보를 찾을 수 없습니다.";
+    if (status === 429) return "요청이 많아 잠시 제한되었습니다. 잠시 후 다시 시도해 주세요.";
+    if (status === 502 || status === 503) return "서버가 준비 중이거나 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+    if (status === 504 || status === 408) return "서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.";
+    if (status >= 500) return "서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+    if (status >= 400) return "요청을 처리할 수 없습니다. 입력 내용을 확인해 주세요.";
+    return "서버 응답 형식이 올바르지 않습니다. 잠시 후 다시 시도해 주세요.";
 }
 
 async function refreshAccessToken() {
@@ -94,6 +113,9 @@ async function refreshAccessToken() {
             method: "POST",
             headers: { Authorization: `Bearer ${refreshToken}` },
         });
+        if (response.status >= 500 || response.status === 429) {
+            throw new ApiError(getHttpErrorMessage(response.status), response.status);
+        }
         const payload = await parseResponse<AuthTokens>(response);
 
         if (!response.ok || !payload.success) {
@@ -103,9 +125,9 @@ async function refreshAccessToken() {
 
         saveAuthTokens(payload.data);
         return true;
-    } catch {
-        clearAuthTokens();
-        return false;
+    } catch (error) {
+        if (error instanceof ApiError) throw error;
+        throw new ApiError("서버에 연결할 수 없습니다. 네트워크 연결을 확인해 주세요.", 0);
     }
 }
 
@@ -135,7 +157,8 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     let response: Response;
     try {
         response = await fetch(`${API_BASE_URL}${path}`, { ...requestInit, headers });
-    } catch {
+    } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") throw error;
         throw new ApiError("서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.", 0);
     }
 
@@ -151,7 +174,10 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 
     const payload = await parseResponse<T>(response);
     if (!response.ok || !payload.success) {
-        throw new ApiError(payload.message || "요청 처리에 실패했습니다.", response.status);
+        const code = "code" in payload && typeof payload.code === "string" ? payload.code : undefined;
+        const message = typeof payload.message === "string" && payload.message.trim()
+            ? payload.message : getHttpErrorMessage(response.status);
+        throw new ApiError(message, response.status, code);
     }
 
     return payload.data;
@@ -160,9 +186,18 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 // 백엔드는 보통 한글 메시지를 그대로 내려주지만, 혹시 코드값만 오는 경우를 대비한 안전망.
 const ERROR_CODE_MESSAGES: Record<string, string> = {
     DEPOSIT_LIMIT_EXCEEDED: "계좌 예치금은 최대 1조원까지 보유할 수 있습니다.",
+    INVALID_TOKEN: "로그인이 만료되었거나 인증이 필요합니다. 다시 로그인해 주세요.",
+    TOKEN_EXPIRED: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+    REFRESH_TOKEN_NOT_FOUND: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
 };
 
 export function getApiErrorMessage(error: unknown, fallback: string) {
     if (!(error instanceof ApiError)) return fallback;
-    return ERROR_CODE_MESSAGES[error.message] ?? error.message;
+    const authMessage = error.code && ["INVALID_TOKEN", "TOKEN_EXPIRED", "REFRESH_TOKEN_NOT_FOUND"].includes(error.code)
+        ? ERROR_CODE_MESSAGES[error.code] : undefined;
+    if (authMessage) return authMessage;
+    if (["유효하지 않은 토큰입니다.", "만료된 토큰입니다.", "리프레시 토큰을 찾을 수 없습니다."].includes(error.message)) {
+        return ERROR_CODE_MESSAGES.INVALID_TOKEN;
+    }
+    return ERROR_CODE_MESSAGES[error.message] ?? (/^[A-Z][A-Z0-9_]+$/.test(error.message) ? fallback : error.message);
 }
