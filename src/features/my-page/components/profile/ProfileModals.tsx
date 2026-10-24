@@ -51,22 +51,29 @@ export function ProfileSavedModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function WithdrawalModal({ onClose, isSocialAccount, accountEmail, isAdmin }: { onClose: () => void; isSocialAccount: boolean; accountEmail: string; isAdmin?: boolean }) {
+const WITHDRAWAL_CONFIRM_TEXT = "탈퇴하겠습니다";
+
+export function WithdrawalModal({ onClose, isSocialAccount, isEmaillessSocial, accountEmail, isAdmin }: { onClose: () => void; isSocialAccount: boolean; isEmaillessSocial?: boolean; accountEmail: string; isAdmin?: boolean }) {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [confirmText, setConfirmText] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const canSubmit = isAdmin ? Boolean(password) && Boolean(adminCode.trim()) : isSocialAccount ? Boolean(email.trim()) : Boolean(password);
+  const canSubmit = isAdmin ? Boolean(password) && Boolean(adminCode.trim())
+    : isEmaillessSocial ? confirmText.trim() === WITHDRAWAL_CONFIRM_TEXT
+    : isSocialAccount ? Boolean(email.trim()) : Boolean(password);
   async function withdraw() {
     if (busy || !canSubmit) return;
-    if (!isAdmin && isSocialAccount && (!accountEmail || email.trim().toLowerCase() !== accountEmail.trim().toLowerCase())) {
+    if (!isAdmin && isSocialAccount && !isEmaillessSocial && (!accountEmail || email.trim().toLowerCase() !== accountEmail.trim().toLowerCase())) {
       setError("계정에 등록된 본인 이메일을 입력해 주세요.");
       return;
     }
     setBusy(true); setError("");
     try {
-      const body = isAdmin ? { password, adminCode: adminCode.trim() } : isSocialAccount ? { email: email.trim() } : { password };
+      const body = isAdmin ? { password, adminCode: adminCode.trim() }
+        : isEmaillessSocial ? { confirmText: confirmText.trim() }
+        : isSocialAccount ? { email: email.trim() } : { password };
       await apiRequest<null>("/api/users/me", { method: "DELETE", retryOnUnauthorized: false, body: JSON.stringify(body) });
       clearAuthTokens();
       window.location.assign("/home");
@@ -80,7 +87,8 @@ export function WithdrawalModal({ onClose, isSocialAccount, accountEmail, isAdmi
       {isAdmin ? <>
         <label className="mt-4 block text-left text-sm">현재 비밀번호<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 w-full rounded border border-hairline p-3" /></label>
         <label className="mt-3 block text-left text-sm">관리자 인증 코드<PasswordInput value={adminCode} onChange={event => { setAdminCode(event.target.value); setError(""); }} className="mt-2 w-full rounded border border-hairline p-3" /></label>
-      </> : isSocialAccount ? <label className="mt-4 block text-left text-sm">본인 이메일<input type="email" autoComplete="email" value={email} onChange={event => { setEmail(event.target.value); setError(""); }} placeholder="계정에 등록된 이메일" className="mt-2 w-full rounded border border-hairline p-3" /></label>
+      </> : isEmaillessSocial ? <label className="mt-4 block text-left text-sm">{`"${WITHDRAWAL_CONFIRM_TEXT}" 입력`}<input type="text" value={confirmText} onChange={event => { setConfirmText(event.target.value); setError(""); }} placeholder={WITHDRAWAL_CONFIRM_TEXT} className="mt-2 w-full rounded border border-hairline p-3" /></label>
+        : isSocialAccount ? <label className="mt-4 block text-left text-sm">본인 이메일<input type="email" autoComplete="email" value={email} onChange={event => { setEmail(event.target.value); setError(""); }} placeholder="계정에 등록된 이메일" className="mt-2 w-full rounded border border-hairline p-3" /></label>
         : <label className="mt-4 block text-left text-sm">현재 비밀번호<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 w-full rounded border border-hairline p-3" /></label>}
       {error && <p role="alert" className="mt-3 text-red-500">{error}</p>}
       <p className="mt-2 break-keep text-pretty text-sm leading-6 text-muted">{isAdmin ? "폐기하면 관리자 계정과 권한이 모두 삭제됩니다." : "탈퇴하면 저장된 투자 성향, 주문 내역과 수익률 정보를 다시 확인할 수 없습니다."}</p>

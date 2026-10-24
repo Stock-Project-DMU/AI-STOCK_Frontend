@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { getMarketIndexes, type MarketIndex } from "@/lib/api/market";
 import { apiRequest, getApiErrorMessage } from "@/lib/api/client";
+import { subscribeMarketIndexes } from "@/lib/api/realtime";
 
 export default function MarketPulse() {
     const [indexes, setIndexes] = useState<MarketIndex[]>([]);
@@ -15,7 +16,8 @@ export default function MarketPulse() {
         void apiRequest<{ price: number | null; changeRate: number | null }>("/api/market/exchange-rate", { auth: false })
             .then(value => { if (active) setExchange(value); })
             .catch(reason => { if (active) setError(previous => previous || getApiErrorMessage(reason, "환율을 불러오지 못했습니다.")); });
-        return () => { active = false; };
+        const unsubscribe = subscribeMarketIndexes(value => { if (active) setIndexes(value); });
+        return () => { active = false; unsubscribe(); };
     }, []);
     const rows = [
         { name: "KOSPI", price: indexes.find(item => item.industryCode === "001")?.indexValue, rate: indexes.find(item => item.industryCode === "001")?.changeRate },

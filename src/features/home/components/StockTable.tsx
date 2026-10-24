@@ -7,7 +7,8 @@ import { useAuthGuard } from "@/components/auth/AuthGuardProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { addWatchlist, getWatchlist, removeWatchlist, WATCHLIST_CHANGED } from "@/lib/api/stock";
 import { HOME_STOCK_PAGE_SIZE } from "../constants/stockData";
-import { getAllMarketRankings, MARKET_REFRESH_INTERVAL_MS, type MarketRanking } from "@/lib/api/market";
+import { getAllMarketRankings, type MarketRanking } from "@/lib/api/market";
+import { subscribeMarketRankings } from "@/lib/api/realtime";
 
 type SortKey = "현재가" | "상승순" | "하락순" | "거래량" | "거래대금";
 
@@ -64,20 +65,15 @@ export default function StockTable() {
             } catch (error) { if (active) { setMarketRows([]); setMarketError(getApiErrorMessage(error, "시세를 불러오지 못했습니다.")); } }
             finally { if (active) setLoadingMarket(false); }
         }
-        // 화면이 보이는 동안 주기적으로 조용히 다시 불러와 새로고침 없이 시세가 바뀌게 한다.
-        // 일시적인 실패는 기존 목록을 그대로 두고 다음 주기에 다시 시도한다.
-        // 전체 목록을 요청 1회로 통째로 교체하므로, 스크롤로 펼쳐 둔 개수(visibleCount)는 그대로 유지된다.
-        async function refresh() {
-            if (document.visibilityState !== "visible") return;
-            try {
-                const items = await getAllMarketRankings(RANKING_SORT[sortKey]);
-                if (active) { setMarketRows(items); setMarketError(""); }
-            } catch { /* 다음 주기에 재시도 */ }
-        }
         void load();
-        const timer = window.setInterval(() => void refresh(), MARKET_REFRESH_INTERVAL_MS);
-        return () => { active = false; window.clearInterval(timer); };
-    }, [sortKey, authenticated]);
+        // 장중엔 실시간 구독으로 갱신되고, 장외엔 메시지가 안 와서 위 REST로 받은 값이 그대로 유지된다.
+        // 전체 목록을 통째로 교체하므로, 스크롤로 펼쳐 둔 개수(visibleCount)는 그대로 유지된다.
+        // 정렬이 바뀌면 이 effect가 다시 실행되면서 이전 토픽 구독은 해제되고 새 정렬 토픽을 구독한다.
+        const unsubscribe = subscribeMarketRankings(RANKING_SORT[sortKey], items => {
+            if (active) { setMarketRows(items); setMarketError(""); }
+        });
+        return () => { active = false; unsubscribe(); };
+    }, [sortKey]);
 
     useEffect(() => {
         if (!authenticated) return;

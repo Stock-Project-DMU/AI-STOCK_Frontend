@@ -2,12 +2,14 @@
 
 import { EmptyPortfolioIcon } from "@/components/icons/Icon";
 import type { OrderHistoryResponse } from "@/lib/api/types";
-import { useState } from "react";
+import { getOrdersPage } from "@/lib/api/portfolio";
+import { useEffect, useRef, useState } from "react";
 
 type OrdersPanelProps = {
   selectedOrderId: number;
   onSelect: (id: number) => void;
-  apiOrders: OrderHistoryResponse[] | null;
+  apiOrders: OrderHistoryResponse[] | null; // 필터 탭 건수·상세 패널(딥링크 포함) 조회용 — 전체 목록
+  accountId: number | null; // 스크롤 목록 페이지네이션 대상 계좌
   isLoading: boolean;
   error: string;
 };
@@ -16,38 +18,84 @@ const formatWon = (value: number) => `${value.toLocaleString("ko-KR")}원`;
 const formatDate = (value: string | null) => value ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)) : "-";
 type OrderFilter = "ALL" | "BUY" | "SELL";
 
-export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLoading, error }: OrdersPanelProps) {
+function toDisplayOrder(order: OrderHistoryResponse) {
+  return {
+    id: order.orderId,
+    status: order.status,
+    orderType: order.orderType,
+    name: order.stockName || order.stockCode,
+    side: `${order.orderType === "SELL" ? "매도" : "매수"} ${order.status === "EXECUTED" ? "체결" : order.status === "PENDING" ? "대기" : "취소"}`,
+    quantity: `${order.quantity.toLocaleString("ko-KR")}주`,
+    transactionAmount: (order.execPrice ?? order.orderPrice) * order.quantity,
+    fee: order.fee,
+    price: formatWon((order.execPrice ?? order.orderPrice) * order.quantity),
+    averagePrice: formatWon(order.execPrice ?? order.orderPrice),
+    orderedAt: formatDate(order.orderedAt),
+    executedAt: formatDate(order.executedAt),
+    priceType: order.priceType === "MARKET" ? "시장가" : "지정가",
+  };
+}
+
+export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, accountId, isLoading, error }: OrdersPanelProps) {
   const [filter, setFilter] = useState<OrderFilter>("ALL");
+  const [pagedOrders, setPagedOrders] = useState<OrderHistoryResponse[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // 계좌가 바뀌면(처음 들어올 때 포함) 목록 영역을 1페이지(20건)부터 다시 받는다.
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      setPagedOrders([]); setPage(0); setHasNext(false);
+      if (accountId == null) return;
+      setPageLoading(true);
+      try {
+        const result = await getOrdersPage(accountId, 0);
+        if (active) { setPagedOrders(result.orders); setHasNext(result.hasNext); }
+      } catch { if (active) setHasNext(false); }
+      finally { if (active) setPageLoading(false); }
+    }
+    void load();
+    return () => { active = false; };
+  }, [accountId]);
+
+  // 목록 영역 안쪽(scrollRef) 바닥에 감시 요소가 들어오면 다음 페이지를 이어 붙인다 — 페이지 전체가 아니라 이 영역 안에서만 스크롤.
+  useEffect(() => {
+    const root = scrollRef.current;
+    const target = loadMoreRef.current;
+    if (!root || !target || !hasNext || accountId == null) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting) && !pageLoading) {
+        const nextPage = page + 1;
+        setPageLoading(true);
+        getOrdersPage(accountId, nextPage)
+          .then(result => { setPagedOrders(current => [...current, ...result.orders]); setPage(nextPage); setHasNext(result.hasNext); })
+          .catch(() => setHasNext(false))
+          .finally(() => setPageLoading(false));
+      }
+    }, { root, rootMargin: "200px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasNext, page, pageLoading, accountId]);
 
   if (isLoading) return <div className="flex min-h-[500px] items-center justify-center text-sm font-semibold text-muted">주문 내역을 불러오는 중입니다.</div>;
   if (error) return <div role="alert" className="flex min-h-[500px] items-center justify-center text-sm font-semibold text-red-500">{error}</div>;
   if (!apiOrders?.length) return <EmptyOrders />;
 
-  const displayOrders = apiOrders
-    .filter((order) => filter === "ALL" || order.orderType === filter)
-    .map((order) => ({
-        id: order.orderId,
-        status: order.status,
-        orderType: order.orderType,
-        name: order.stockName || order.stockCode,
-        side: `${order.orderType === "SELL" ? "매도" : "매수"} ${order.status === "EXECUTED" ? "체결" : order.status === "PENDING" ? "대기" : "취소"}`,
-        quantity: `${order.quantity.toLocaleString("ko-KR")}주`,
-        transactionAmount: (order.execPrice ?? order.orderPrice) * order.quantity,
-        fee: order.fee,
-        price: formatWon((order.execPrice ?? order.orderPrice) * order.quantity),
-        averagePrice: formatWon(order.execPrice ?? order.orderPrice),
-        orderedAt: formatDate(order.orderedAt),
-        executedAt: formatDate(order.executedAt),
-        priceType: order.priceType === "MARKET" ? "시장가" : "지정가",
-      }));
-
+  // 필터 탭 건수와 상세 패널은 전체 목록(apiOrders) 기준 — 아직 스크롤로 안 펼친 주문의 딥링크·건수도 정확해야 하므로.
   const filterItems: { id: OrderFilter; label: string; count: number }[] = [
     { id: "ALL", label: "전체", count: apiOrders.length },
     { id: "BUY", label: "매수", count: apiOrders.filter((order) => order.orderType === "BUY").length },
     { id: "SELL", label: "매도", count: apiOrders.filter((order) => order.orderType === "SELL").length },
   ];
 
-  const selected = displayOrders.find((order) => order.id === selectedOrderId) ?? displayOrders[0];
+  // 스크롤 목록은 페이지네이션으로 받아온 것만 — 필터는 지금까지 불러온 것 안에서 걸러낸다(더 보려면 스크롤로 더 받아야 함).
+  const displayOrders = pagedOrders.filter(order => filter === "ALL" || order.orderType === filter).map(toDisplayOrder);
+  const selectedSource = apiOrders.find(order => order.orderId === selectedOrderId) ?? apiOrders[0];
+  const selected = selectedSource ? toDisplayOrder(selectedSource) : undefined;
   if (!selected) {
     return (
       <div className="mx-auto max-w-[1180px]">
@@ -82,7 +130,7 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
           <OrderListHeader filter={filter} filterItems={filterItems} visibleCount={displayOrders.length} />
           <OrderFilterTabs filter={filter} filterItems={filterItems} onFilterChange={setFilter} />
           <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px] border-b border-hairline px-4 py-2 text-xs font-semibold text-muted sm:grid"><span>종목 / 주문 구분</span><span>수량</span><span className="text-right">금액</span></div>
-          <div className="divide-y divide-gray-200">
+          <div ref={scrollRef} className="max-h-[560px] divide-y divide-gray-200 overflow-y-auto">
             {displayOrders.map((order) => (
               <button key={order.id} type="button" onClick={() => onSelect(order.id)} className={`relative grid w-full grid-cols-[minmax(0,1fr)_70px_110px] items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors sm:grid-cols-[minmax(0,1fr)_90px_130px] ${selected.id === order.id ? "theme-accent-soft" : "bg-white hover:bg-surface-soft"}`}>
                 {selected.id === order.id && <span className="absolute inset-y-0 left-0 w-0.5 bg-[var(--market-accent)]" />}
@@ -90,6 +138,8 @@ export default function OrdersPanel({ selectedOrderId, onSelect, apiOrders, isLo
                 <span className="num font-semibold">{order.quantity}</span><span className="num text-right font-bold">{order.price}</span>
               </button>
             ))}
+            {hasNext && <div ref={loadMoreRef} aria-hidden="true" className="h-px" />}
+            {pageLoading && <p className="py-3 text-center text-xs text-muted">불러오는 중...</p>}
           </div>
         </section>
         <aside className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">

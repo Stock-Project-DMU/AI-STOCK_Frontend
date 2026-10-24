@@ -7,7 +7,7 @@ import { investmentProfileChoices, getFundProfileName, investmentLevelChoices } 
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
 import { CheckIcon } from "@/components/icons/Icon";
-import { SURVEY_QUESTIONS } from "../constants/surveyQuestions";
+import { NO_EXPERIENCE_OPTION, SURVEY_QUESTIONS } from "../constants/surveyQuestions";
 
 type InvestmentSurveyProps = { skipIntro?: boolean; completeLabel?: string; onComplete: (result: InvestmentProfileResponse) => void; onSaved?: (result: InvestmentProfileResponse) => void };
 
@@ -64,11 +64,16 @@ export default function InvestmentSurvey({ onComplete, onSaved, completeLabel = 
                                                 setAnswers((current) => {
                                                     const next = [...current];
                                                     const selectedAnswers = current[step] ?? [];
-                                                    next[step] = question.multiple
-                                                        ? selectedAnswers.includes(option)
-                                                            ? selectedAnswers.filter(answer => answer !== option)
-                                                            : [...selectedAnswers, option]
-                                                        : [option];
+                                                    if (!question.multiple) {
+                                                        next[step] = [option];
+                                                    } else if (option === NO_EXPERIENCE_OPTION) {
+                                                        // "없음"은 1~5번과 상호배타적 — 고르면 나머지 해제, 다시 누르면 해제.
+                                                        next[step] = selectedAnswers.includes(option) ? [] : [option];
+                                                    } else if (selectedAnswers.includes(option)) {
+                                                        next[step] = selectedAnswers.filter(answer => answer !== option);
+                                                    } else {
+                                                        next[step] = [...selectedAnswers.filter(answer => answer !== NO_EXPERIENCE_OPTION), option];
+                                                    }
                                                     return next;
                                                 })
                                             }
