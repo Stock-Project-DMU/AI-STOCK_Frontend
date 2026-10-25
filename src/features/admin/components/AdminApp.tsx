@@ -78,8 +78,8 @@ const roleLabel: Record<string, string> = { USER: "일반 회원", ADMIN: "관�
 const investmentLevelLabel: Record<string, string> = { BEGINNER: "입문자", INTERMEDIATE: "일반 투자자", EXPERT: "숙련 투자자" };
 const fundTendencyLabel: Record<number, string> = { 1: "수익추구형", 2: "자유소비형", 3: "목표달성형" };
 const investmentTendencyLabel: Record<number, string> = { 1: "안정형", 2: "안정추구형", 3: "위험중립형", 4: "적극투자형", 5: "공격투자형" };
-const ledgerTypeLabel: Record<LedgerType, string> = { AUTO_CHARGE: "셀프 충전", ADMIN_CHARGE: "관리자 승인/지급", ADMIN_DEDUCTION: "관리자 차감", AUTO_DEDUCTION: "셀프 차감" };
-const ledgerTypes: [string, string][] = [["", "전체 유형"], ["AUTO_CHARGE", "셀프 충전"], ["ADMIN_CHARGE", "관리자 승인/지급"], ["ADMIN_DEDUCTION", "관리자 차감"], ["AUTO_DEDUCTION", "셀프 차감"], ["REJECTED", "거절"]];
+const ledgerTypeLabel: Record<LedgerType, string> = { AUTO_CHARGE: "직접 충전", ADMIN_CHARGE: "관리자 지급", ADMIN_DEDUCTION: "관리자 차감", AUTO_DEDUCTION: "직접 차감" };
+const ledgerTypes: [string, string][] = [["", "전체 유형"], ["AUTO_CHARGE", "직접 충전"], ["ADMIN_CHARGE", "관리자 지급"], ["ADMIN_DEDUCTION", "관리자 차감"], ["AUTO_DEDUCTION", "직접 차감"], ["REJECTED", "거절"]];
 
 const statusText: Record<string, string> = { ACTIVE: "활성", SUSPENDED: "정지", PENDING: "대기", APPROVED: "승인", REJECTED: "거절", EXECUTED: "체결 완료", CANCELLED: "취소", BUY: "매수", SELL: "매도", ANSWERED: "답변 완료" };
 const won = (amount: number) => amount.toLocaleString("ko-KR") + "원";

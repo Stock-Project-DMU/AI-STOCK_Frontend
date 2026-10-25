@@ -82,6 +82,17 @@ export function getOrders(accountId: number) {
     return apiRequest<OrderHistoryResponse[]>(`/api/orders?accountId=${accountId}`);
 }
 
+export type OrderHistoryPage = {
+    orders: OrderHistoryResponse[];
+    page: number;
+    size: number;
+    hasNext: boolean;
+};
+export const ORDER_HISTORY_PAGE_SIZE = 20;
+export function getOrdersPage(accountId: number, page: number, signal?: AbortSignal) {
+    return apiRequest<OrderHistoryPage>(`/api/orders?accountId=${accountId}&page=${page}&size=${ORDER_HISTORY_PAGE_SIZE}`, { signal });
+}
+
 export function getHoldings(accountId: number) {
     return apiRequest<HoldingResponse[]>(`/api/orders/holdings?accountId=${accountId}`);
 }

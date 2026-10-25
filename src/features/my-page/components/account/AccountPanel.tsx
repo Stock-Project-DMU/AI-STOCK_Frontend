@@ -184,7 +184,7 @@ function AccountSummary({ accounts, profit, realizedProfit, isLoading, error }: 
     { label: "주문 동결 금액", value: won(account.frozenBalance) },
     { label: "총 평가 자산", value: won(profit?.totalAsset ?? account.balance + account.frozenBalance) },
     { label: "평가 손익", value: won(profit?.profitAmount ?? 0) },
-    ...(account.unlimitedCharge ? [] : [{ label: "자동 충전 남은 횟수", value: `${Math.max((account.maxChargeCount ?? 0) - account.chargeCount, 0)}/${account.maxChargeCount ?? 0}` }]),
+    ...(account.unlimitedCharge ? [] : [{ label: "직접 충전 남은 횟수", value: `${Math.max((account.maxChargeCount ?? 0) - account.chargeCount, 0)}/${account.maxChargeCount ?? 0}` }]),
   ];
   const accountDetails = [
     { label: "예치 이자율", value: `연 ${(account.interestRate ?? 0).toFixed(2)}%` },

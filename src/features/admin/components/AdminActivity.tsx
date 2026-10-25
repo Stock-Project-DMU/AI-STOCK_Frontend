@@ -86,7 +86,7 @@ export function toActivity(item: AdminActivityItem): Activity {
         case "ADMIN_BALANCE": {
             const b = item.balance;
             const isCharge = b?.type === "AUTO_CHARGE" || b?.type === "ADMIN_CHARGE";
-            const title = item.activityType === "SELF_BALANCE" ? (isCharge ? "셀프 충전" : "셀프 차감") : (isCharge ? "관리자 지급" : "관리자 차감");
+            const title = item.activityType === "SELF_BALANCE" ? (isCharge ? "직접 충전" : "직접 차감") : (isCharge ? "관리자 지급" : "관리자 차감");
             return { key: `a${item.id}`, category, tone: isCharge ? "green" : "red", title, detail: `${item.userName} · ${number(b?.amount ?? 0)}원 · 잔액 ${number(b?.balanceAfter ?? 0)}원${b?.processedByLoginId ? ` · 처리 ${b.processedByLoginId}` : ""}`, at: item.occurredAt, target };
         }
         case "INQUIRY": {

@@ -1,5 +1,8 @@
 import type { SurveyQuestion } from "../types";
 
+// 4번 문항(투자 경험)에서 1~5번과 상호배타적인 "없음" 선택지 — InvestmentSurvey.tsx가 이 값으로 식별한다.
+export const NO_EXPERIENCE_OPTION = "없음 (투자 경험 없음)";
+
 export const SURVEY_QUESTIONS: SurveyQuestion[] = [
     {
         title: "투자 목적",
@@ -21,7 +24,7 @@ export const SURVEY_QUESTIONS: SurveyQuestion[] = [
     },
     {
         title: "지금까지의 투자 경험",
-        options: ["선물·옵션", "주식 신용거래", "레버리지·인버스 ETF", "원금 비보장 ELS", "주식형 펀드"],
+        options: ["선물·옵션", "주식 신용거래", "레버리지·인버스 ETF", "원금 비보장 ELS", "주식형 펀드", NO_EXPERIENCE_OPTION],
         multiple: true,
     },
     {

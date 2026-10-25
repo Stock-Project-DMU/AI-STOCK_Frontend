@@ -15,7 +15,7 @@ type Filter = typeof filters[number];
 const TRANSACTION_META: Record<AccountTransactionResponse["type"], { label: string; sign: 1 | -1; filter: Filter }> = {
     INITIAL_GRANT: { label: "계좌 개설 지급", sign: 1, filter: "충전" },
     AUTO_CHARGE: { label: "직접 충전", sign: 1, filter: "충전" },
-    ADMIN_CHARGE: { label: "관리자 승인 충전", sign: 1, filter: "충전" },
+    ADMIN_CHARGE: { label: "관리자 지급", sign: 1, filter: "충전" },
     ADMIN_DEDUCTION: { label: "관리자 차감", sign: -1, filter: "기타" },
     AUTO_DEDUCTION: { label: "직접 차감", sign: -1, filter: "기타" },
     ORDER_BUY: { label: "주식 매수", sign: -1, filter: "주식 거래" },

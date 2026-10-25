@@ -49,6 +49,7 @@ export default function MyPageDashboard() {
   const [draftProfile, setDraftProfile] = useState(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isSocialAccount, setIsSocialAccount] = useState(false);
+  const [isEmaillessSocial, setIsEmaillessSocial] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loginProvider, setLoginProvider] = useState<LoginProvider | null>(null);
   const [profileErrors, setProfileErrors] = useState<ProfileErrors>({});
@@ -109,6 +110,7 @@ export default function MyPageDashboard() {
           return;
         }
         setIsSocialAccount(user.loginId === null);
+        setIsEmaillessSocial(user.loginId === null && user.email === null);
         setIsAdmin(user.role === "ADMIN");
         setLoginProvider(getAuthenticatedLoginProvider());
 
@@ -505,7 +507,7 @@ export default function MyPageDashboard() {
             />
           )}
 
-          {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} apiOrders={apiOrders} isLoading={isDashboardLoading} error={dashboardError} />}
+          {activeTab === "orders" && <OrdersPanel selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} apiOrders={apiOrders} accountId={accounts?.[0]?.accountId ?? null} isLoading={isDashboardLoading} error={dashboardError} />}
           {activeTab === "returns" && <ReturnsPanel live={live} rows={realizedReturns} />}
           {activeTab === "inquiry" && <InquiryPanel />}
         </div>
@@ -552,7 +554,7 @@ export default function MyPageDashboard() {
         </Modal>
       )}
 
-      {showWithdrawal && <WithdrawalModal isSocialAccount={isSocialAccount} accountEmail={profile.email} isAdmin={isAdmin} onClose={() => setShowWithdrawal(false)} />}
+      {showWithdrawal && <WithdrawalModal isSocialAccount={isSocialAccount} isEmaillessSocial={isEmaillessSocial} accountEmail={profile.email} isAdmin={isAdmin} onClose={() => setShowWithdrawal(false)} />}
       {isLeaveModalOpen && (
         <UnsavedChangesModal
           onStay={stayOnPage}
