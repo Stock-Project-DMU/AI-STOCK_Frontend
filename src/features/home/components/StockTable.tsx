@@ -13,7 +13,7 @@ import { subscribeMarketRankings } from "@/lib/api/realtime";
 type SortKey = "현재가" | "상승순" | "하락순" | "거래량" | "거래대금";
 
 // 정렬은 현재 목록 재정렬이 아니라 백엔드 순위(all=true)를 받아온다. all=true 순위는 시장 전체가 아니라 등록 종목
-// (stocks.json, 105개) 범위의 순위라, 시가총액 비중 등도 등록 종목 합계 기준이다(real/mock 공통, 2026-10-02).
+// (stocks.json, 105개) 범위의 순위라, 시가총액 비중 등도 등록 종목 합계 기준이다(2026-10-02).
 const RANKING_SORT: Record<SortKey, string> = {
     현재가: "market-cap",
     상승순: "rise",
