@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/common/Button";
 import { startOAuth, type OAuthProvider } from "@/lib/api/oauth";
 import { login } from "@/lib/api/auth";
@@ -21,6 +21,16 @@ export default function LoginPage() {
     const [errors, setErrors] = useState<LoginFormErrors>({});
     const [requestError, setRequestError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        const handlePageShow = (event: PageTransitionEvent) => {
+            // 외부 인증 화면에서 뒤로 돌아오면 캐시에 남은 버튼 비활성화 상태를 해제한다.
+            if (event.persisted) setIsSubmitting(false);
+        };
+
+        window.addEventListener("pageshow", handlePageShow);
+        return () => window.removeEventListener("pageshow", handlePageShow);
+    }, []);
 
     async function socialLogin(provider: OAuthProvider) {
         setIsSubmitting(true); setRequestError("");

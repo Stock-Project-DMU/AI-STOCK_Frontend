@@ -3,10 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { finishOAuth, type OAuthProvider } from "@/lib/api/oauth";
 import { getLoginDestination } from "@/lib/api/auth-navigation";
+import { ApiError } from "@/lib/api/client";
+import SuspendedAccountModal from "@/components/auth/SuspendedAccountModal";
 
 export default function OAuthCallbackPage() {
     const started = useRef(false);
     const [error, setError] = useState("");
+    const [suspended, setSuspended] = useState(false);
     useEffect(() => {
         if (started.current) return;
         started.current = true;
@@ -23,7 +26,12 @@ export default function OAuthCallbackPage() {
             return;
         }
         finishOAuth(provider, code, state).then(getLoginDestination).then(destination => window.location.replace(destination))
-            .catch(cause => setError(cause instanceof Error ? cause.message : "소셜 로그인에 실패했습니다."));
+            .catch(cause => {
+                setError(cause instanceof Error ? cause.message : "소셜 로그인에 실패했습니다.");
+                if (cause instanceof ApiError && cause.code === "USER_SUSPENDED") {
+                    setSuspended(true);
+                }
+            });
     }, []);
-    return <main className="mx-auto max-w-xl p-10"><h1 className="text-xl font-bold">소셜 로그인</h1><p role={error ? "alert" : "status"} className="my-5">{error || "인증 결과를 확인하고 있습니다…"}</p>{error && <Link href="/login" className="text-primary">로그인 화면으로 돌아가기</Link>}</main>;
+    return <main className="mx-auto max-w-xl p-10"><h1 className="text-xl font-bold">소셜 로그인</h1><p role={error ? "alert" : "status"} className="my-5">{suspended ? "로그인을 진행할 수 없습니다." : error || "인증 결과를 확인하고 있습니다…"}</p>{error && <Link href="/login" className="text-primary">로그인 화면으로 돌아가기</Link>}{suspended && <SuspendedAccountModal onClose={() => window.location.replace("/login")} />}</main>;
 }
