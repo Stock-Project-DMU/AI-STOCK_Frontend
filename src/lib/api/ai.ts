@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { ApiError, apiRequest, getApiErrorMessage } from "./client";
 export type PlanningSession = { sessionId: number; title: string | null; status: string; createdAt: string; updatedAt: string };
 export type PlanningMessage = { messageId: number; role: "USER" | "AI" | "ASSISTANT" | "MODEL"; content: string; createdAt: string };
 export const getPlanningSessions = () => apiRequest<PlanningSession[]>("/api/ai/planning/sessions");
@@ -83,3 +83,42 @@ export const saveSimulation = (pendingSimulationId: string) => apiRequest<Simula
 export const getSimulations = () => apiRequest<SimulationSummary[]>("/api/simulations");
 export const getSimulation = (simulationId: number) => apiRequest<SimulationResult>(`/api/simulations/${simulationId}`);
 export const deleteSimulation = (simulationId: number) => apiRequest<null>(`/api/simulations/${simulationId}`, { method: "DELETE" });
+
+// AI 기능(시뮬레이터·재무설계) 전용 오류 안내.
+// GEMINI_RATE_LIMIT_EXCEEDED(429)는 시뮬레이터 자체 호출 제한과 Gemini 할당량 초과 두 경우에 온다.
+const AI_RATE_LIMIT_CODE = "GEMINI_RATE_LIMIT_EXCEEDED";
+const AI_RESPONSE_TIMEOUT_CODE = "AI_RESPONSE_TIMEOUT";
+
+function isAiRateLimitError(error: unknown): error is ApiError {
+    return error instanceof ApiError && (error.status === 429 || error.code === AI_RATE_LIMIT_CODE);
+}
+
+function retryAfterText(error: ApiError) {
+    return error.retryAfterSeconds && error.retryAfterSeconds > 0
+        ? `${error.retryAfterSeconds}초 후 다시 시도하세요.` : "잠시 후 다시 시도하세요.";
+}
+
+// 시뮬레이터·재무설계의 계정당 하루 3회 초과(DAILY_LIMIT_EXCEEDED). Gemini 자체 할당량 초과(GEMINI_RATE_LIMIT_EXCEEDED)와는
+// 다른 코드로 오므로 "잠시 후 다시"가 아니라 "내일 다시"로 안내한다.
+const DAILY_LIMIT_CODE = "DAILY_LIMIT_EXCEEDED";
+const DAILY_LIMIT_MESSAGE = "오늘 사용 횟수를 모두 사용했습니다. 내일 다시 이용해 주세요.";
+
+function isDailyLimitError(error: unknown) {
+    return error instanceof ApiError && error.code === DAILY_LIMIT_CODE;
+}
+
+export function getSimulationErrorMessage(error: unknown, fallback: string) {
+    if (isDailyLimitError(error)) return DAILY_LIMIT_MESSAGE;
+    if (isAiRateLimitError(error)) return `분당 3회까지 사용 가능합니다. ${retryAfterText(error)}`;
+    return getApiErrorMessage(error, fallback);
+}
+
+export function getPlanningErrorMessage(error: unknown, fallback: string) {
+    if (isDailyLimitError(error)) return DAILY_LIMIT_MESSAGE;
+    if (isAiRateLimitError(error)) return "AI 요청이 많아 잠시 후 다시 시도해 주세요.";
+    // 백엔드 45초 마감(AI_RESPONSE_TIMEOUT)과 앞단 프록시의 504를 같은 안내로 묶는다.
+    if (error instanceof ApiError && (error.status === 504 || error.code === AI_RESPONSE_TIMEOUT_CODE)) {
+        return "응답 생성에 실패했습니다. 다시 시도해 주세요.";
+    }
+    return getApiErrorMessage(error, fallback);
+}

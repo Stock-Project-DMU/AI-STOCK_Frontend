@@ -5,7 +5,7 @@ import Link from "next/link";
 import FinancialSummary from "@/features/ai-financial-planner/components/FinancialSummary";
 import { Button } from "@/components/common/Button";
 import { useLivePortfolio } from "@/hooks/LivePortfolioProvider";
-import { runSimulation, saveSimulation, type SimulationResult } from "@/lib/api/ai";
+import { getSimulationErrorMessage, runSimulation, saveSimulation, type SimulationResult } from "@/lib/api/ai";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 import { formatMonths, formatWon, formatYearMonth } from "../utils/simulation";
 import ProjectionPanel from "./ProjectionPanel";
@@ -73,7 +73,7 @@ export default function GoalSimulator() {
         try {
             setResult(await runSimulation(goalText.trim(), monthlyContribution, includeCurrentPortfolio));
         } catch (runError) {
-            setError(getApiErrorMessage(runError, "시뮬레이션 실행에 실패했습니다."));
+            setError(getSimulationErrorMessage(runError, "시뮬레이션 실행에 실패했습니다."));
             setSurveyRequired(runError instanceof ApiError && runError.status === 403);
         } finally {
             setBusy(false);

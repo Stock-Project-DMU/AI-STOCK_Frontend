@@ -15,6 +15,8 @@ export class ApiError extends Error {
         message: string,
         public readonly status: number,
         public readonly code?: string,
+        // 429 응답의 Retry-After 헤더(초). 헤더가 없거나 브라우저가 노출하지 않으면 undefined.
+        public readonly retryAfterSeconds?: number,
     ) {
         super(message);
         this.name = "ApiError";
@@ -104,6 +106,15 @@ function getHttpErrorMessage(status: number) {
     return "서버 응답 형식이 올바르지 않습니다. 잠시 후 다시 시도해 주세요.";
 }
 
+// Retry-After는 초(정수) 또는 HTTP 날짜 형식이다. 둘 다 아니면 undefined.
+function getRetryAfterSeconds(response: Response) {
+    const value = response.headers.get("Retry-After")?.trim();
+    if (!value) return undefined;
+    if (/^\d+$/.test(value)) return Number(value);
+    const retryAt = Date.parse(value);
+    return Number.isNaN(retryAt) ? undefined : Math.max(0, Math.ceil((retryAt - Date.now()) / 1000));
+}
+
 async function refreshAccessToken() {
     const refreshToken = getRefreshToken();
     if (!refreshToken) return false;
@@ -177,7 +188,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
         const code = "code" in payload && typeof payload.code === "string" ? payload.code : undefined;
         const message = typeof payload.message === "string" && payload.message.trim()
             ? payload.message : getHttpErrorMessage(response.status);
-        throw new ApiError(message, response.status, code);
+        throw new ApiError(message, response.status, code, getRetryAfterSeconds(response));
     }
 
     return payload.data;
