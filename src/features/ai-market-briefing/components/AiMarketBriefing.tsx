@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GearIcon, NewsIcon } from "@/components/icons/Icon";
+import { createPortal } from "react-dom";
+import { GearIcon, MoreHorizontalIcon, NewsIcon } from "@/components/icons/Icon";
 import {
-    getBriefingByDate, getBriefingHistory, getPlanningPreferences, savePlanningPreferences, syncNewsChatSessions,
+    deleteNewsChatSession, getBriefingByDate, getBriefingHistory, getPlanningPreferences, savePlanningPreferences, syncNewsChatSessions,
     type NewsBriefing, type NewsChatSession, type NewsChatSessions, type PlanningPreferences,
 } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
@@ -11,15 +12,35 @@ import FinancialSummary from "@/features/ai-financial-planner/components/Financi
 import BriefingSettings from "./BriefingSettings";
 import NewsChat from "./NewsChat";
 import SavedBriefingsModal from "./SavedBriefingsModal";
-
-function belongsToSession(briefing: NewsBriefing, session: NewsChatSession) {
-    return briefing.outletDomain === session.outletDomain
-        && (briefing.deliveryTime ?? null) === (session.deliveryTime ?? null);
-}
+import { belongsToSession, briefingKey, findLatestByDate } from "../utils";
 
 function sessionLabel(session: NewsChatSession) {
     if (!session.outletDomain) return "전체 뉴스";
     return `${session.outletName} · ${session.deliveryTime ? session.deliveryTime.slice(0, 5) : "이전 기록"}`;
+}
+
+// 채팅(설정)이 삭제된 뒤에도 저장 목록에 남은 브리핑은 열람할 수 있어야 한다 — 채팅 없이 내용만 보여준다.
+function OrphanBriefingView({ briefing, saved, busy, savedLoading, onToggleSave, onBack }: {
+    briefing: NewsBriefing; saved: boolean; busy: boolean; savedLoading: boolean;
+    onToggleSave: () => void; onBack: () => void;
+}) {
+    return <section className="flex min-h-[540px] min-w-0 flex-1 flex-col bg-surface-soft">
+        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-hairline bg-canvas px-6 font-bold">
+            <button type="button" onClick={onBack} className="text-xs font-semibold text-primary hover:underline">← 현재 설정 채팅</button>
+        </header>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6 lg:p-8">
+            <p className="text-xs text-muted">이 브리핑의 설정별 채팅은 삭제되어 더 이상 열람할 수 없습니다. 브리핑 내용만 보여드립니다.</p>
+            <article className="min-w-0 rounded-lg border border-hairline bg-canvas px-5 py-4 text-sm leading-7 text-body">
+                <div className="mb-2 flex items-start justify-between gap-3">
+                    <p className="text-xs font-semibold text-primary">{briefing.briefingDate} · {briefing.outletName} 시황 브리핑</p>
+                    <button type="button" disabled={savedLoading || busy} onClick={onToggleSave} className="shrink-0 text-xs font-semibold text-primary hover:underline disabled:opacity-50">
+                        {busy ? "처리 중..." : saved ? "저장 해제" : "저장"}
+                    </button>
+                </div>
+                <p className="whitespace-pre-wrap break-words">{briefing.content}</p>
+            </article>
+        </div>
+    </section>;
 }
 
 export default function AiMarketBriefing() {
@@ -37,8 +58,23 @@ export default function AiMarketBriefing() {
     const [savedError, setSavedError] = useState("");
     const [savedListOpen, setSavedListOpen] = useState(false);
     const [savingDate, setSavingDate] = useState<string | null>(null);
+    const [savingKey, setSavingKey] = useState<string | null>(null);
+    const [orphanBriefing, setOrphanBriefing] = useState<NewsBriefing | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; arrowLeft: number; above: boolean } | null>(null);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [deleteBusyId, setDeleteBusyId] = useState<number | null>(null);
+    const [deleteError, setDeleteError] = useState("");
     const saving = useRef(false);
     const extraBriefings = useRef<NewsBriefing[]>([]);
+    const openMenuRef = useRef<HTMLDivElement | null>(null);
+    const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+
+    const applyBriefingItems = useCallback((items: NewsBriefing[]) => {
+        const byKey = new Map(extraBriefings.current.map(item => [briefingKey(item), item]));
+        items.forEach(item => byKey.set(briefingKey(item), item));
+        setBriefings([...byKey.values()].sort((a, b) => b.briefingDate.localeCompare(a.briefingDate)));
+    }, []);
 
     const refreshSessions = useCallback(async (selectCurrent = false): Promise<NewsChatSessions> => {
         const result = await syncNewsChatSessions();
@@ -66,16 +102,52 @@ export default function AiMarketBriefing() {
         const refresh = () => {
             getBriefingHistory().then(items => {
                 if (!active) return;
-                const byDate = new Map(extraBriefings.current.map(item => [item.briefingDate, item]));
-                items.forEach(item => byDate.set(item.briefingDate, item));
-                setBriefings([...byDate.values()].sort((a, b) => b.briefingDate.localeCompare(a.briefingDate)));
+                applyBriefingItems(items);
                 setHistoryError("");
             }).catch(cause => { if (active) setHistoryError(getApiErrorMessage(cause, "브리핑 기록을 불러오지 못했습니다.")); });
         };
         refresh();
         const timer = window.setInterval(() => { refresh(); void refreshSessions().catch(() => {}); }, 60_000);
         return () => { active = false; window.clearInterval(timer); };
-    }, [refreshSessions]);
+    }, [refreshSessions, applyBriefingItems]);
+
+    // 설정 시각이 지나면 오늘의 새 브리핑이 올라오는지 더 촘촘히 확인한다(60초 주기만으로는 최대 1분 늦게 뜰 수 있어서).
+    // 설정 시각+5초에 한 번 보고, 아직 없으면 5초 간격으로 최대 1분까지 더 확인하다가 새 브리핑이 오면 멈춘다.
+    const currentSession = sessions.find(item => item.sessionId === currentSessionId) ?? null;
+    useEffect(() => {
+        if (!currentSession?.outletDomain || !currentSession.deliveryTime) return;
+        const outletDomain = currentSession.outletDomain;
+        const deliveryTime = currentSession.deliveryTime;
+        let active = true;
+        let attempts = 0;
+        const MAX_ATTEMPTS = 12;
+        let retryTimer: ReturnType<typeof setTimeout> | undefined;
+
+        function todayKst() {
+            return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date());
+        }
+
+        function check() {
+            getBriefingHistory().then(items => {
+                if (!active) return;
+                applyBriefingItems(items);
+                setHistoryError("");
+                const arrived = items.some(item => item.briefingDate === todayKst()
+                    && item.outletDomain === outletDomain && (item.deliveryTime ?? null) === deliveryTime);
+                if (arrived) return;
+                attempts += 1;
+                if (attempts < MAX_ATTEMPTS) retryTimer = setTimeout(check, 5_000);
+            }).catch(() => {
+                attempts += 1;
+                if (active && attempts < MAX_ATTEMPTS) retryTimer = setTimeout(check, 5_000);
+            });
+        }
+
+        const target = Date.parse(`${todayKst()}T${deliveryTime}+09:00`) + 5_000;
+        const startDelay = Math.max(0, target - Date.now());
+        const startTimer = setTimeout(check, startDelay);
+        return () => { active = false; clearTimeout(startTimer); clearTimeout(retryTimer); };
+    }, [currentSession?.outletDomain, currentSession?.deliveryTime, applyBriefingItems]);
 
     useEffect(() => {
         let active = true;
@@ -91,10 +163,11 @@ export default function AiMarketBriefing() {
         ? selectedDate : visibleBriefings[0]?.briefingDate ?? "";
     const savedDates = [...(preferences?.savedBriefingDates ?? [])].sort((a, b) => b.localeCompare(a));
 
-    const updateSavedBriefing = async (date: string, shouldSave: boolean) => {
+    const updateSavedBriefing = async (date: string, shouldSave: boolean, briefing?: NewsBriefing) => {
         if (saving.current) throw new Error("다른 저장 작업이 진행 중입니다.");
         saving.current = true;
         setSavingDate(date);
+        setSavingKey(briefing ? briefingKey(briefing) : null);
         try {
             const current = await getPlanningPreferences();
             const updated = await savePlanningPreferences({
@@ -107,6 +180,7 @@ export default function AiMarketBriefing() {
         } finally {
             saving.current = false;
             setSavingDate(null);
+            setSavingKey(null);
         }
     };
 
@@ -114,11 +188,12 @@ export default function AiMarketBriefing() {
         setSelectedSessionId(id);
         setSelectedDate("");
         setJumpTarget(null);
+        setOrphanBriefing(null);
         setView("chat");
     };
 
     const openSavedBriefing = async (date: string) => {
-        let briefing = briefings.find(item => item.briefingDate === date);
+        let briefing = findLatestByDate(briefings, date);
         if (!briefing) {
             try {
                 briefing = await getBriefingByDate(date);
@@ -132,7 +207,17 @@ export default function AiMarketBriefing() {
         try {
             const result = await refreshSessions();
             const target = result.sessions.find(item => belongsToSession(briefing!, item));
-            if (!target) throw new Error("브리핑의 설정별 채팅을 찾지 못했습니다.");
+            if (!target) {
+                // 설정(채팅)이 삭제된 브리핑 — 채팅 없이 내용만 보여준다.
+                setOrphanBriefing(briefing);
+                setSelectedDate("");
+                setJumpTarget(null);
+                setView("chat");
+                setSavedListOpen(false);
+                setSavedError("");
+                return;
+            }
+            setOrphanBriefing(null);
             setSelectedSessionId(target.sessionId);
             setSelectedDate(date);
             setJumpTarget({ date });
@@ -147,6 +232,57 @@ export default function AiMarketBriefing() {
     const settingSaved = () => {
         void refreshSessions(true).catch(cause => setSessionError(getApiErrorMessage(cause, "새 설정의 채팅을 불러오지 못했습니다.")));
     };
+
+    function toggleSessionMenu(id: number, button: HTMLButtonElement) {
+        if (openMenuId === id) { setOpenMenuId(null); return; }
+        const rect = button.getBoundingClientRect();
+        const width = 160;
+        const height = 44;
+        const above = window.innerHeight - rect.bottom < height + 12 && rect.top > height + 12;
+        const left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8));
+        setMenuPosition({ top: above ? rect.top - height - 8 : rect.bottom + 8, left, arrowLeft: Math.max(12, Math.min(rect.left + rect.width / 2 - left - 5, width - 20)), above });
+        setOpenMenuId(id);
+    }
+
+    useEffect(() => {
+        if (openMenuId === null) return;
+        const closeOnOutsideInteraction = (event: PointerEvent | FocusEvent) => {
+            const target = event.target as Node;
+            if (!openMenuRef.current?.contains(target) && !menuButtonRef.current?.contains(target)) setOpenMenuId(null);
+        };
+        const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpenMenuId(null); };
+        const closeOnScroll = () => setOpenMenuId(null);
+        document.addEventListener("pointerdown", closeOnOutsideInteraction);
+        document.addEventListener("focusin", closeOnOutsideInteraction);
+        document.addEventListener("keydown", closeOnEscape);
+        window.addEventListener("scroll", closeOnScroll, true);
+        window.addEventListener("resize", closeOnScroll);
+        return () => {
+            document.removeEventListener("pointerdown", closeOnOutsideInteraction);
+            document.removeEventListener("focusin", closeOnOutsideInteraction);
+            document.removeEventListener("keydown", closeOnEscape);
+            window.removeEventListener("scroll", closeOnScroll, true);
+            window.removeEventListener("resize", closeOnScroll);
+        };
+    }, [openMenuId]);
+
+    const deletingSession = sessions.find(item => item.sessionId === deletingId) ?? null;
+    const menuSession = sessions.find(item => item.sessionId === openMenuId) ?? null;
+
+    async function removeSession(id: number) {
+        if (deleteBusyId !== null) return;
+        setDeleteBusyId(id);
+        setDeleteError("");
+        try {
+            await deleteNewsChatSession(id);
+            await refreshSessions();
+            setDeletingId(null);
+        } catch (cause) {
+            setDeleteError(getApiErrorMessage(cause, "채팅을 삭제하지 못했습니다."));
+        } finally {
+            setDeleteBusyId(null);
+        }
+    }
 
     return <div className="cq-medium-flex-row ai-chat-page market-theme market-grid flex min-h-[calc(100dvh-72px)] min-w-0 flex-col">
         <aside aria-label="AI 뉴스 시황 메뉴" className="cq-planner-history flex shrink-0 flex-col border-b border-hairline bg-canvas">
@@ -168,12 +304,20 @@ export default function AiMarketBriefing() {
             {sessionError && <p role="alert" className="px-3 pb-2 text-xs text-red-600">{sessionError}</p>}
             {sessionError && <button type="button" onClick={() => { void refreshSessions(true).catch(cause => setSessionError(getApiErrorMessage(cause, "설정별 채팅을 불러오지 못했습니다."))); }}
                 className="mx-3 mb-3 self-start rounded-md border border-hairline px-3 py-1.5 text-xs text-body">다시 시도</button>}
+            {deleteError && <p role="alert" className="px-3 pb-2 text-xs text-red-600">{deleteError}</p>}
             <div className="cq-planner-session-list flex max-h-48 overflow-auto">
-                {sessions.map(item => <button key={item.sessionId} type="button" onClick={() => selectSession(item.sessionId)}
-                    aria-current={view === "chat" && selectedSessionId === item.sessionId ? "page" : undefined}
-                    className={`w-full shrink-0 border-l-2 px-4 py-3 text-left text-xs ${view === "chat" && selectedSessionId === item.sessionId ? "border-primary bg-primary/6 font-semibold text-primary" : "border-transparent text-body hover:bg-surface-soft"}`}>
-                    <span className="block truncate font-semibold">{sessionLabel(item)}</span>
-                </button>)}
+                {sessions.map(item => {
+                    const menuOpen = openMenuId === item.sessionId;
+                    return <div key={item.sessionId} className={`flex w-full shrink-0 items-center gap-1 border-l-2 px-2 py-1.5 ${view === "chat" && selectedSessionId === item.sessionId ? "border-primary bg-primary/6" : "border-transparent hover:bg-surface-soft"}`}>
+                        <button type="button" onClick={() => selectSession(item.sessionId)} aria-current={view === "chat" && selectedSessionId === item.sessionId ? "page" : undefined}
+                            className={`min-w-0 flex-1 truncate px-2 py-1.5 text-left text-xs font-semibold ${view === "chat" && selectedSessionId === item.sessionId ? "text-primary" : "text-body"}`}>
+                            {sessionLabel(item)}
+                        </button>
+                        <button type="button" ref={menuOpen ? menuButtonRef : null} onClick={event => toggleSessionMenu(item.sessionId, event.currentTarget)}
+                            aria-label={`${sessionLabel(item)} 옵션 ${menuOpen ? "닫기" : "열기"}`} aria-expanded={menuOpen}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-hairline bg-white text-muted hover:border-primary hover:text-primary"><MoreHorizontalIcon className="h-3.5 w-3.5" /></button>
+                    </div>;
+                })}
             </div>
             <button type="button" onClick={() => setView("settings")} aria-pressed={view === "settings"}
                 className="flex h-12 shrink-0 items-center gap-2 border-t border-hairline px-5 text-xs font-bold text-muted hover:text-ink">
@@ -183,10 +327,14 @@ export default function AiMarketBriefing() {
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {view === "chat" && <div className="cq-planner-chat-row flex min-h-0 min-w-0 flex-1 flex-col">
-                {selectedSession ? <NewsChat key={selectedSession.sessionId} session={selectedSession} briefings={visibleBriefings}
+                {orphanBriefing ? <OrphanBriefingView briefing={orphanBriefing} saved={savedDates.includes(orphanBriefing.briefingDate)}
+                    busy={savingKey === briefingKey(orphanBriefing)} savedLoading={savedLoading}
+                    onToggleSave={() => { void updateSavedBriefing(orphanBriefing.briefingDate, !savedDates.includes(orphanBriefing.briefingDate), orphanBriefing).catch(cause => setSavedError(getApiErrorMessage(cause, "브리핑 저장 상태를 변경하지 못했습니다."))); }}
+                    onBack={() => { setOrphanBriefing(null); if (currentSessionId !== null) selectSession(currentSessionId); }} />
+                    : selectedSession ? <NewsChat key={selectedSession.sessionId} session={selectedSession} briefings={visibleBriefings}
                     focusedBriefingDate={focusedDate} jumpTarget={jumpTarget} savedBriefingDates={savedDates}
-                    savingDate={savingDate} savedLoading={savedLoading} onSave={date => updateSavedBriefing(date, true)}
-                    onRemove={date => updateSavedBriefing(date, false)}
+                    savingKey={savingKey} savedLoading={savedLoading} onSave={briefing => updateSavedBriefing(briefing.briefingDate, true, briefing)}
+                    onRemove={briefing => updateSavedBriefing(briefing.briefingDate, false, briefing)}
                     onActivity={() => { void refreshSessions().catch(() => {}); }} />
                     : <p role="status" className="flex-1 p-6 text-sm text-muted">설정별 채팅을 불러오는 중입니다...</p>}
                 <FinancialSummary />
@@ -199,5 +347,24 @@ export default function AiMarketBriefing() {
             savingDate={savingDate} onSelect={date => { void openSavedBriefing(date); }}
             onDelete={date => { void updateSavedBriefing(date, false).catch(cause => setSavedError(getApiErrorMessage(cause, "저장 목록에서 삭제하지 못했습니다."))); }}
             onClose={() => setSavedListOpen(false)} />}
+        {menuSession && menuPosition && createPortal(
+            <div ref={openMenuRef} role="group" aria-label={`${sessionLabel(menuSession)} 채팅 옵션`} style={{ top: menuPosition.top, left: menuPosition.left }} className="fixed z-[60] w-40 rounded-lg border border-hairline bg-canvas p-1.5 shadow-xl">
+                <span aria-hidden="true" style={{ left: menuPosition.arrowLeft }} className={`absolute h-2.5 w-2.5 rotate-45 border-hairline bg-canvas ${menuPosition.above ? "-bottom-1.5 border-b border-r" : "-top-1.5 border-l border-t"}`} />
+                <button type="button" onClick={() => { setOpenMenuId(null); setDeletingId(menuSession.sessionId); setDeleteError(""); }} className="relative block h-9 w-full rounded-md px-3 text-left text-xs font-semibold text-red-600 hover:bg-red-50">삭제</button>
+            </div>,
+            document.body,
+        )}
+        {deletingSession && <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4" onMouseDown={event => { if (event.target === event.currentTarget && deleteBusyId === null) setDeletingId(null); }}>
+            <div role="dialog" aria-modal="true" aria-labelledby="briefing-chat-delete-title" className="w-full max-w-sm rounded-xl border border-hairline bg-white p-6 shadow-2xl">
+                <h2 id="briefing-chat-delete-title" className="text-lg font-bold text-ink">채팅을 삭제할까요?</h2>
+                <p className="mt-3 text-sm leading-6 text-body"><strong className="text-ink">{sessionLabel(deletingSession)}</strong> 채팅과 대화 내용이 함께 삭제됩니다.</p>
+                {deletingSession.sessionId === currentSessionId && <p className="mt-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-700">브리핑 설정도 함께 삭제되어 더 이상 브리핑을 받지 않습니다.</p>}
+                {deleteError && <p role="alert" className="mt-3 text-sm text-red-600">{deleteError}</p>}
+                <div className="mt-6 flex justify-end gap-2">
+                    <button type="button" autoFocus onClick={() => setDeletingId(null)} disabled={deleteBusyId !== null} className="rounded-lg border border-hairline bg-white px-4 py-2 text-sm font-semibold text-body hover:bg-surface-soft disabled:opacity-50">취소</button>
+                    <button type="button" onClick={() => void removeSession(deletingSession.sessionId)} disabled={deleteBusyId !== null} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">{deleteBusyId === deletingSession.sessionId ? "삭제 중..." : "삭제"}</button>
+                </div>
+            </div>
+        </div>}
     </div>;
 }

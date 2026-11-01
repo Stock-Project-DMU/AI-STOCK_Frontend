@@ -91,7 +91,7 @@ export default function LoginPage() {
                         <Field label="비밀번호" error={errors.password}>
                             <input id="login-password" name="password" type="password" placeholder="비밀번호 입력" value={formData.password} onChange={handleChange("password")} autoComplete="current-password" aria-invalid={Boolean(errors.password)} className="w-full rounded-xl border px-4 py-3.5 text-sm outline-none" />
                         </Field>
-                        {requestError ? <p role="alert" className="text-sm font-semibold text-red-500">{requestError}</p> : null}
+                        {requestError ? <p role="alert" className="whitespace-pre-wrap break-words text-sm font-semibold text-red-500">{requestError}</p> : null}
                         <Button type="submit" fullWidth size="md" className="text-sm" disabled={isSubmitting}>{isSubmitting ? "로그인 중..." : "로그인"}</Button>
                     </form>
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { SendIcon, SparkleIcon } from "@/components/icons/Icon";
 import { getNewsChatMessages, sendNewsChatMessage, type NewsBriefing, type NewsChatMessage, type NewsChatSession } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { briefingKey } from "../utils";
 
 type ArticleSource = { title: string; link: string; outlet: string; description?: string; pubDate?: string };
 type TimelineEntry = { kind: "briefing"; briefing: NewsBriefing; time: number; order: number } | { kind: "message"; message: NewsChatMessage; time: number; order: number };
@@ -40,15 +41,15 @@ type NewsChatProps = {
     focusedBriefingDate: string;
     jumpTarget: { date: string } | null;
     savedBriefingDates: string[];
-    savingDate: string | null;
+    savingKey: string | null;
     savedLoading: boolean;
-    onSave: (date: string) => Promise<void>;
-    onRemove: (date: string) => Promise<void>;
+    onSave: (briefing: NewsBriefing) => Promise<void>;
+    onRemove: (briefing: NewsBriefing) => Promise<void>;
     onActivity: () => void;
 };
 
 export default function NewsChat({ session, briefings, focusedBriefingDate, jumpTarget, savedBriefingDates,
-    savingDate, savedLoading, onSave, onRemove, onActivity }: NewsChatProps) {
+    savingKey, savedLoading, onSave, onRemove, onActivity }: NewsChatProps) {
     const [messages, setMessages] = useState<NewsChatMessage[]>([]);
     const [loadingMessages, setLoadingMessages] = useState(true);
     const [input, setInput] = useState("");
@@ -113,10 +114,10 @@ export default function NewsChat({ session, briefings, focusedBriefingDate, jump
         setSaveMessage("");
         try {
             if (savedBriefingDates.includes(briefing.briefingDate)) {
-                await onRemove(briefing.briefingDate);
+                await onRemove(briefing);
                 setSaveMessage("저장 목록에서 삭제했습니다.");
             } else {
-                await onSave(briefing.briefingDate);
+                await onSave(briefing);
                 setSaveMessage("브리핑을 저장했습니다.");
             }
         } catch (cause) {
@@ -135,16 +136,16 @@ export default function NewsChat({ session, briefings, focusedBriefingDate, jump
                 <p>궁금한 뉴스나 시황을 질문해 주세요. 최신 기사를 검색해 답변합니다.</p>
                 <div className="mt-4 flex flex-wrap gap-2">{suggestions.map(text => <button type="button" key={text} disabled={busy || loadingMessages} onClick={() => void send(text, Date.now())} className="rounded-full border border-hairline bg-canvas px-4 py-2 text-left text-sm text-body hover:bg-surface-soft">{text}</button>)}</div>
             </div>}
-            {timeline.map(entry => entry.kind === "briefing" ? <div key={`briefing-${entry.briefing.briefingDate}`} id={`briefing-${entry.briefing.briefingDate}`} className="flex justify-start">
+            {timeline.map(entry => entry.kind === "briefing" ? <div key={`briefing-${briefingKey(entry.briefing)}`} id={`briefing-${entry.briefing.briefingDate}`} className="flex justify-start">
                 <div className="flex max-w-[700px] gap-3">
                     <span className="theme-accent-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-md"><SparkleIcon className="h-4 w-4" /></span>
                     <article className="min-w-0 rounded-lg border border-hairline bg-canvas px-5 py-4 text-sm leading-7 text-body">
                         <div className="mb-2 flex items-start justify-between gap-3">
                             <p className="text-xs font-semibold text-primary">{entry.briefing.briefingDate} · {entry.briefing.outletName} 시황 브리핑</p>
-                            <button type="button" disabled={savedLoading || savingDate !== null}
+                            <button type="button" disabled={savedLoading || savingKey !== null}
                                 onClick={() => void bookmark(entry.briefing)}
                                 className="shrink-0 text-xs font-semibold text-primary hover:underline disabled:opacity-50">
-                                {savingDate === entry.briefing.briefingDate ? "처리 중..." : savedBriefingDates.includes(entry.briefing.briefingDate) ? "저장 해제" : "저장"}
+                                {savingKey === briefingKey(entry.briefing) ? "처리 중..." : savedBriefingDates.includes(entry.briefing.briefingDate) ? "저장 해제" : "저장"}
                             </button>
                         </div>
                         <p className="whitespace-pre-wrap break-words">{entry.briefing.content}</p>

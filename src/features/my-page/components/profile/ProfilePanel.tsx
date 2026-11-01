@@ -147,6 +147,12 @@ export default function ProfilePanel({
         <section className="rounded-lg border border-hairline bg-surface-soft p-4 sm:p-5">
           <div className="mb-2"><h2 className="font-bold">기본 정보</h2></div>
           {renderRows(accountRows)}
+          <dl className="border-t border-gray-200">
+            <div className="grid min-h-12 grid-cols-[100px_minmax(0,1fr)] items-center gap-3 py-2 sm:grid-cols-[110px_minmax(0,1fr)]">
+              <dt className="text-xs font-semibold text-muted sm:text-sm">가입 방식</dt>
+              <dd className="text-sm font-bold text-ink">{isSocialAccount ? `${providerInfo?.label ?? "소셜"} 가입` : "일반 가입"}</dd>
+            </div>
+          </dl>
           {providerInfo && (
             <dl className="border-t border-gray-200">
               <div className="grid min-h-12 grid-cols-[100px_minmax(0,1fr)] items-center gap-3 py-2 sm:grid-cols-[110px_minmax(0,1fr)]">

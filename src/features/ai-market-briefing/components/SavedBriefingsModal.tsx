@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { CloseIcon } from "@/components/icons/Icon";
 import type { NewsBriefing } from "@/lib/api/ai";
+import { findLatestByDate } from "../utils";
 
 type SavedBriefingsModalProps = {
     dates: string[];
@@ -63,7 +64,7 @@ export default function SavedBriefingsModal({ dates, briefings, loading, error, 
                 {!loading && !error && !dates.length && <p className="py-8 text-center text-sm text-muted">저장한 브리핑이 없습니다.</p>}
                 {!!dates.length && <div className="space-y-2">
                     {dates.map(date => {
-                        const briefing = briefings.find(item => item.briefingDate === date);
+                        const briefing = findLatestByDate(briefings, date);
                         return <div key={date} className="flex min-w-0 items-center gap-3 rounded-lg border border-hairline bg-surface-soft p-3">
                             <button type="button" onClick={() => onSelect(date)} aria-label={`${date} 저장한 브리핑으로 이동`} className="min-w-0 flex-1 text-left hover:text-primary">
                                 <span className="block text-sm font-semibold">{date}</span>

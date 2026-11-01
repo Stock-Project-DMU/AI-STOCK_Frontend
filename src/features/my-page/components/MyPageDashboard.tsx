@@ -112,7 +112,7 @@ export default function MyPageDashboard() {
         setIsSocialAccount(user.loginId === null);
         setIsEmaillessSocial(user.loginId === null && user.email === null);
         setIsAdmin(user.role === "ADMIN");
-        setLoginProvider(getAuthenticatedLoginProvider());
+        setLoginProvider(user.socialProviders?.[0] ?? getAuthenticatedLoginProvider());
 
         setProfile((current) => ({
           ...current,

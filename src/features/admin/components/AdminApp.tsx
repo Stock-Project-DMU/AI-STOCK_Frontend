@@ -81,7 +81,25 @@ const investmentTendencyLabel: Record<number, string> = { 1: "안정형", 2: "�
 const ledgerTypeLabel: Record<LedgerType, string> = { AUTO_CHARGE: "직접 충전", ADMIN_CHARGE: "관리자 지급", ADMIN_DEDUCTION: "관리자 차감", AUTO_DEDUCTION: "직접 차감" };
 const ledgerTypes: [string, string][] = [["", "전체 유형"], ["AUTO_CHARGE", "직접 충전"], ["ADMIN_CHARGE", "관리자 지급"], ["ADMIN_DEDUCTION", "관리자 차감"], ["AUTO_DEDUCTION", "직접 차감"], ["REJECTED", "거절"]];
 
-const statusText: Record<string, string> = { ACTIVE: "활성", SUSPENDED: "정지", PENDING: "대기", APPROVED: "승인", REJECTED: "거절", EXECUTED: "체결 완료", CANCELLED: "취소", BUY: "매수", SELL: "매도", ANSWERED: "답변 완료" };
+const statusText: Record<string, string> = { ACTIVE: "활성", SUSPENDED: "정지", WITHDRAWN: "탈퇴", PENDING: "대기", APPROVED: "승인", REJECTED: "거절", EXECUTED: "체결 완료", CANCELLED: "취소", BUY: "매수", SELL: "매도", ANSWERED: "답변 완료" };
+// 마이페이지 AccountTransactions.tsx의 TRANSACTION_META와 같은 분류 체계(사용자용 라벨과 동일하게 맞춘다).
+const balanceChangeTypeLabel: Record<string, string> = {
+    INITIAL_GRANT: "계좌 개설 지급", AUTO_CHARGE: "직접 충전", ADMIN_CHARGE: "관리자 지급", ADMIN_DEDUCTION: "관리자 차감",
+    AUTO_DEDUCTION: "직접 차감", ORDER_BUY: "주식 매수", ORDER_SELL: "주식 매도", ORDER_REFUND: "주문 취소 환불",
+    INTEREST: "예치금 이자", TRADE_FEE: "거래 수수료", DIVIDEND: "배당금 입금",
+};
+// ADMIN_CREATE는 AdminActivity.tsx에 이미 "관리자 계정 생성"이라는 문구가 있어 그쪽과 맞춘다.
+const adminActionLabel: Record<string, string> = {
+    USER_STATUS_CHANGE: "회원 상태 변경",
+    ACCOUNT_STATUS_CHANGE: "계좌 상태 변경",
+    ACCOUNT_ADJUSTMENT: "잔고 조정",
+    CHARGE_REQUEST_DECISION: "충전 요청 처리",
+    ORDER_CANCEL: "주문 취소",
+    ADMIN_CREATE: "관리자 계정 생성",
+    ADMIN_DISPOSE: "관리자 폐기",
+    NOTICE_DELETE: "공지 삭제",
+    NOTICE_POPUP_CHANGE: "팝업 변경",
+};
 const won = (amount: number) => amount.toLocaleString("ko-KR") + "원";
 
 // 회원관리/거래내역/가상계좌관리(계좌·충전요청) 검색 항목 — 백엔드 field 파라미터값과 1:1.
@@ -116,6 +134,26 @@ export function StatusBadge({ value }: { value: string }) {
         : value === "PENDING" ? "amber" : ["SUSPENDED", "REJECTED", "BUY"].includes(value) ? "red"
         : value === "SELL" ? "blue" : "gray";
     return <span className={`ao-badge ${tone}`}>{statusText[value] ?? value}</span>;
+}
+// 정지 이력의 beforeValue/afterValue는 "SUSPENDED | 정지 종료: ..." 처럼 상태코드 뒤에 상세 설명이 붙어서 온다 — 코드만 떼어 번역한다.
+function splitStatusChange(value: string | null) {
+    if (value == null) return null;
+    const [code, ...rest] = value.split(" | ");
+    return { code, detail: rest.join(" | ") };
+}
+function formatStatusChange(value: string | null) {
+    const split = splitStatusChange(value);
+    if (!split) return "—";
+    const label = statusText[split.code] ?? split.code;
+    return split.detail ? `${label} | ${split.detail}` : label;
+}
+function StatusChangeValue({ value }: { value: string | null }) {
+    const split = splitStatusChange(value);
+    if (!split) return <>—</>;
+    return <>
+        <StatusBadge value={split.code} />
+        {split.detail && <span className="ml-1 text-muted">{split.detail}</span>}
+    </>;
 }
 // 문의 상태 전용 라벨 — 마이페이지 문의하기 화면과 문구를 맞춤("대기" 대신 "답변 대기").
 const inquiryStatusText: Record<string, string> = { PENDING: "답변 대기", ANSWERED: "답변 완료" };
@@ -171,7 +209,7 @@ function AccountLedgerTable({ accountId }: { accountId: number }) {
     if (!result) return <p className="mt-2 text-sm text-muted">불러오는 중...</p>;
     return <>
         <DataTable headings={["거래ID", "유형", "금액", "거래전 잔액", "거래후 잔액", "관련 요청", "처리자", "사유", "시각"]}>
-            {result.content.map(item => <tr key={item.transactionId}><td>{item.transactionId}</td><td><span className={`ao-badge ${item.type.includes("CHARGE") ? "green" : "red"}`}>{ledgerTypeLabel[item.type]}</span></td><td className={item.amount < 0 ? "text-blue-500" : "text-red-500"}>{item.amount < 0 ? "−" : "+"}{won(Math.abs(item.amount))}</td><td>{won(item.balanceBefore)}</td><td>{won(item.balanceAfter)}</td><td>{item.relatedChargeRequestId != null ? `#${item.relatedChargeRequestId}` : "—"}</td><td>{item.processedByLoginId ?? "—"}</td><td className="max-w-48 break-words">{item.reason ?? "—"}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
+            {result.content.map(item => <tr key={item.transactionId}><td>{item.transactionId}</td><td><span className={`ao-badge ${item.type.includes("CHARGE") ? "green" : "red"}`}>{ledgerTypeLabel[item.type]}</span></td><td className={item.amount < 0 ? "text-blue-500" : "text-red-500"}>{item.amount < 0 ? "−" : "+"}{won(Math.abs(item.amount))}</td><td>{won(item.balanceBefore)}</td><td>{won(item.balanceAfter)}</td><td>{item.relatedChargeRequestId != null ? `#${item.relatedChargeRequestId}` : "—"}</td><td>{item.processedByLoginId ?? "—"}</td><td className="max-w-48 truncate" title={item.reason ?? undefined}>{item.reason ?? "—"}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
         </DataTable>
         {!result.content.length && <p className="mt-2 text-sm text-muted">거래내역이 없습니다.</p>}
         <AdminPager page={page} totalPages={result.totalPages} onChange={setPage} />
@@ -253,9 +291,9 @@ function DetailPanel({ detail, back, open }: { detail: NonNullable<Detail>; back
             <h2 className="text-lg font-bold">충전 요청 #{charge.requestId}</h2>
             <p className="mt-3"><button onClick={() => open("user", charge.userId)} className="text-primary">{charge.userName}</button> · {charge.accountNumber}</p>
             <p className="mt-2">{won(charge.amount)} · <StatusBadge value={charge.status} /></p>
-            <p className="mt-3">요청 사유: {charge.reason}</p>
+            <p className="mt-3 break-words">요청 사유: {charge.reason}</p>
             <p className="mt-1">요청 시각: {formatDateTime(charge.requestedAt)}</p>
-            {charge.decisionReason && <p className="mt-3">처리 사유: {charge.decisionReason}</p>}
+            {charge.decisionReason && <p className="mt-3 break-words">처리 사유: {charge.decisionReason}</p>}
             {charge.status !== "PENDING" && <p className="mt-1">처리자: {charge.decidedByName ?? "—"} · 처리 시각: {charge.decidedAt ? formatDateTime(charge.decidedAt) : "—"}</p>}
             <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
                 <div><dt className="text-muted">계좌 현재 잔고</dt><dd>{won(charge.accountBalance)}</dd></div>
@@ -300,7 +338,7 @@ function DetailPanel({ detail, back, open }: { detail: NonNullable<Detail>; back
             </div>}
             <h3 className="mt-5 font-bold">잔고 변동내역</h3>
             <DataTable headings={["구분", "금액", "거래전 잔액", "거래후 잔액", "시각"]}>
-                {(trade.balanceChanges ?? []).map((change, index) => <tr key={index}><td>{change.type}</td><td className={change.amount < 0 ? "text-blue-500" : "text-red-500"}>{change.amount < 0 ? "−" : "+"}{won(Math.abs(change.amount))}</td><td>{won(change.balanceBefore)}</td><td>{won(change.balanceAfter)}</td><td>{formatDateTime(change.createdAt)}</td></tr>)}
+                {(trade.balanceChanges ?? []).map((change, index) => <tr key={index}><td>{balanceChangeTypeLabel[change.type] ?? change.type}</td><td className={change.amount < 0 ? "text-blue-500" : "text-red-500"}>{change.amount < 0 ? "−" : "+"}{won(Math.abs(change.amount))}</td><td>{won(change.balanceBefore)}</td><td>{won(change.balanceAfter)}</td><td>{formatDateTime(change.createdAt)}</td></tr>)}
             </DataTable>
             {!trade.balanceChanges?.length && <p className="mt-2 text-sm text-muted">잔고 변동내역이 없습니다.</p>}
             {trade.order.status === "PENDING" && <><textarea value={reason} onChange={event => setReason(event.target.value)} maxLength={500} placeholder="취소 사유" className="mt-4 w-full rounded border p-3" /><CharCount value={reason} max={500} /><button disabled={busy || !reason.trim()} onClick={() => void mutate("cancel", { reason })} className="mt-3 rounded border border-red-500 px-4 py-2 text-red-500 disabled:opacity-50">미체결 주문 취소</button></>}
@@ -357,10 +395,10 @@ function DetailPanel({ detail, back, open }: { detail: NonNullable<Detail>; back
             <h3 className="mt-5 font-bold">문의 내역 (전체 {user.inquiryCount ?? 0}건, 최근 5건 표시)</h3>
             <div className="mt-2 space-y-3">
                 {(user.recentInquiries ?? []).map(item => <div key={item.inquiryId} className="rounded border border-hairline p-3 text-sm">
-                    <p className="flex items-center justify-between gap-2"><b>{item.title}</b><StatusBadge value={item.status} /></p>
+                    <p className="flex items-center justify-between gap-2"><b className="min-w-0 break-words">{item.title}</b><StatusBadge value={item.status} /></p>
                     <p className="mt-1 text-muted">{formatDateTime(item.createdAt)}</p>
-                    <p className="mt-2 whitespace-pre-wrap">{item.content}</p>
-                    {item.answer ? <div className="mt-3 rounded bg-surface-soft p-2"><p className="text-xs text-muted">답변 {item.answeredAt ? formatDateTime(item.answeredAt) : ""}</p><p className="mt-1 whitespace-pre-wrap">{item.answer}</p></div> : <p className="mt-2 text-xs text-muted">답변 대기 중</p>}
+                    <p className="mt-2 whitespace-pre-wrap break-words">{item.content}</p>
+                    {item.answer ? <div className="mt-3 rounded bg-surface-soft p-2"><p className="text-xs text-muted">답변 {item.answeredAt ? formatDateTime(item.answeredAt) : ""}</p><p className="mt-1 whitespace-pre-wrap break-words">{item.answer}</p></div> : <p className="mt-2 text-xs text-muted">답변 대기 중</p>}
                 </div>)}
             </div>
             {!user.recentInquiries?.length && <p className="mt-2 text-sm text-muted">문의 내역이 없습니다.</p>}
@@ -386,13 +424,13 @@ function DetailPanel({ detail, back, open }: { detail: NonNullable<Detail>; back
 
             <h3 className="mt-5 font-bold">정지·해제 이력</h3>
             <DataTable headings={["구분", "변경", "사유", "처리자", "시각"]}>
-                {(user.suspensionHistory ?? []).map((item, index) => <tr key={index}><td>{item.action === "ACCOUNT_STATUS_CHANGE" ? `계좌 ${item.accountNumber ?? ""}` : "회원"}</td><td><StatusBadge value={item.beforeValue} /> → <StatusBadge value={item.afterValue} /></td><td className="max-w-48 break-words">{item.reason}</td><td>{item.adminLoginId}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
+                {(user.suspensionHistory ?? []).map((item, index) => <tr key={index}><td>{item.action === "ACCOUNT_STATUS_CHANGE" ? `계좌 ${item.accountNumber ?? ""}` : "회원"}</td><td><StatusChangeValue value={item.beforeValue} /> → <StatusChangeValue value={item.afterValue} /></td><td className="max-w-48 break-words">{item.reason}</td><td>{item.adminLoginId}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
             </DataTable>
             {!user.suspensionHistory?.length && <p className="mt-2 text-sm text-muted">정지·해제 이력이 없습니다.</p>}
 
             <h3 className="mt-5 font-bold">관리자 처리 내역 (전체 {user.adminActionCount ?? 0}건)</h3>
             <DataTable headings={["처리", "변경", "사유", "처리자", "시각"]}>
-                {(user.recentAdminActions ?? []).map((item, index) => <tr key={index}><td>{item.action}</td><td>{item.beforeValue ?? "—"} → {item.afterValue ?? "—"}</td><td className="max-w-48 break-words">{item.reason ?? "—"}</td><td>{item.adminLoginId}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
+                {(user.recentAdminActions ?? []).map((item, index) => <tr key={index}><td>{adminActionLabel[item.action] ?? item.action}</td><td>{formatStatusChange(item.beforeValue)} → {formatStatusChange(item.afterValue)}</td><td className="max-w-48 truncate" title={item.reason ?? undefined}>{item.reason ?? "—"}</td><td>{item.adminLoginId}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
             </DataTable>
             {!user.recentAdminActions?.length && <p className="mt-2 text-sm text-muted">관리자 처리 내역이 없습니다.</p>}
 
@@ -424,7 +462,7 @@ function DetailPanel({ detail, back, open }: { detail: NonNullable<Detail>; back
 
             <h3 className="mt-5 font-bold">정지·해제 이력</h3>
             <DataTable headings={["변경", "사유", "처리자", "시각"]}>
-                {(account.suspensionHistory ?? []).map((item, index) => <tr key={index}><td><StatusBadge value={item.beforeValue} /> → <StatusBadge value={item.afterValue} /></td><td className="max-w-48 break-words">{item.reason}</td><td>{item.adminLoginId}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
+                {(account.suspensionHistory ?? []).map((item, index) => <tr key={index}><td><StatusChangeValue value={item.beforeValue} /> → <StatusChangeValue value={item.afterValue} /></td><td className="max-w-48 break-words">{item.reason}</td><td>{item.adminLoginId}</td><td>{formatDateTime(item.createdAt)}</td></tr>)}
             </DataTable>
             {!account.suspensionHistory?.length && <p className="mt-2 text-sm text-muted">정지·해제 이력이 없습니다.</p>}
 
@@ -456,13 +494,13 @@ function DetailPanel({ detail, back, open }: { detail: NonNullable<Detail>; back
             <h2 className="text-lg font-bold">문의 #{inquiry.inquiryId}</h2>
             <p className="mt-3"><button onClick={() => open("user", inquiry.userId)} className="text-primary">{inquiry.userName}</button> ({inquiry.loginId})</p>
             <p className="mt-3"><InquiryStatusBadge value={inquiry.status} /> · 등록 {formatDateTime(inquiry.createdAt)}</p>
-            <h3 className="mt-4 font-bold">{inquiry.title}</h3>
-            <p className="mt-2 whitespace-pre-wrap text-sm">{inquiry.content}</p>
+            <h3 className="mt-4 break-words font-bold">{inquiry.title}</h3>
+            <p className="mt-2 whitespace-pre-wrap break-words text-sm">{inquiry.content}</p>
             {inquiry.answer && <div className="mt-4 rounded border border-hairline bg-surface-soft p-3 text-sm">
                 <p className="text-xs text-muted">답변{inquiry.answeredAt ? ` · ${formatDateTime(inquiry.answeredAt)}` : ""}{inquiry.answeredByName ? ` · ${inquiry.answeredByName}` : ""}</p>
-                <p className="mt-2 whitespace-pre-wrap">{inquiry.answer}</p>
+                <p className="mt-2 whitespace-pre-wrap break-words">{inquiry.answer}</p>
             </div>}
-            {inquiry.status === "PENDING" && <><textarea value={reason} onChange={event => setReason(event.target.value)} maxLength={500} placeholder="답변 내용" className="mt-4 w-full rounded border p-3" /><CharCount value={reason} max={500} /><button disabled={busy || !reason.trim()} onClick={() => void mutate("answer", { answer: reason })} className="admin-button-primary mt-3 rounded px-4 py-2 disabled:opacity-50">답변 등록</button></>}
+            {inquiry.status === "PENDING" && <><textarea value={reason} onChange={event => setReason(event.target.value.slice(0, 500))} maxLength={500} placeholder="답변 내용" className="mt-4 w-full rounded border p-3" /><CharCount value={reason} max={500} /><button disabled={busy || !reason.trim()} onClick={() => void mutate("answer", { answer: reason })} className="admin-button-primary mt-3 rounded px-4 py-2 disabled:opacity-50">답변 등록</button></>}
         </>}
     </section>;
 }
@@ -571,9 +609,9 @@ export default function AdminApp() {
             {section === "accounts" && <div className="flex gap-2"><button onClick={() => changeAccountsTab("list")} className={accountsTab === "list" ? "admin-button-primary rounded px-3 py-1.5" : "rounded border border-hairline px-3 py-1.5"}>계좌 목록</button><button onClick={() => changeAccountsTab("ledger")} className={accountsTab === "ledger" ? "admin-button-primary rounded px-3 py-1.5" : "rounded border border-hairline px-3 py-1.5"}>충전·차감 이력</button><button onClick={() => changeAccountsTab("charges")} className={accountsTab === "charges" ? "admin-button-primary rounded px-3 py-1.5" : "rounded border border-hairline px-3 py-1.5"}>충전 요청</button></div>}
             {loading ? <p role="status">불러오는 중...</p> : <>
                 {section === "accounts" && accountsTab === "list" && <><h2 className="font-bold">가상계좌 목록</h2><DataTable headings={[<SortHeader key="ACCOUNT_NUMBER" label="계좌번호" column="ACCOUNT_NUMBER" sort={sort} onSort={handleSort} />, <SortHeader key="USER" label="사용자" column="USER" sort={sort} onSort={handleSort} />, <SortHeader key="BALANCE" label="잔고" column="BALANCE" sort={sort} onSort={handleSort} />, <SortHeader key="OPENED_AT" label="개설일" column="OPENED_AT" sort={sort} onSort={handleSort} />, <SortHeader key="STATUS" label="상태" column="STATUS" sort={sort} onSort={handleSort} />, "관리"]}>{accountsList.map(item => <tr key={item.accountId}><td>{item.accountNumber}</td><td><button onClick={() => setDetail({ kind: "user", id: item.userId })} className="text-primary">{item.userName}</button></td><td>{won(item.balance)}</td><td>{item.openedAt ? formatDateTime(item.openedAt) : "—"}</td><td><StatusBadge value={item.status} /></td><td><button onClick={() => setDetail({ kind: "account", id: item.accountId })} className="text-primary">상세</button></td></tr>)}</DataTable>{!accountsList.length && <p className="text-sm text-muted">계좌가 없습니다.</p>}</>}
-                {section === "accounts" && accountsTab === "ledger" && <><h2 className="font-bold">충전·차감 이력</h2><DataTable headings={[<SortHeader key="TRANSACTION_ID" label="거래ID" column="TRANSACTION_ID" sort={sort} onSort={handleSort} />, <SortHeader key="ACCOUNT_NUMBER" label="계좌번호" column="ACCOUNT_NUMBER" sort={sort} onSort={handleSort} />, <SortHeader key="USER" label="사용자" column="USER" sort={sort} onSort={handleSort} />, <SortHeader key="TYPE" label="유형" column="TYPE" sort={sort} onSort={handleSort} />, <SortHeader key="AMOUNT" label="금액" column="AMOUNT" sort={sort} onSort={handleSort} />, <SortHeader key="BALANCE_BEFORE" label="거래전 잔액" column="BALANCE_BEFORE" sort={sort} onSort={handleSort} />, <SortHeader key="BALANCE_AFTER" label="거래후 잔액" column="BALANCE_AFTER" sort={sort} onSort={handleSort} />, <SortHeader key="CHARGE_REQUEST_ID" label="관련 요청" column="CHARGE_REQUEST_ID" sort={sort} onSort={handleSort} />, <SortHeader key="PROCESSED_BY" label="처리자" column="PROCESSED_BY" sort={sort} onSort={handleSort} />, <SortHeader key="REASON" label="사유" column="REASON" sort={sort} onSort={handleSort} />, <SortHeader key="OCCURRED_AT" label="시각" column="OCCURRED_AT" sort={sort} onSort={handleSort} />]}>{ledger.map(item => <tr key={`${item.entryType}-${item.transactionId ?? item.chargeRequest?.requestId}`}><td>{item.transactionId ?? "—"}</td><td>{item.accountNumber}</td><td><button onClick={() => setDetail({ kind: "user", id: item.userId })} className="text-primary">{item.userName}</button></td><td>{item.entryType === "REJECTED_REQUEST" ? <span className="ao-badge red">요청 거절</span> : <span className={`ao-badge ${item.type?.includes("CHARGE") ? "green" : "red"}`}>{item.type ? ledgerTypeLabel[item.type] : "—"}</span>}</td><td className={item.amount != null ? (item.amount < 0 ? "text-blue-500" : "text-red-500") : ""}>{item.amount != null ? `${item.amount < 0 ? "−" : "+"}${won(Math.abs(item.amount))}` : item.chargeRequest ? `요청 ${won(item.chargeRequest.amount)}` : "—"}</td><td>{item.balanceBefore != null ? won(item.balanceBefore) : "—"}</td><td>{item.balanceAfter != null ? won(item.balanceAfter) : "—"}</td><td>{item.chargeRequest ? <button onClick={() => setDetail({ kind: "charge", id: item.chargeRequest!.requestId })} className="text-primary">#{item.chargeRequest.requestId}</button> : "—"}</td><td>{item.processedByLoginId ?? item.chargeRequest?.decidedByName ?? "—"}</td><td className="max-w-48 break-words">{item.reason ?? item.chargeRequest?.decisionReason ?? "—"}</td><td>{formatDateTime(item.occurredAt)}</td></tr>)}</DataTable>{!ledger.length && <p className="text-sm text-muted">충전·차감 이력이 없습니다.</p>}</>}
+                {section === "accounts" && accountsTab === "ledger" && <><h2 className="font-bold">충전·차감 이력</h2><DataTable headings={[<SortHeader key="TRANSACTION_ID" label="거래ID" column="TRANSACTION_ID" sort={sort} onSort={handleSort} />, <SortHeader key="ACCOUNT_NUMBER" label="계좌번호" column="ACCOUNT_NUMBER" sort={sort} onSort={handleSort} />, <SortHeader key="USER" label="사용자" column="USER" sort={sort} onSort={handleSort} />, <SortHeader key="TYPE" label="유형" column="TYPE" sort={sort} onSort={handleSort} />, <SortHeader key="AMOUNT" label="금액" column="AMOUNT" sort={sort} onSort={handleSort} />, <SortHeader key="BALANCE_BEFORE" label="거래전 잔액" column="BALANCE_BEFORE" sort={sort} onSort={handleSort} />, <SortHeader key="BALANCE_AFTER" label="거래후 잔액" column="BALANCE_AFTER" sort={sort} onSort={handleSort} />, <SortHeader key="CHARGE_REQUEST_ID" label="관련 요청" column="CHARGE_REQUEST_ID" sort={sort} onSort={handleSort} />, <SortHeader key="PROCESSED_BY" label="처리자" column="PROCESSED_BY" sort={sort} onSort={handleSort} />, <SortHeader key="REASON" label="사유" column="REASON" sort={sort} onSort={handleSort} />, <SortHeader key="OCCURRED_AT" label="시각" column="OCCURRED_AT" sort={sort} onSort={handleSort} />]}>{ledger.map(item => <tr key={`${item.entryType}-${item.transactionId ?? item.chargeRequest?.requestId}`}><td>{item.transactionId ?? "—"}</td><td>{item.accountNumber}</td><td><button onClick={() => setDetail({ kind: "user", id: item.userId })} className="text-primary">{item.userName}</button></td><td>{item.entryType === "REJECTED_REQUEST" ? <span className="ao-badge red">요청 거절</span> : <span className={`ao-badge ${item.type?.includes("CHARGE") ? "green" : "red"}`}>{item.type ? ledgerTypeLabel[item.type] : "—"}</span>}</td><td className={item.amount != null ? (item.amount < 0 ? "text-blue-500" : "text-red-500") : ""}>{item.amount != null ? `${item.amount < 0 ? "−" : "+"}${won(Math.abs(item.amount))}` : item.chargeRequest ? `요청 ${won(item.chargeRequest.amount)}` : "—"}</td><td>{item.balanceBefore != null ? won(item.balanceBefore) : "—"}</td><td>{item.balanceAfter != null ? won(item.balanceAfter) : "—"}</td><td>{item.chargeRequest ? <button onClick={() => setDetail({ kind: "charge", id: item.chargeRequest!.requestId })} className="text-primary">#{item.chargeRequest.requestId}</button> : "—"}</td><td>{item.processedByLoginId ?? item.chargeRequest?.decidedByName ?? "—"}</td><td className="max-w-48 truncate" title={item.reason ?? item.chargeRequest?.decisionReason ?? undefined}>{item.reason ?? item.chargeRequest?.decisionReason ?? "—"}</td><td>{formatDateTime(item.occurredAt)}</td></tr>)}</DataTable>{!ledger.length && <p className="text-sm text-muted">충전·차감 이력이 없습니다.</p>}</>}
                 {section === "accounts" && accountsTab === "charges" && <><h2 className="font-bold">캐시 충전 요청</h2><DataTable headings={[<SortHeader key="REQUEST_ID" label="요청번호" column="REQUEST_ID" sort={sort} onSort={handleSort} />, <SortHeader key="USER" label="사용자" column="USER" sort={sort} onSort={handleSort} />, <SortHeader key="ACCOUNT_NUMBER" label="계좌" column="ACCOUNT_NUMBER" sort={sort} onSort={handleSort} />, <SortHeader key="AMOUNT" label="요청 금액" column="AMOUNT" sort={sort} onSort={handleSort} />, <SortHeader key="REQUESTED_AT" label="요청 시각" column="REQUESTED_AT" sort={sort} onSort={handleSort} />, <SortHeader key="STATUS" label="상태" column="STATUS" sort={sort} onSort={handleSort} />, "관리"]}>{charges.map(item => <tr key={item.requestId}><td>{item.requestId}</td><td><button onClick={() => setDetail({ kind: "user", id: item.userId })} className="text-primary">{item.userName}</button></td><td>{item.accountNumber}</td><td>{won(item.amount)}</td><td>{formatDateTime(item.requestedAt)}</td><td><StatusBadge value={item.status} /></td><td><button onClick={() => setDetail({ kind: "charge", id: item.requestId })} className="text-primary">상세 / 심사</button></td></tr>)}</DataTable>{!charges.length && <p className="text-sm text-muted">충전 요청이 없습니다.</p>}</>}
-                {section === "inquiries" && <DataTable headings={[<SortHeader key="INQUIRY_ID" label="문의번호" column="INQUIRY_ID" sort={sort} onSort={handleSort} />, <SortHeader key="USER" label="사용자" column="USER" sort={sort} onSort={handleSort} />, <SortHeader key="TITLE" label="제목" column="TITLE" sort={sort} onSort={handleSort} />, <SortHeader key="STATUS" label="상태" column="STATUS" sort={sort} onSort={handleSort} />, <SortHeader key="CREATED_AT" label="등록일" column="CREATED_AT" sort={sort} onSort={handleSort} />, <SortHeader key="ANSWERED_AT" label="답변일" column="ANSWERED_AT" sort={sort} onSort={handleSort} />, "관리"]}>{inquiries.map(item => <tr key={item.inquiryId}><td>{item.inquiryId}</td><td><button onClick={() => setDetail({ kind: "user", id: item.userId })} className="text-primary">{item.userName}</button></td><td>{item.title}</td><td><InquiryStatusBadge value={item.status} /></td><td>{formatDateTime(item.createdAt)}</td><td>{item.answeredAt ? formatDateTime(item.answeredAt) : "—"}</td><td><button onClick={() => setDetail({ kind: "inquiry", id: item.inquiryId })} className="text-primary">상세 / 답변</button></td></tr>)}</DataTable>}
+                {section === "inquiries" && <DataTable headings={[<SortHeader key="INQUIRY_ID" label="문의번호" column="INQUIRY_ID" sort={sort} onSort={handleSort} />, <SortHeader key="USER" label="사용자" column="USER" sort={sort} onSort={handleSort} />, <SortHeader key="TITLE" label="제목" column="TITLE" sort={sort} onSort={handleSort} />, <SortHeader key="STATUS" label="상태" column="STATUS" sort={sort} onSort={handleSort} />, <SortHeader key="CREATED_AT" label="등록일" column="CREATED_AT" sort={sort} onSort={handleSort} />, <SortHeader key="ANSWERED_AT" label="답변일" column="ANSWERED_AT" sort={sort} onSort={handleSort} />, "관리"]}>{inquiries.map(item => <tr key={item.inquiryId}><td>{item.inquiryId}</td><td><button onClick={() => setDetail({ kind: "user", id: item.userId })} className="text-primary">{item.userName}</button></td><td className="max-w-48 truncate" title={item.title}>{item.title}</td><td><InquiryStatusBadge value={item.status} /></td><td>{formatDateTime(item.createdAt)}</td><td>{item.answeredAt ? formatDateTime(item.answeredAt) : "—"}</td><td><button onClick={() => setDetail({ kind: "inquiry", id: item.inquiryId })} className="text-primary">상세 / 답변</button></td></tr>)}</DataTable>}
                 {section === "inquiries" && !inquiries.length && <p className="text-sm text-muted">문의가 없습니다.</p>}
                 {section === "transactions" && <><h2 className="font-bold">거래 내역</h2><DataTable headings={[<SortHeader key="ORDER_ID" label="주문번호" column="ORDER_ID" sort={sort} onSort={handleSort} />, <SortHeader key="USER" label="사용자" column="USER" sort={sort} onSort={handleSort} />, <SortHeader key="STOCK" label="종목" column="STOCK" sort={sort} onSort={handleSort} />, <SortHeader key="ORDER_TYPE" label="구분" column="ORDER_TYPE" sort={sort} onSort={handleSort} />, <SortHeader key="QUANTITY" label="수량" column="QUANTITY" sort={sort} onSort={handleSort} />, <SortHeader key="AMOUNT" label="금액" column="AMOUNT" sort={sort} onSort={handleSort} />, <SortHeader key="STATUS" label="상태" column="STATUS" sort={sort} onSort={handleSort} />, <SortHeader key="ORDERED_AT" label="주문 시각" column="ORDERED_AT" sort={sort} onSort={handleSort} />, "관리"]}>{trades.map(item => <tr key={item.order.orderId}><td>{item.order.orderId}</td><td>{item.userName}</td><td>{item.order.stockName}</td><td><StatusBadge value={item.order.orderType} /></td><td>{item.order.quantity}</td><td>{won((item.order.execPrice ?? item.order.orderPrice) * item.order.quantity)}</td><td><StatusBadge value={item.order.status} /></td><td>{formatDateTime(item.order.orderedAt)}</td><td><button onClick={() => setDetail({ kind: "transaction", id: item.order.orderId })} className="text-primary">상세</button></td></tr>)}</DataTable>{!trades.length && <p className="text-sm text-muted">거래 내역이 없습니다.</p>}</>}
                 {section === "users" && <><DataTable headings={[<SortHeader key="USER_ID" label="회원번호" column="USER_ID" sort={sort} onSort={handleSort} />, <SortHeader key="LOGIN_ID" label="아이디" column="LOGIN_ID" sort={sort} onSort={handleSort} />, <SortHeader key="NAME" label="이름" column="NAME" sort={sort} onSort={handleSort} />, <SortHeader key="EMAIL" label="이메일" column="EMAIL" sort={sort} onSort={handleSort} />, <SortHeader key="CREATED_AT" label="가입일" column="CREATED_AT" sort={sort} onSort={handleSort} />, <SortHeader key="STATUS" label="상태" column="STATUS" sort={sort} onSort={handleSort} />, "관리"]}>{users.map(user => <tr key={user.userId}><td>{user.userId}</td><td>{user.loginId}</td><td>{user.name}</td><td>{user.email ?? "—"}</td><td>{user.createdAt?.slice(0, 10)}</td><td><StatusBadge value={user.status} /></td><td><button onClick={() => setDetail({ kind: "user", id: user.userId })} className="text-primary">상세</button></td></tr>)}</DataTable>{!users.length && <p>검색 결과가 없습니다.</p>}</>}
