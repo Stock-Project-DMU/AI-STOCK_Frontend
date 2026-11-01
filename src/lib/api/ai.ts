@@ -85,17 +85,12 @@ export const getSimulation = (simulationId: number) => apiRequest<SimulationResu
 export const deleteSimulation = (simulationId: number) => apiRequest<null>(`/api/simulations/${simulationId}`, { method: "DELETE" });
 
 // AI 기능(시뮬레이터·재무설계) 전용 오류 안내.
-// GEMINI_RATE_LIMIT_EXCEEDED(429)는 시뮬레이터 자체 호출 제한과 Gemini 할당량 초과 두 경우에 온다.
+// GEMINI_RATE_LIMIT_EXCEEDED(429)는 Gemini API 자체 할당량 초과가 재시도 후에도 계속될 때 온다.
 const AI_RATE_LIMIT_CODE = "GEMINI_RATE_LIMIT_EXCEEDED";
 const AI_RESPONSE_TIMEOUT_CODE = "AI_RESPONSE_TIMEOUT";
 
 function isAiRateLimitError(error: unknown): error is ApiError {
     return error instanceof ApiError && (error.status === 429 || error.code === AI_RATE_LIMIT_CODE);
-}
-
-function retryAfterText(error: ApiError) {
-    return error.retryAfterSeconds && error.retryAfterSeconds > 0
-        ? `${error.retryAfterSeconds}초 후 다시 시도하세요.` : "잠시 후 다시 시도하세요.";
 }
 
 // 시뮬레이터·재무설계의 계정당 하루 3회 초과(DAILY_LIMIT_EXCEEDED). Gemini 자체 할당량 초과(GEMINI_RATE_LIMIT_EXCEEDED)와는
@@ -109,7 +104,7 @@ function isDailyLimitError(error: unknown) {
 
 export function getSimulationErrorMessage(error: unknown, fallback: string) {
     if (isDailyLimitError(error)) return DAILY_LIMIT_MESSAGE;
-    if (isAiRateLimitError(error)) return `분당 3회까지 사용 가능합니다. ${retryAfterText(error)}`;
+    if (isAiRateLimitError(error)) return "AI 요청이 많아 잠시 후 다시 시도해 주세요.";
     return getApiErrorMessage(error, fallback);
 }
 
