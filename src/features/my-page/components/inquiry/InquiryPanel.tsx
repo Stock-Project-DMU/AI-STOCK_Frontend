@@ -80,15 +80,15 @@ export default function InquiryPanel() {
             {!detail && !detailError && <p role="status" className="py-12 text-center text-sm text-muted">불러오는 중입니다.</p>}
             {detail && <div className="rounded-lg border border-hairline bg-white p-5">
                 <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-base font-bold">{detail.title}</h2>
+                    <h2 className="break-words text-base font-bold">{detail.title}</h2>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${statusClass[detail.status]}`}>{statusLabel[detail.status]}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted">{formatDateTime(detail.createdAt)}</p>
-                <p className="mt-4 whitespace-pre-wrap text-sm leading-6">{detail.content}</p>
+                <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6">{detail.content}</p>
                 {detail.answer ? (
                     <div className="mt-5 rounded-lg bg-surface-soft p-4">
                         <p className="text-xs font-semibold text-muted">답변{detail.answeredAt ? ` · ${formatDateTime(detail.answeredAt)}` : ""}{detail.answeredByName ? ` · ${detail.answeredByName}` : ""}</p>
-                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{detail.answer}</p>
+                        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6">{detail.answer}</p>
                     </div>
                 ) : <p className="mt-5 text-sm text-muted">아직 답변이 등록되지 않았습니다.</p>}
             </div>}

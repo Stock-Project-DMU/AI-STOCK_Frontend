@@ -31,6 +31,15 @@ const RANKING_TOOLTIP: Record<SortKey, string> = {
     거래대금: "등록 종목 기준 오늘 누적 거래대금 순입니다.",
 };
 
+function formatTradingValue(value: number | null) {
+    if (value == null) return "—";
+    const abs = Math.abs(value);
+    if (abs >= 1_0000_0000_0000) return `${(value / 1_0000_0000_0000).toFixed(1)}조`;
+    if (abs >= 1_0000_0000) return `${(value / 1_0000_0000).toFixed(1)}억`;
+    if (abs >= 1_0000) return `${Math.round(value / 1_0000).toLocaleString("ko-KR")}만`;
+    return value.toLocaleString("ko-KR");
+}
+
 export default function StockTable() {
     const router = useRouter();
     const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -116,7 +125,9 @@ export default function StockTable() {
     const rows = useMemo(() => {
         return marketRows.map(item => ({ code: item.stockCode, name: item.stockName,
             changeRate: item.changeRate == null ? "—" : (item.changeRate >= 0 ? "+" : "") + item.changeRate.toFixed(2) + "%",
-            currentPrice: item.price?.toLocaleString("ko-KR") ?? "—" }));
+            currentPrice: item.price?.toLocaleString("ko-KR") ?? "—",
+            volume: item.volume == null ? "—" : `${item.volume.toLocaleString("ko-KR")}주`,
+            tradingValue: formatTradingValue(item.tradingValue) }));
     }, [marketRows]);
     const visibleRows = rows.slice(0, visibleCount);
     const hasMore = visibleCount < rows.length;
@@ -163,7 +174,7 @@ export default function StockTable() {
             {marketError && <p role="alert" className="p-4 text-sm text-red-500">{marketError}</p>}
             {!loadingMarket && !marketError && !rows.length && <p className="p-4 text-sm">표시할 시세가 없습니다.</p>}
 
-            <div className="min-w-0">
+            <div className="min-w-0 overflow-x-auto">
                 <table className="w-full table-fixed border-collapse text-[13px]">
                     <thead>
                         <tr className="border-b border-hairline bg-surface-soft text-[12px] font-bold tracking-wider text-muted">
@@ -171,7 +182,9 @@ export default function StockTable() {
                             <th className="w-10 px-1 py-2 text-center">관심</th>
                             <th className="min-w-0 px-1.5 py-2 text-left">종목</th>
                             <th className="w-20 px-1 py-2 text-right">등락률</th>
-                            <th className="w-36 py-2 pl-1 pr-5 text-right">현재가</th>
+                            <th className="w-28 px-1 py-2 text-right">현재가</th>
+                            <th className="w-24 px-1 py-2 text-right">거래량</th>
+                            <th className="w-24 py-2 pl-1 pr-5 text-right">거래대금</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -203,7 +216,9 @@ export default function StockTable() {
                                         </div>
                                     </td>
                                     <td className={`num truncate px-1 py-2 text-right font-bold ${rising ? "text-up" : "text-down"}`}>{stock.changeRate}</td>
-                                    <td className="num whitespace-nowrap py-2 pl-1 pr-5 text-right font-semibold text-ink">{stock.currentPrice}<span className="ml-1 text-[12px] font-normal text-muted">KRW</span></td>
+                                    <td className="num whitespace-nowrap px-1 py-2 text-right font-semibold text-ink">{stock.currentPrice}<span className="ml-1 text-[12px] font-normal text-muted">KRW</span></td>
+                                    <td className="num truncate px-1 py-2 text-right text-[12px] text-muted">{stock.volume}</td>
+                                    <td className="num truncate py-2 pl-1 pr-5 text-right text-[12px] text-muted">{stock.tradingValue}</td>
                                 </tr>
                             );
                         })}

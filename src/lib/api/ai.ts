@@ -22,6 +22,7 @@ export type NewsChatSession = { sessionId: number; outletDomain: string | null; 
 export type NewsChatMessage = NewsChatTurn & { messageId: number; sources: NewsChatAnswer["sources"]; searchedAt: string | null; createdAt: string };
 export type NewsChatSessions = { currentSessionId: number; sessions: NewsChatSession[] };
 export const syncNewsChatSessions = () => apiRequest<NewsChatSessions>("/api/ai/news/chat/sessions/sync", { method: "POST" });
+export const deleteNewsChatSession = (sessionId: number) => apiRequest<null>(`/api/ai/news/chat/sessions/${sessionId}`, { method: "DELETE" });
 export const getNewsChatMessages = (sessionId: number) => apiRequest<NewsChatMessage[]>(`/api/ai/news/chat/sessions/${sessionId}/messages`);
 export const sendNewsChatMessage = (sessionId: number, content: string, briefingDate: string | null) =>
     apiRequest<NewsChatMessage[]>(`/api/ai/news/chat/sessions/${sessionId}/messages`, {
@@ -33,7 +34,7 @@ export type PlanningPreferences = { savedBriefingDates: string[]; linkedBriefing
 export type PlanningConnectionOptions = {
     goals: { planId: number; goal: string; monthlyPayment: number; years: number }[];
     simulations: { simulationId: number; goalText: string; targetAmount: number; periodMonths: number | null; rebalancedReachDate: string | null; createdAt: string }[];
-    briefings: { briefingDate: string; outletName: string }[];
+    briefings: { briefingDate: string; outletDomain: string; outletName: string; deliveryTime: string | null }[];
 };
 export const getPlanningPreferences = () => apiRequest<PlanningPreferences>("/api/ai/planning/preferences");
 export const getPlanningConnectionOptions = () => apiRequest<PlanningConnectionOptions>("/api/ai/planning/preferences/options");

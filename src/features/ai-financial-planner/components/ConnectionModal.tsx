@@ -186,9 +186,9 @@ export default function ConnectionModal({ onClose, onSaved }: ConnectionModalPro
                     <section className="mt-7">
                         <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-ink">저장한 뉴스 브리핑 · {options.briefings.length}건</h3><span className="text-xs text-muted">{preferences.linkedBriefingDates.length}/{MAX_CONNECTIONS} 연동</span></div>
                         {!options.briefings.length && <p className="mt-3 text-sm text-muted">저장한 브리핑이 없습니다. <Link href="/ai-market-briefing" className="font-semibold text-primary underline">시황 브리핑으로 이동</Link></p>}
-                        <div className="mt-3 space-y-2">{options.briefings.slice(briefingPage * PAGE_SIZE, (briefingPage + 1) * PAGE_SIZE).map(briefing => <label key={briefing.briefingDate} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
+                        <div className="mt-3 space-y-2">{options.briefings.slice(briefingPage * PAGE_SIZE, (briefingPage + 1) * PAGE_SIZE).map(briefing => <label key={`${briefing.briefingDate}|${briefing.outletDomain}|${briefing.deliveryTime ?? ""}`} className="flex cursor-pointer items-center gap-3 rounded-lg border border-hairline p-3 text-sm hover:bg-surface-soft">
                             <input type="checkbox" checked={preferences.linkedBriefingDates.includes(briefing.briefingDate)} onChange={() => toggleBriefing(briefing.briefingDate)} disabled={busy} className="accent-primary" />
-                            <span className="min-w-0">{briefing.briefingDate} · {briefing.outletName}</span>
+                            <span className="min-w-0">{briefing.briefingDate} · {briefing.outletName}{briefing.deliveryTime ? ` ${briefing.deliveryTime.slice(0, 5)}` : ""}</span>
                         </label>)}</div>
                         <PaginationControls page={briefingPage} total={options.briefings.length} onPage={setBriefingPage} label="뉴스 브리핑" />
                     </section>

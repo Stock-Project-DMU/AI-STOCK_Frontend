@@ -1,5 +1,5 @@
 import { apiRequest } from "./client";
-export type MarketRanking = { rank: number; stockCode: string; stockName: string; price: number | null; changeAmount: number | null; changeRate: number | null; volume: number | null; extraInfo: string | null };
+export type MarketRanking = { rank: number; stockCode: string; stockName: string; price: number | null; changeAmount: number | null; changeRate: number | null; volume: number | null; tradingValue: number | null; extraInfo: string | null };
 export type HistoricalPrice = { date: string; open: number; high: number; low: number; close: number; volume: number; changeRate: number | null };
 export type MarketIndex = { industryCode: string; industryName: string; indexValue: number | null; changeRate: number | null };
 export type MarketNews = { title: string; description: string; link: string; pubDate: string; outlet: string };

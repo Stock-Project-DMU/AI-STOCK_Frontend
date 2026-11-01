@@ -160,8 +160,8 @@ export default function TradePanel({ stock, account, orders, holdings, marketSta
                             <SelectLike label="주문 유형" value="일반 주문" />
                             <label className="rounded-lg border border-hairline bg-surface-soft p-2.5"><span className="block text-[12px] text-muted">주문 방식</span><select aria-label="주문 방식" value={priceType} disabled={isSubmitting} onChange={event => { setPriceType(event.target.value as "LIMIT" | "MARKET"); setRequestError(""); setRequestMessage(""); }} className="mt-1 w-full rounded-md bg-canvas p-1 text-xs font-bold text-ink"><option value="LIMIT">지정가</option><option value="MARKET">시장가</option></select></label>
                         </div>
-                        {priceType === "LIMIT" ? <Counter label={tab === "buy" ? "매수가격" : "매도가격"} currentPrice={stock?.currentPrice ?? 0} value={price.toLocaleString("ko-KR")} unit="원" onMinus={() => setSelectedPrice(Math.max(1, price - 500))} onPlus={() => setSelectedPrice(price + 500)} /> : <p className="rounded-lg bg-surface-soft p-3 text-muted">시장가는 서버가 조회한 최근 시세로 모의 체결됩니다. 아래 금액은 예상 금액이며 실제 체결 금액과 다를 수 있습니다.</p>}
-                        <Counter label="수량" currentPrice={stock?.currentPrice ?? 0} value={String(quantity)} unit="주" onMinus={() => setQuantity((value) => Math.max(1, value - 1))} onPlus={() => setQuantity((value) => value + 1)} />
+                        {priceType === "LIMIT" ? <Counter label={tab === "buy" ? "매수가격" : "매도가격"} currentPrice={stock?.currentPrice ?? 0} value={price.toLocaleString("ko-KR")} unit="원" onMinus={() => setSelectedPrice(Math.max(1, price - 500))} onPlus={() => setSelectedPrice(price + 500)} onChange={(value) => setSelectedPrice(Math.max(1, value))} /> : <p className="rounded-lg bg-surface-soft p-3 text-muted">시장가는 서버가 조회한 최근 시세로 모의 체결됩니다. 아래 금액은 예상 금액이며 실제 체결 금액과 다를 수 있습니다.</p>}
+                        <Counter label="수량" currentPrice={stock?.currentPrice ?? 0} value={String(quantity)} unit="주" onMinus={() => setQuantity((value) => Math.max(1, value - 1))} onPlus={() => setQuantity((value) => value + 1)} onChange={(value) => setQuantity(Math.max(1, value))} />
 
                         <div className="grid grid-cols-4 gap-1.5">
                             {[10, 25, 50, 100].map((percent) => <button key={percent} type="button" onClick={() => setQuantity(Math.max(1, Math.floor((maximumQuantity * percent) / 100)))} className="rounded-md border border-hairline bg-surface-soft py-1.5 text-[12px] font-semibold text-muted hover:border-muted-soft hover:text-ink">{percent === 100 ? "최대" : `${percent}%`}</button>)}
@@ -174,7 +174,7 @@ export default function TradePanel({ stock, account, orders, holdings, marketSta
                         </div>
 
                         {marketClosed && <p className="rounded-md bg-surface-strong px-3 py-2 text-[12px] text-muted">정규장(평일 09:00~15:30)에만 주문할 수 있습니다{marketStatus?.state === "HOLIDAY" ? `(${marketStatusLabel(marketStatus)})` : ""}.{marketStatus?.nextOpen && <> 다음 개장: {formatDateTime(marketStatus.nextOpen)}</>}</p>}
-                        {requestError && <p className="rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
+                        {requestError && <p className="whitespace-pre-wrap break-words rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
                         {requestMessage && <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-600">{requestMessage}</p>}
 
                         <button type="button" onClick={handleOrder} disabled={!authReady || isSubmitting || !account || !stock || quantity < 1 || price < 1 || marketClosed} className={`trade-action-button w-full rounded-lg py-3.5 text-sm font-bold transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${tab === "buy" ? "bg-[var(--market-up)]" : "bg-[var(--market-down)]"}`}>{isSubmitting ? "처리 중..." : `${stockName} ${tab === "buy" ? "매수하기" : "매도하기"}`}</button>
@@ -184,7 +184,7 @@ export default function TradePanel({ stock, account, orders, holdings, marketSta
                 </div>
             )}
 
-            {tab === "pending" && requestError && <p className="mx-4 mb-4 rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
+            {tab === "pending" && requestError && <p className="mx-4 mb-4 whitespace-pre-wrap break-words rounded-md bg-red-500/10 px-3 py-2 text-[12px] text-up">{requestError}</p>}
             {tab === "pending" && requestMessage && <p className="mx-4 mb-4 rounded-md bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-600">{requestMessage}</p>}
         </aside>
 
@@ -210,8 +210,25 @@ function SelectLike({ label, value }: { label: string; value: string }) {
     return <div className="rounded-lg border border-hairline bg-surface-soft p-2.5 text-left"><span className="block text-[12px] text-muted">{label}</span><strong className="mt-1 block text-xs text-ink">{value}</strong></div>;
 }
 
-function Counter({ label, currentPrice, value, unit, onMinus, onPlus }: { label: string; currentPrice: number; value: string; unit: string; onMinus: () => void; onPlus: () => void }) {
-    return <div><div className="mb-1.5 flex justify-between"><span className="font-semibold text-body">{label}</span><span className="num text-[12px] text-muted">현재가 {currentPrice.toLocaleString("ko-KR")}원</span></div><div className="flex items-center rounded-lg border border-hairline bg-surface-soft px-3 py-2.5 focus-within:border-muted-soft"><strong className="num flex-1 text-base text-ink">{value}</strong><span className="mr-3 text-muted">{unit}</span><button type="button" onClick={onMinus} aria-label={`${label} 감소`} className="h-6 w-6 rounded-md border border-hairline text-muted hover:bg-surface-strong hover:text-ink">−</button><button type="button" onClick={onPlus} aria-label={`${label} 증가`} className="ml-1 h-6 w-6 rounded-md border border-hairline text-muted hover:bg-surface-strong hover:text-ink">＋</button></div></div>;
+function Counter({ label, currentPrice, value, unit, onMinus, onPlus, onChange }: { label: string; currentPrice: number; value: string; unit: string; onMinus: () => void; onPlus: () => void; onChange: (value: number) => void }) {
+    const [draft, setDraft] = useState(value);
+    const [syncedValue, setSyncedValue] = useState(value);
+    if (value !== syncedValue) { setSyncedValue(value); setDraft(value); }
+    return <div><div className="mb-1.5 flex justify-between"><span className="font-semibold text-body">{label}</span><span className="num text-[12px] text-muted">현재가 {currentPrice.toLocaleString("ko-KR")}원</span></div><div className="flex items-center rounded-lg border border-hairline bg-surface-soft px-3 py-2.5 focus-within:border-muted-soft">
+        <input
+            type="text"
+            inputMode="numeric"
+            aria-label={label}
+            value={draft}
+            onChange={(event) => {
+                const digits = event.target.value.replace(/[^0-9]/g, "");
+                setDraft(digits);
+                if (digits) onChange(Number(digits));
+            }}
+            onBlur={() => setDraft(value)}
+            className="num min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-ink outline-none"
+        />
+        <span className="mr-3 text-muted">{unit}</span><button type="button" onClick={onMinus} aria-label={`${label} 감소`} className="h-6 w-6 rounded-md border border-hairline text-muted hover:bg-surface-strong hover:text-ink">−</button><button type="button" onClick={onPlus} aria-label={`${label} 증가`} className="ml-1 h-6 w-6 rounded-md border border-hairline text-muted hover:bg-surface-strong hover:text-ink">＋</button></div></div>;
 }
 
 function Portfolio({ tab, holding }: { tab: Exclude<OrderTab, "pending">; holding: HoldingResponse | null }) {

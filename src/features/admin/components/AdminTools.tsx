@@ -139,6 +139,7 @@ type NoticeDetail = NoticeListItem & { content: string; recipientCount: number; 
 
 const noticeFields: [string, string][] = [["ALL", "전체"], ["NOTICE_ID", "공지번호"], ["TITLE", "제목"], ["ADMIN_LOGIN_ID", "작성자"]];
 const targetTypeLabel: Record<string, string> = { SINGLE: "개별", ALL: "전체", SEARCH: "검색결과", SELECTED: "선택회원" };
+const noticeTypeLabel: Record<string, string> = { SYSTEM: "공지" };
 
 function NoticeManagementPanel() {
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -206,7 +207,7 @@ function NoticeList({ onOpen }: { onOpen: (noticeId: number) => void }) {
                 {items.map(item => <tr key={item.noticeId}>
                     <td>{item.noticeId}</td>
                     <td>{item.title}</td>
-                    <td>{item.type}</td>
+                    <td>{noticeTypeLabel[item.type] ?? item.type}</td>
                     <td>{targetTypeLabel[item.targetType] ?? item.targetType} ({item.targetCount})</td>
                     <td>{item.sentCount}</td>
                     <td>{item.popup ? <span className={`ao-badge ${item.popupActive ? "green" : "gray"}`}>{item.popupActive ? "노출중" : "종료"}</span> : "—"}</td>
@@ -268,7 +269,7 @@ function NoticeDetailView({ noticeId, onBack }: { noticeId: number; onBack: () =
             <h2 className="text-lg font-bold">{item.title}</h2>
             <p className="mt-2 whitespace-pre-wrap text-sm">{item.content}</p>
             <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-                <div><dt className="text-muted">유형</dt><dd>{item.type}</dd></div>
+                <div><dt className="text-muted">유형</dt><dd>{noticeTypeLabel[item.type] ?? item.type}</dd></div>
                 <div><dt className="text-muted">대상</dt><dd>{targetTypeLabel[item.targetType] ?? item.targetType} ({item.targetCount}명)</dd></div>
                 <div><dt className="text-muted">발송 수</dt><dd>{item.sentCount}명</dd></div>
                 <div><dt className="text-muted">받은 사람</dt><dd>{item.recipientCount}명</dd></div>

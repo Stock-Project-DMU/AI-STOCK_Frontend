@@ -138,7 +138,7 @@ export default function AccountPanel({
         {mode === "recharge" && view === "detail" && selectedHistory && <RechargeDetail record={selectedHistory} onBack={() => onViewChange("history")} />}
       </div>
       {requestingCharge && <p role="status">{view === "deduct" ? "차감 중..." : isUnlimitedCharge ? "충전 중..." : "충전 요청 중..."}</p>}
-      {mode === "recharge" && chargeError && <p role="alert" className="mt-3 text-red-500">{chargeError}</p>}
+      {mode === "recharge" && chargeError && <p role="alert" className="mt-3 whitespace-pre-wrap break-words text-red-500">{chargeError}</p>}
     </div>
   );
 }
@@ -324,7 +324,7 @@ function RechargeReason({ amount, reason, onReasonChange, onBack, onRequest }: {
         <span className="theme-accent-soft theme-accent-text rounded-full px-2.5 py-1 text-xs font-bold">2단계 중 2단계</span>
       </div>
       <label className="mb-2 block text-sm font-bold" htmlFor="recharge-reason">충전 목적</label>
-      <textarea id="recharge-reason" value={reason} onChange={(event) => onReasonChange(event.target.value)} maxLength={500} className="h-40 w-full resize-none rounded-lg border border-hairline bg-white p-3.5 text-sm leading-6 outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]" placeholder="가상캐시가 필요한 목적을 입력해 주세요." />
+      <textarea id="recharge-reason" value={reason} onChange={(event) => onReasonChange(event.target.value.slice(0, 500))} maxLength={500} className="h-40 w-full resize-none rounded-lg border border-hairline bg-white p-3.5 text-sm leading-6 outline-none focus:border-[var(--market-accent)] focus:ring-2 focus:ring-[var(--market-accent-soft)]" placeholder="가상캐시가 필요한 목적을 입력해 주세요." />
       <p className="mt-2 text-right text-xs text-muted">{reason.length}/500</p>
       <div className="mt-4 flex justify-end gap-3"><button type="button" onClick={onBack} className="rounded-lg border border-hairline px-4 py-2 text-sm font-bold hover:bg-surface-soft">이전</button><button type="button" onClick={onRequest} disabled={!reason.trim()} className="theme-accent-bg rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40">요청</button></div>
     </div>

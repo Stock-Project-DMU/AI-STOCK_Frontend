@@ -27,11 +27,12 @@ export default function OAuthCallbackPage() {
         }
         finishOAuth(provider, code, state).then(getLoginDestination).then(destination => window.location.replace(destination))
             .catch(cause => {
-                setError(cause instanceof Error ? cause.message : "소셜 로그인에 실패했습니다.");
-                if (cause instanceof ApiError && cause.code === "USER_SUSPENDED") {
+                const message = cause instanceof Error ? cause.message : "소셜 로그인에 실패했습니다.";
+                setError(message);
+                if (cause instanceof ApiError && ["USER_SUSPENDED", "ACCOUNT_SUSPENDED", "ACCOUNT_SUSPENDED_CHARGE"].includes(cause.code ?? "")) {
                     setSuspended(true);
                 }
             });
     }, []);
-    return <main className="mx-auto max-w-xl p-10"><h1 className="text-xl font-bold">소셜 로그인</h1><p role={error ? "alert" : "status"} className="my-5">{suspended ? "로그인을 진행할 수 없습니다." : error || "인증 결과를 확인하고 있습니다…"}</p>{error && <Link href="/login" className="text-primary">로그인 화면으로 돌아가기</Link>}{suspended && <SuspendedAccountModal onClose={() => window.location.replace("/login")} />}</main>;
+    return <main className="mx-auto max-w-xl p-10"><h1 className="text-xl font-bold">소셜 로그인</h1><p role={error ? "alert" : "status"} className="my-5 whitespace-pre-wrap break-words">{suspended ? "로그인을 진행할 수 없습니다." : error || "인증 결과를 확인하고 있습니다…"}</p>{error && <Link href="/login" className="text-primary">로그인 화면으로 돌아가기</Link>}{suspended && <SuspendedAccountModal message={error} onClose={() => window.location.replace("/login")} />}</main>;
 }
