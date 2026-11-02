@@ -1,9 +1,15 @@
 "use client";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { SparkleIcon, SendIcon } from "@/components/icons/Icon";
-import { createPlanningSession, getPlanningMessages, sendPlanningMessage, type PlanningMessage } from "@/lib/api/ai";
+import { createPlanningSession, getPlanningErrorMessage, getPlanningMessages, sendPlanningMessage, type PlanningMessage } from "@/lib/api/ai";
 import { getApiErrorMessage } from "@/lib/api/client";
 import PlannerMessageContent from "./PlannerMessageContent";
+// 답변 대기 단계별 안내(경과 초 기준). 백엔드는 45초가 지나면 AI_RESPONSE_TIMEOUT으로 끝낸다.
+const WAITING_MESSAGES = [
+    { after: 0, text: "AI가 분석 중입니다..." },
+    { after: 5, text: "조금 더 걸리고 있어요..." },
+    { after: 15, text: "응답을 생성하고 있습니다. 잠시만 기다려 주세요." },
+];
 export default function PlannerChat({ sessionId, onSessionChange }: { sessionId: number | null; onSessionChange: (id: number) => void }) {
     const createdSession = useRef<number | null>(null);
     const mounted = useRef(true);
@@ -13,6 +19,13 @@ export default function PlannerChat({ sessionId, onSessionChange }: { sessionId:
     const [input, setInput] = useState("");
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
+    const [waitingStep, setWaitingStep] = useState(0);
+    useEffect(() => {
+        if (!busy) return;
+        const timers = WAITING_MESSAGES.slice(1).map((step, index) =>
+            window.setTimeout(() => setWaitingStep(index + 1), step.after * 1000));
+        return () => timers.forEach(window.clearTimeout);
+    }, [busy]);
     useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
     useEffect(() => {
         const list = messageList.current;
@@ -30,7 +43,7 @@ export default function PlannerChat({ sessionId, onSessionChange }: { sessionId:
         event.preventDefault();
         const content = input.trim();
         if (!content || busy || loadingMessages) return;
-        setBusy(true); setError("");
+        setBusy(true); setWaitingStep(0); setError("");
         let id = sessionId ?? createdSession.current;
         try {
             if (!id) { id = (await createPlanningSession()).sessionId; createdSession.current = id; }
@@ -42,7 +55,7 @@ export default function PlannerChat({ sessionId, onSessionChange }: { sessionId:
             onSessionChange(id);
         } catch (error) {
             if (!mounted.current) return;
-            setError(getApiErrorMessage(error, "AI 답변 요청에 실패했습니다."));
+            setError(getPlanningErrorMessage(error, "AI 답변 요청에 실패했습니다."));
             if (id) { getPlanningMessages(id).then(items => { if (mounted.current) setMessages(items); }).catch(() => {}); }
         } finally { if (mounted.current) setBusy(false); }
     }
@@ -54,7 +67,7 @@ export default function PlannerChat({ sessionId, onSessionChange }: { sessionId:
             {messages.map(message => <div key={message.messageId} className={`flex ${message.role === "USER" ? "justify-end" : "justify-start"}`}>
                 <div className={`flex min-w-0 max-w-[700px] gap-3 ${message.role === "USER" ? "flex-row-reverse" : ""}`}>{message.role !== "USER" && <span className="theme-accent-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-md"><SparkleIcon className="h-4 w-4" /></span>}<p className={`min-w-0 whitespace-pre-wrap rounded-lg border border-hairline px-5 py-4 text-sm leading-7 ${message.role === "USER" ? "chat-user-bubble" : "bg-canvas text-body"}`}>{message.role !== "USER" ? <PlannerMessageContent content={message.content} /> : message.content}</p></div>
             </div>)}
-            {busy && <p role="status" className="text-sm text-muted">AI가 자료를 분석하고 있습니다...</p>}
+            {busy && <p role="status" aria-live="polite" className="text-sm text-muted">{WAITING_MESSAGES[waitingStep].text}</p>}
             {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
         </div>
         <form onSubmit={submit} className="shrink-0 border-t border-hairline bg-canvas px-6 pb-3 pt-3">
