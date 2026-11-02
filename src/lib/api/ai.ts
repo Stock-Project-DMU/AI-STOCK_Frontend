@@ -93,7 +93,7 @@ function isAiRateLimitError(error: unknown): error is ApiError {
     return error instanceof ApiError && (error.status === 429 || error.code === AI_RATE_LIMIT_CODE);
 }
 
-// 시뮬레이터·재무설계의 계정당 하루 3회 초과(DAILY_LIMIT_EXCEEDED). Gemini 자체 할당량 초과(GEMINI_RATE_LIMIT_EXCEEDED)와는
+// 시뮬레이터(하루 3회)·재무설계(하루 5회)의 계정당 하루 사용 횟수 초과(DAILY_LIMIT_EXCEEDED). Gemini 자체 할당량 초과(GEMINI_RATE_LIMIT_EXCEEDED)와는
 // 다른 코드로 오므로 "잠시 후 다시"가 아니라 "내일 다시"로 안내한다.
 const DAILY_LIMIT_CODE = "DAILY_LIMIT_EXCEEDED";
 const DAILY_LIMIT_MESSAGE = "오늘 사용 횟수를 모두 사용했습니다. 내일 다시 이용해 주세요.";
